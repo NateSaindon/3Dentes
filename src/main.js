@@ -62,6 +62,24 @@ async function main() {
     else mesh.material.color.copy(mesh.userData.baseColor).lerp(new THREE.Color(color), 0.55);
   }
 
+  /**
+   * Where to view a structure from. Flying straight in along the current
+   * direction leaves a molar hidden behind the premolars in front of it, since
+   * the arch curves away from a frontal viewpoint. Approaching from outside the
+   * arch — buccally — puts the camera where the tooth is actually exposed:
+   * near-frontal for incisors, near-lateral for molars, and a natural
+   * three-quarter view for everything between.
+   */
+  function approachFor(focus) {
+    const outward = new THREE.Vector3(focus.x, 0, focus.z);
+    if (outward.lengthSq() < 1e-6) outward.set(0, 0, 1); // dead centre: face it
+    outward.normalize();
+    return outward
+      .add(new THREE.Vector3(0, 0, 0.32))  // bias forward, avoiding a flat profile
+      .add(new THREE.Vector3(0, 0.22, 0))  // and slightly above the occlusal plane
+      .normalize();
+  }
+
   let hovered = null;
   function setHover(fma) {
     if (hovered && hovered !== selected) tint(hovered, null);
@@ -80,7 +98,8 @@ async function main() {
         const mesh = meshes.get(selected);
         const box = new THREE.Box3().setFromObject(mesh);
         const size = box.getSize(new THREE.Vector3()).length();
-        view.flyTo(box.getCenter(new THREE.Vector3()), Math.max(size * 3.2, 55));
+        const focus = box.getCenter(new THREE.Vector3());
+        view.flyTo(focus, Math.max(size * 4.2, 70), approachFor(focus));
       }
     } else {
       detail.clear();

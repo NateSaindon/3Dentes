@@ -17,9 +17,10 @@ offline.
   derived from arch/side/position rather than hand-entered.
 - **Odontogram** in the standard clinical layout (upper arch on top, patient's
   right on the viewer's left), synced both ways with the 3D view. Selecting a
-  tooth on the chart flies the camera to it — which is how you reach the
-  posterior teeth, since from a frontal view a molar really is hidden behind the
-  premolars in front of it.
+  tooth on the chart flies the camera to it, approaching from outside the arch
+  so the tooth is actually exposed — near-frontal for an incisor, swinging
+  buccal for a molar. This is how you reach the posterior teeth, since from a
+  frontal view a molar really is hidden behind the premolars in front of it.
 - **Layer visibility and opacity**, so you can fade the gingiva and alveolar bone
   back to expose the roots in situ, or isolate a single structure.
 

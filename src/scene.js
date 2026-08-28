@@ -58,10 +58,12 @@ export function createScene(canvas) {
   // --- camera flight -------------------------------------------------------
   let flight = null;
 
-  function flyTo(focus, distance) {
-    // Approach from the current viewing direction so the model never appears to
-    // spin under the user; only the framing changes.
-    const dir = camera.position.clone().sub(controls.target).normalize();
+  function flyTo(focus, distance, approach = null) {
+    // Without an approach direction, keep the current one so the model doesn't
+    // appear to spin under the user and only the framing changes.
+    const dir = approach
+      ? approach.clone().normalize()
+      : camera.position.clone().sub(controls.target).normalize();
     flight = {
       t: 0,
       fromPos: camera.position.clone(),
