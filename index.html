@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14161a" />
+    <meta name="description" content="Interactive 3D atlas of human oral anatomy — 28 individually selectable permanent teeth, jaws, gingiva and muscles of mastication." />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>3Dentes — Interactive Oral Anatomy</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="status" class="status">Loading anatomy…</div>
+
+    <header class="topbar">
+      <h1>3Dentes</h1>
+      <div class="topbar-actions">
+        <button id="isolate" class="btn" disabled title="Show only the selected structure">Isolate</button>
+        <button id="reset" class="btn" title="Reset camera and selection">Reset</button>
+      </div>
+    </header>
+
+    <aside class="panel panel-left">
+      <section>
+        <h2 class="panel-title">Layers</h2>
+        <div id="layers"></div>
+      </section>
+      <section>
+        <h2 class="panel-title">Notation</h2>
+        <div id="notation" class="segmented"></div>
+      </section>
+      <p class="caveat">
+        <strong>Source data limits.</strong> Built from BodyParts3D, a single individual.
+        No third molars, no enamel/dentin/pulp, no nerves, periodontal ligament, tongue,
+        TMJ disc, or salivary glands. External morphology only — not a complete clinical
+        reference.
+      </p>
+    </aside>
+
+    <aside class="panel panel-right">
+      <h2 class="panel-title">Selection</h2>
+      <div id="detail"></div>
+    </aside>
+
+    <footer class="chartbar">
+      <div id="chart"></div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "3dentes",
+  "version": "0.1.0",
+  "description": "Interactive 3D atlas of human oral anatomy, in the browser.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "fetch:assets": "node tools/fetch-assets.mjs",
+    "build:assets": "node tools/build-assets.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.1.0",
+    "@gltf-transform/functions": "^4.1.0",
+    "vite": "^7.0.0",
+    "vite-plugin-pwa": "^1.0.0"
+  }
+}

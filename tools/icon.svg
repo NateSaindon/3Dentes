@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#14161a"/>
+  <!-- A molar in outline: crown with cusps, two diverging roots. -->
+  <g fill="none" stroke="#3d9bd1" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M150 196
+             c0-52 34-84 106-84
+             s106 32 106 84
+             c0 34-12 58-18 96
+             c-6 38-10 96-30 96
+             c-18 0-22-46-28-78
+             c-4-22-10-32-30-32
+             s-26 10-30 32
+             c-6 32-10 78-28 78
+             c-20 0-24-58-30-96
+             c-6-38-18-62-18-96 Z"/>
+    <path d="M186 150c22-18 48-26 70-26s48 8 70 26" stroke-opacity="0.55"/>
+  </g>
+</svg>
