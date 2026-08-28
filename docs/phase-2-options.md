@@ -1,5 +1,12 @@
 # Phase 2 — closing the anatomy gaps
 
+> **Superseded in part (2026-08-27).** The plan is now to segment a CBCT volume
+> the operator supplies, which provides pulp, canals, third molars and the
+> mandibular canal as *measured* anatomy rather than authored approximations.
+> See [cbct-plan.md](cbct-plan.md) — read it first. The options below remain the
+> fallback for anything CBCT cannot resolve (fine canal anatomy, soft tissue) and
+> for regions ruined by restoration artifact.
+
 The alpha's ceiling is the source data: BodyParts3D gives external morphology and
 nothing else. Everything below is anatomy that has to be **authored**, which is
 where the real cost lives. Modelling work is planned for the Fedora desktop
@@ -31,9 +38,14 @@ with micro-CT literature for canal configurations (Vertucci types).
 - *Cons:* days per arch, and it needs real anatomical judgement — this is where
   your expertise is the bottleneck, not the software.
 
-**Recommendation:** do Option A first and label it schematic. It makes the app
-substantially more useful immediately and establishes the layer/cross-section UI
-that Option B would reuse. Upgrade individual teeth to Option B as needed.
+**Option C — segment it from CBCT.** Now the preferred route: real measured pulp
+anatomy, no authoring judgement required. See [cbct-plan.md](cbct-plan.md).
+
+**Recommendation:** Option C where the scan resolves it. Fall back to Option A
+(labelled schematic) for teeth ruined by restoration artifact or where canal
+detail falls below voxel size, and reserve Option B for anything that has to be
+endodontically trustworthy. Either way the layer and cross-section UI is shared,
+so building it against CBCT output first is not wasted.
 
 ## 2. Nerve pathways
 
