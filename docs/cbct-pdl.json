@@ -1,0 +1,232 @@
+{
+  "provenance": "WIDTH MEASURED between two walls found in the data (root surface and lamina dura). GEOMETRY EXAGGERATED: the mesh is a 0.32 mm shell on the measured root surface, because a 0.2 mm ligament is ~1.3 voxels and will not mesh.",
+  "render_thickness_mm": 0.32,
+  "width_caveat": "Apparent width is inflated by the point-spread function and is an UPPER BOUND. Do not read it as a PDL width or compare it against a threshold for widening.",
+  "teeth": {
+    "2": {
+      "universal": 2,
+      "fma": "FMA55697",
+      "arch": "upper",
+      "volume_mm3": 6.1,
+      "apparent_width_median_mm": 0.24,
+      "aspects": 262
+    },
+    "3": {
+      "universal": 3,
+      "fma": "FMA55698",
+      "arch": "upper",
+      "volume_mm3": 3.8,
+      "apparent_width_median_mm": 0.24,
+      "aspects": 220
+    },
+    "4": {
+      "universal": 4,
+      "fma": "FMA55688",
+      "arch": "upper",
+      "volume_mm3": 1.3,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 226
+    },
+    "5": {
+      "universal": 5,
+      "fma": "FMA55689",
+      "arch": "upper",
+      "volume_mm3": 2.5,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 199
+    },
+    "6": {
+      "universal": 6,
+      "fma": "FMA55798",
+      "arch": "upper",
+      "volume_mm3": 1.1,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 323
+    },
+    "7": {
+      "universal": 7,
+      "fma": "FMA55680",
+      "arch": "upper",
+      "volume_mm3": 0.5,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 332
+    },
+    "8": {
+      "universal": 8,
+      "fma": "FMA55681",
+      "arch": "upper",
+      "volume_mm3": 0.6,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 484
+    },
+    "9": {
+      "universal": 9,
+      "fma": "FMA55682",
+      "arch": "upper",
+      "volume_mm3": 0.9,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 508
+    },
+    "10": {
+      "universal": 10,
+      "fma": "FMA55683",
+      "arch": "upper",
+      "volume_mm3": 0.3,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 287
+    },
+    "11": {
+      "universal": 11,
+      "fma": "FMA55799",
+      "arch": "upper",
+      "volume_mm3": 0.6,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 342
+    },
+    "12": {
+      "universal": 12,
+      "fma": "FMA55690",
+      "arch": "upper",
+      "volume_mm3": 1.2,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 162
+    },
+    "13": {
+      "universal": 13,
+      "fma": "FMA55691",
+      "arch": "upper",
+      "volume_mm3": 1.8,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 267
+    },
+    "14": {
+      "universal": 14,
+      "fma": "FMA55699",
+      "arch": "upper",
+      "volume_mm3": 5.9,
+      "apparent_width_median_mm": 0.24,
+      "aspects": 286
+    },
+    "15": {
+      "universal": 15,
+      "fma": "FMA55700",
+      "arch": "upper",
+      "volume_mm3": 4.7,
+      "apparent_width_median_mm": 0.24,
+      "aspects": 280
+    },
+    "18": {
+      "universal": 18,
+      "fma": "FMA55703",
+      "arch": "lower",
+      "volume_mm3": 0.5,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 275
+    },
+    "19": {
+      "universal": 19,
+      "fma": "FMA55704",
+      "arch": "lower",
+      "volume_mm3": 1.6,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 448
+    },
+    "20": {
+      "universal": 20,
+      "fma": "FMA55692",
+      "arch": "lower",
+      "volume_mm3": 0.1,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 120
+    },
+    "21": {
+      "universal": 21,
+      "fma": "FMA55693",
+      "arch": "lower",
+      "volume_mm3": 2.6,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 416
+    },
+    "22": {
+      "universal": 22,
+      "fma": "FMA55687",
+      "arch": "lower",
+      "volume_mm3": 1.3,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 348
+    },
+    "23": {
+      "universal": 23,
+      "fma": "FMA57141",
+      "arch": "lower",
+      "volume_mm3": 0.4,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 293
+    },
+    "24": {
+      "universal": 24,
+      "fma": "FMA57143",
+      "arch": "lower",
+      "volume_mm3": 0.6,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 279
+    },
+    "25": {
+      "universal": 25,
+      "fma": "FMA57142",
+      "arch": "lower",
+      "volume_mm3": 1.6,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 292
+    },
+    "26": {
+      "universal": 26,
+      "fma": "FMA57140",
+      "arch": "lower",
+      "volume_mm3": 0.7,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 243
+    },
+    "27": {
+      "universal": 27,
+      "fma": "FMA55686",
+      "arch": "lower",
+      "volume_mm3": 2.8,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 396
+    },
+    "28": {
+      "universal": 28,
+      "fma": "FMA55694",
+      "arch": "lower",
+      "volume_mm3": 6.0,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 521
+    },
+    "29": {
+      "universal": 29,
+      "fma": "FMA55695",
+      "arch": "lower",
+      "volume_mm3": 0.3,
+      "apparent_width_median_mm": 0.08,
+      "aspects": 123
+    },
+    "30": {
+      "universal": 30,
+      "fma": "FMA55705",
+      "arch": "lower",
+      "volume_mm3": 3.4,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 471
+    },
+    "31": {
+      "universal": 31,
+      "fma": "FMA55706",
+      "arch": "lower",
+      "volume_mm3": 1.0,
+      "apparent_width_median_mm": 0.16,
+      "aspects": 586
+    }
+  },
+  "apparent_width_median_mm": 0.16
+}

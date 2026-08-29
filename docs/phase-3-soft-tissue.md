@@ -156,7 +156,7 @@ can derive.
 1. ~~**Register the `mandibular` volume onto `centered`**~~ — **done**, see below.
 2. ~~**Pulp as tissue**~~ — **done**, see below.
 3. **Generate gingiva** from CEJ and alveolar crest — *landmarks done, surface incomplete; see below.*
-4. **PDL shell.**
+4. ~~**PDL shell.**~~ — **done**, see below.
 5. **Muscles fitted to measured attachments; tongue authored.** Blender, and last.
 
 See [wishlist.md](wishlist.md) for what this anatomy would later enable.
@@ -344,3 +344,62 @@ Scalloped margins, per-tooth sockets, interdental papillae, following the arch.
 **Remaining:** the surface is terraced at voxel scale and heavy (~370k triangles
 per arch). That is a retopology job, already on the wishlist, and it is the kind
 of thing Blender is actually for — as opposed to anything a script can derive.
+
+
+---
+
+## Step 4 as executed — the PDL space
+
+The ligament is 0.15–0.25 mm and cannot be resolved. But the **space it occupies
+is bounded by two surfaces that are both measurable** — the root surface and the
+lamina dura — so this is not an offset shell of guessed thickness. Both walls are
+found in the data, per tooth, per aspect, per level.
+
+That the PDL is visible at all was already established: the 691–1514 HU dark ring
+around the roots is what made per-tooth isolation possible in the first place.
+
+### What was measured
+
+Walking outward from the root surface at 24 aspects until dense bone appears:
+
+| Apparent width | Teeth |
+| --- | --- |
+| 0.08 mm | 6–11, 20, 21, 23–29 (mostly anterior) |
+| 0.16 mm | 4, 5, 12, 13, 18, 19, 22, 30, 31 |
+| 0.24 mm | 2, 3, 14, 15 (maxillary molars) |
+
+**Median 0.08–0.16 mm, which is at the sampling floor.** The measurement is
+quantised in half-voxel steps, so this does not resolve the ligament. What it
+does say is that **the lamina dura is immediately adjacent to the root at the
+majority of aspects — no PDL widening is detectable**, which is the finding a
+clinician would want from it.
+
+**The posterior-to-anterior gradient is most likely a method artefact, not
+anatomy.** For a multi-rooted tooth the "root surface radius at this angle" is a
+percentile over a cross-section containing several roots, so the apparent surface
+sits further out than any individual root and the gap to bone reads wider. The
+four teeth at 0.24 mm are all maxillary molars, which is exactly where that
+applies.
+
+### What was rendered, and why it is not the measurement
+
+A 0.2 mm ligament is ~1.3 voxels. Painting between the two measured walls leaves
+a shell so sparse it meshes to nothing — 0.3–6 mm³ per tooth against a real ~40.
+So, as with the pulp lining, **the geometry is an exaggerated 0.32 mm shell** on
+the measured root surface, restricted to below the measured crest. Upper
+2121 mm³, lower 2198 mm³. The measured widths stay in `docs/cbct-pdl.json`; the
+mesh is explicitly not them.
+
+The meshes are ~1M triangles and 50 MB per arch. **They need decimation before
+use** — the same retopology job the gingival collars need.
+
+### Provenance summary for Phase 3
+
+| Structure | Provenance |
+| --- | --- |
+| Pulp lumen, canal, apical foramina | **Measured** |
+| PDL *location and continuity* | **Measured** (both walls) |
+| CEJ, alveolar crest | **Measured** (crest validated across two exposures) |
+| Gingival collar, PDL *thickness*, pulp lining | **Derived / exaggerated** |
+| Nerve trunk and branches | **Schematic / inferred** |
+| Tongue, muscles, mucosa | **Not started** — not in the data at any resolution |
