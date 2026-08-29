@@ -154,8 +154,7 @@ can derive.
 ## Order of work
 
 1. ~~**Register the `mandibular` volume onto `centered`**~~ — **done**, see below.
-2. **Pulp as tissue** — relabel, add the lining and neurovascular core, and wire
-   the apical foramina to the IAN.
+2. ~~**Pulp as tissue**~~ — **done**, see below.
 3. **Generate gingiva** from CEJ and alveolar crest.
 4. **PDL shell.**
 5. **Muscles fitted to measured attachments; tongue authored.** Blender, and last.
@@ -226,3 +225,50 @@ boundary at +40.96, and down to z = −49.2 against a floor at −44.5.
 
 **The inferior alveolar nerve now has a measured course**, which is what item 2
 of the order of work needs to wire the apical foramina to.
+
+
+---
+
+## Step 2 as executed — pulp as tissue, and the nerve chain
+
+Three surfaces per tooth, provenance kept distinct in separate meshes:
+
+| Surface | Provenance | Note |
+| --- | --- | --- |
+| Lumen | **MEASURED** | 695.0 mm³ across 48 canals |
+| Predentin / odontoblast lining | **AUTHORED** | Real thickness 10–40 µm, ~1% of a canal radius — **deliberately exaggerated** to be renderable |
+| Neurovascular core | **SCHEMATIC** | 187.9 mm³; a tube on the measured centreline entering at the measured apical foramen |
+
+The nerve chain, likewise tiered: the **canal is measured** (618.9 mm³), the
+**trunk inside it is schematic** — CBCT resolves the canal, not its contents —
+and the **branches are inferred**, with both endpoints measured and only the path
+between them convention. Trunks run 60.8 mm right and 54.6 mm left at ~0.6 mm
+radius. **20 branches** reach 12 of the 14 lower teeth, trunk-to-apex 3.2–24.6 mm,
+median 9.2 mm.
+
+Teeth 24 and 25 have no branch, and that is correct rather than a gap: the canal
+ends at the mental foramen, and the lower centrals are supplied by the incisive
+branch, which this data does not resolve.
+
+### Two orientation bugs, both found by building the nerve
+
+Neither could have been caught by the pulp numbers, because both left every
+volume and diameter correct.
+
+1. **The ROI crop offset was never added back** when converting tracked indices
+   to world coordinates, so all 28 pulp meshes sat at the wrong point in the
+   volume. Volumes and diameters are counts and differences, so nothing in the
+   numbers looked wrong. It surfaced when a lower-**left** molar's apex came out
+   at x = −35.9 — the right side of the head.
+2. **The long axis was oriented toward +z for every tooth.** Maxillary roots
+   point superiorly and mandibular roots inferiorly, so for the whole lower arch
+   the "apical" end was actually the occlusal surface. This showed up as nerve
+   branches 18–24 mm long against a canal that runs a few millimetres below the
+   molar apices.
+
+After the fix, **28 of 28 teeth have their apex on the anatomically correct
+side** — upper apices above their crowns, lower apices below.
+
+**The lesson worth keeping:** when a geometry bug cannot change any scalar you
+are printing, print a coordinate. Both bugs were invisible to volume-based
+validation and obvious the moment a position was checked against anatomy.

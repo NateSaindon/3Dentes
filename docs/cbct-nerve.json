@@ -1,0 +1,242 @@
+{
+  "provenance": {
+    "canal": "MEASURED (CBCT)",
+    "apical_foramina": "MEASURED (CBCT)",
+    "nerve_trunk": "SCHEMATIC (canal contents are not resolved by CBCT)",
+    "branches": "INFERRED (endpoints measured, path is convention)"
+  },
+  "trunks": [
+    {
+      "side": "right",
+      "length_mm": 60.8,
+      "mean_radius_mm": 0.576
+    },
+    {
+      "side": "left",
+      "length_mm": 54.6,
+      "mean_radius_mm": 0.602
+    }
+  ],
+  "branches": [
+    {
+      "universal": 18,
+      "fma": "FMA55703",
+      "canal": 0,
+      "trunk_to_apex_mm": 9.22,
+      "apex_lps": [
+        28.98,
+        -8.2,
+        -34.92
+      ]
+    },
+    {
+      "universal": 18,
+      "fma": "FMA55703",
+      "canal": 1,
+      "trunk_to_apex_mm": 3.22,
+      "apex_lps": [
+        32.5,
+        -5.17,
+        -39.44
+      ]
+    },
+    {
+      "universal": 18,
+      "fma": "FMA55703",
+      "canal": 2,
+      "trunk_to_apex_mm": 5.39,
+      "apex_lps": [
+        28.96,
+        -6.33,
+        -38.93
+      ]
+    },
+    {
+      "universal": 19,
+      "fma": "FMA55704",
+      "canal": 0,
+      "trunk_to_apex_mm": 7.17,
+      "apex_lps": [
+        28.47,
+        -16.69,
+        -39.28
+      ]
+    },
+    {
+      "universal": 19,
+      "fma": "FMA55704",
+      "canal": 1,
+      "trunk_to_apex_mm": 3.44,
+      "apex_lps": [
+        26.16,
+        -21.27,
+        -39.86
+      ]
+    },
+    {
+      "universal": 19,
+      "fma": "FMA55704",
+      "canal": 2,
+      "trunk_to_apex_mm": 17.23,
+      "apex_lps": [
+        24.32,
+        -17.76,
+        -26.09
+      ]
+    },
+    {
+      "universal": 20,
+      "fma": "FMA55692",
+      "canal": 0,
+      "trunk_to_apex_mm": 5.76,
+      "apex_lps": [
+        21.95,
+        -25.95,
+        -39.05
+      ]
+    },
+    {
+      "universal": 21,
+      "fma": "FMA55693",
+      "canal": 0,
+      "trunk_to_apex_mm": 13.2,
+      "apex_lps": [
+        17.73,
+        -31.91,
+        -36.19
+      ]
+    },
+    {
+      "universal": 22,
+      "fma": "FMA55687",
+      "canal": 0,
+      "trunk_to_apex_mm": 16.7,
+      "apex_lps": [
+        12.49,
+        -33.04,
+        -39.51
+      ]
+    },
+    {
+      "universal": 23,
+      "fma": "FMA57141",
+      "canal": 0,
+      "trunk_to_apex_mm": 24.4,
+      "apex_lps": [
+        7.19,
+        -36.79,
+        -34.21
+      ]
+    },
+    {
+      "universal": 26,
+      "fma": "FMA57140",
+      "canal": 0,
+      "trunk_to_apex_mm": 24.62,
+      "apex_lps": [
+        -1.48,
+        -36.03,
+        -32.84
+      ]
+    },
+    {
+      "universal": 27,
+      "fma": "FMA55686",
+      "canal": 0,
+      "trunk_to_apex_mm": 16.06,
+      "apex_lps": [
+        -6.66,
+        -32.07,
+        -39.15
+      ]
+    },
+    {
+      "universal": 28,
+      "fma": "FMA55694",
+      "canal": 0,
+      "trunk_to_apex_mm": 15.12,
+      "apex_lps": [
+        -12.07,
+        -31.5,
+        -34.32
+      ]
+    },
+    {
+      "universal": 29,
+      "fma": "FMA55695",
+      "canal": 0,
+      "trunk_to_apex_mm": 7.7,
+      "apex_lps": [
+        -14.64,
+        -25.52,
+        -38.5
+      ]
+    },
+    {
+      "universal": 30,
+      "fma": "FMA55705",
+      "canal": 0,
+      "trunk_to_apex_mm": 7.13,
+      "apex_lps": [
+        -20.29,
+        -13.26,
+        -38.93
+      ]
+    },
+    {
+      "universal": 30,
+      "fma": "FMA55705",
+      "canal": 1,
+      "trunk_to_apex_mm": 6.34,
+      "apex_lps": [
+        -19.09,
+        -18.74,
+        -38.73
+      ]
+    },
+    {
+      "universal": 30,
+      "fma": "FMA55705",
+      "canal": 2,
+      "trunk_to_apex_mm": 9.89,
+      "apex_lps": [
+        -16.6,
+        -20.4,
+        -34.56
+      ]
+    },
+    {
+      "universal": 31,
+      "fma": "FMA55706",
+      "canal": 0,
+      "trunk_to_apex_mm": 3.79,
+      "apex_lps": [
+        -23.86,
+        -2.46,
+        -38.6
+      ]
+    },
+    {
+      "universal": 31,
+      "fma": "FMA55706",
+      "canal": 1,
+      "trunk_to_apex_mm": 5.05,
+      "apex_lps": [
+        -21.66,
+        -5.15,
+        -38.43
+      ]
+    },
+    {
+      "universal": 31,
+      "fma": "FMA55706",
+      "canal": 2,
+      "trunk_to_apex_mm": 9.65,
+      "apex_lps": [
+        -20.95,
+        -7.0,
+        -34.24
+      ]
+    }
+  ]
+}

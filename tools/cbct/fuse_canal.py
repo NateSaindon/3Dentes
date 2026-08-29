@@ -115,6 +115,9 @@ def main():
                fused_mm3=round(float(canal.sum()) * vox, 1),
                pieces=len(keep), stl=os.path.basename(out),
                triangles=int(len(faces)),
+               grid_offset=[int(x) for x in off],
+               grid_shape=[int(x) for x in canal.shape],
+               origin_lps=[-40.96, -58.074258, -44.520221], spacing_mm=sp[0],
                source="union of both volumes' canal labels through "
                       "transform-mandibular-to-centered.json")
     with open(os.path.join(outdir, "canal.json"), "w") as f:

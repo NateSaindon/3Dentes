@@ -162,6 +162,13 @@ Four things worth not rediscovering:
    drop it.** Dropping surplus canal tracks cost tooth 9 a third of its pulp.
 7. **The pulp count is a prior; the volume is a measurement.** An extra canal
    will be neither found nor flagged.
+8. **Every ROI-local index must have its crop corner added back before it
+   becomes a world coordinate.** `pulp_all.py` omitted it and placed all 28 pulp
+   meshes at the wrong point in the volume. Nothing in the *numbers* looked
+   wrong -- volumes and diameters are counts and differences, so they stayed
+   correct -- and it surfaced only when nerve branches were wired to the apices
+   and a lower-LEFT molar's apex came out on the right side of the head. When a
+   geometry bug cannot change any scalar you are printing, print a coordinate.
 
 Node is **not installed** on the Fedora box: `sudo dnf install -y nodejs24
 nodejs24-npm`. Python side is `python3-pydicom python3-numpy python3-gdcm

@@ -90,13 +90,20 @@ def densities(roi, mask, dist):
     return pulp, enam
 
 
-def track_canals(roi, mask, spacing, pulp_hu, enam_hu, max_canals=None):
+def track_canals(roi, mask, spacing, pulp_hu, enam_hu, max_canals=None,
+                 arch="upper"):
     """Return a list of canal tracks; each is a list of per-plane measurements."""
     pts = np.argwhere(mask).astype(float)
     centre0 = pts.mean(0)
     _, _, vt = np.linalg.svd(pts - centre0, full_matrices=False)
+    # Orient the long axis so the LAST tracked plane is the apical one -- every
+    # "apical_*" field downstream depends on it. Maxillary roots point superiorly
+    # and mandibular roots inferiorly, so a single convention is wrong for one
+    # arch. Fixing +z for both put the lower teeth's "apex" at the occlusal
+    # surface, which only showed up when nerve branches came out 18-24 mm long
+    # against a canal that runs a few millimetres below the molar apices.
     ax = vt[0]
-    if ax[0] < 0:
+    if (ax[0] < 0) if arch == "upper" else (ax[0] > 0):
         ax = -ax
     e2, e3 = vt[1], vt[2]
     sp = spacing[0]
@@ -328,11 +335,21 @@ def tube(track, nseg=20):
     return verts, np.array(faces), area, r
 
 
-def index_to_world(cen_idx, v):
+def index_to_world(cen_idx, v, origin_idx):
+    """ROI-local (z, y, x) index -> world LPS millimetres.
+
+    `origin_idx` is the crop corner as (x0, y0, z0). Omitting it silently places
+    every mesh at the wrong point in the volume. The tracking, the volumes and
+    the diameters all stay correct, because they are counts and differences, so
+    nothing in the numbers looks wrong. It surfaced only when the nerve branches
+    were wired to the apices and a lower-LEFT molar's apex came out at x = -35.9,
+    on the right side of the head.
+    """
+    x0, y0, z0 = origin_idx
     w = np.empty_like(cen_idx)
-    w[:, 0] = v.origin[0] + cen_idx[:, 2] * v.spacing[0]
-    w[:, 1] = v.origin[1] + cen_idx[:, 1] * v.spacing[1]
-    w[:, 2] = v.origin[2] + cen_idx[:, 0] * v.spacing[2]
+    w[:, 0] = v.origin[0] + (x0 + cen_idx[:, 2]) * v.spacing[0]
+    w[:, 1] = v.origin[1] + (y0 + cen_idx[:, 1]) * v.spacing[1]
+    w[:, 2] = v.origin[2] + (z0 + cen_idx[:, 0]) * v.spacing[2]
     return w
 
 
@@ -378,7 +395,7 @@ def main():
             continue
         cap = CANAL_COUNT.get(num)
         tracks, ax, e2, e3 = track_canals(sub, m, tuple(v.spacing), pulp_hu,
-                                          enam_hu, max_canals=cap)
+                                          enam_hu, max_canals=cap, arch=arch)
         entry = dict(fma=rec["fma"], universal=num, arch=arch,
                      tooth_mm3=rec["mm3"], pulp_density_hu=round(pulp_hu),
                      enamel_threshold_hu=round(enam_hu),
@@ -392,15 +409,25 @@ def main():
             if out is None:
                 continue
             verts_idx, faces, area, r = out
-            verts = index_to_world(verts_idx, v)
+            verts = index_to_world(verts_idx, v, (x0, y0, z0))
             length = (tr[-1]["t"] - tr[0]["t"]) * v.spacing[0]
             lumen = float(area.sum()) * v.spacing[0]
             dia = 2.0 * np.sqrt(np.maximum(area, 0) / np.pi)
+            # Keep the centreline and radius profile. The lining and the
+            # neurovascular core in pulp_tissue.py are offsets of this curve, and
+            # re-deriving them from the tube mesh would mean recovering a
+            # centreline that was already computed and thrown away.
+            cen = np.array([m["world_c"] for m in tr], dtype=float)
+            cen_w = index_to_world(np.stack([_smooth(cen[:, i], 5)
+                                             for i in range(3)], axis=1),
+                                   v, (x0, y0, z0))
             entry["canals"].append(dict(
                 index=ti, length_mm=round(length, 2), lumen_mm3=round(lumen, 2),
                 max_diameter_mm=round(float(dia.max()), 3),
                 apical_diameter_mm=round(float(dia[-1]), 3),
-                apical_position_lps=[round(float(x), 2) for x in verts[-1]]))
+                apical_position_lps=[round(float(x), 2) for x in verts[-1]],
+                centreline_lps=[[round(float(c), 3) for c in pt] for pt in cen_w],
+                radius_mm=[round(float(x), 4) for x in r]))
             allv.append(verts)
             allf.append(faces + off)
             off += len(verts)

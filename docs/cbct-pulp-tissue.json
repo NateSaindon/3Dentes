@@ -1,0 +1,179 @@
+{
+  "provenance": {
+    "lumen": "MEASURED -- intensity-deficit integration on the CBCT",
+    "lining": "AUTHORED -- offset inside the lumen. Real predentin and the odontoblast layer are 10-40 um, ~1% of a canal radius; this is exaggerated to be renderable and is NOT a measurement.",
+    "core": "SCHEMATIC -- a tube on the measured centreline entering at the measured apical foramen. CBCT resolves the canal, not its contents."
+  },
+  "lining_fraction": 0.88,
+  "core_fraction": 0.52,
+  "teeth": {
+    "2": {
+      "fma": "FMA55697",
+      "canals": 3,
+      "lumen_mm3": 23.91,
+      "core_mm3": 6.47
+    },
+    "3": {
+      "fma": "FMA55698",
+      "canals": 4,
+      "lumen_mm3": 33.68,
+      "core_mm3": 9.11
+    },
+    "4": {
+      "fma": "FMA55688",
+      "canals": 1,
+      "lumen_mm3": 27.6,
+      "core_mm3": 7.46
+    },
+    "5": {
+      "fma": "FMA55689",
+      "canals": 2,
+      "lumen_mm3": 27.48,
+      "core_mm3": 7.43
+    },
+    "6": {
+      "fma": "FMA55798",
+      "canals": 1,
+      "lumen_mm3": 18.25,
+      "core_mm3": 4.93
+    },
+    "7": {
+      "fma": "FMA55680",
+      "canals": 1,
+      "lumen_mm3": 21.7,
+      "core_mm3": 5.87
+    },
+    "8": {
+      "fma": "FMA55681",
+      "canals": 1,
+      "lumen_mm3": 13.65,
+      "core_mm3": 3.69
+    },
+    "9": {
+      "fma": "FMA55682",
+      "canals": 1,
+      "lumen_mm3": 19.65,
+      "core_mm3": 5.31
+    },
+    "10": {
+      "fma": "FMA55683",
+      "canals": 1,
+      "lumen_mm3": 19.36,
+      "core_mm3": 5.23
+    },
+    "11": {
+      "fma": "FMA55799",
+      "canals": 1,
+      "lumen_mm3": 21.56,
+      "core_mm3": 5.83
+    },
+    "12": {
+      "fma": "FMA55690",
+      "canals": 2,
+      "lumen_mm3": 20.52,
+      "core_mm3": 5.55
+    },
+    "13": {
+      "fma": "FMA55691",
+      "canals": 1,
+      "lumen_mm3": 18.82,
+      "core_mm3": 5.09
+    },
+    "14": {
+      "fma": "FMA55699",
+      "canals": 4,
+      "lumen_mm3": 24.79,
+      "core_mm3": 6.7
+    },
+    "15": {
+      "fma": "FMA55700",
+      "canals": 3,
+      "lumen_mm3": 16.86,
+      "core_mm3": 4.56
+    },
+    "18": {
+      "fma": "FMA55703",
+      "canals": 3,
+      "lumen_mm3": 41.21,
+      "core_mm3": 11.14
+    },
+    "19": {
+      "fma": "FMA55704",
+      "canals": 3,
+      "lumen_mm3": 33.21,
+      "core_mm3": 8.98
+    },
+    "20": {
+      "fma": "FMA55692",
+      "canals": 1,
+      "lumen_mm3": 36.56,
+      "core_mm3": 9.89
+    },
+    "21": {
+      "fma": "FMA55693",
+      "canals": 1,
+      "lumen_mm3": 30.53,
+      "core_mm3": 8.26
+    },
+    "22": {
+      "fma": "FMA55687",
+      "canals": 1,
+      "lumen_mm3": 36.09,
+      "core_mm3": 9.76
+    },
+    "23": {
+      "fma": "FMA57141",
+      "canals": 1,
+      "lumen_mm3": 10.02,
+      "core_mm3": 2.71
+    },
+    "24": {
+      "fma": "FMA57143",
+      "canals": 1,
+      "lumen_mm3": 9.2,
+      "core_mm3": 2.49
+    },
+    "25": {
+      "fma": "FMA57142",
+      "canals": 1,
+      "lumen_mm3": 7.78,
+      "core_mm3": 2.1
+    },
+    "26": {
+      "fma": "FMA57140",
+      "canals": 1,
+      "lumen_mm3": 14.51,
+      "core_mm3": 3.92
+    },
+    "27": {
+      "fma": "FMA55686",
+      "canals": 1,
+      "lumen_mm3": 37.18,
+      "core_mm3": 10.05
+    },
+    "28": {
+      "fma": "FMA55694",
+      "canals": 1,
+      "lumen_mm3": 28.33,
+      "core_mm3": 7.66
+    },
+    "29": {
+      "fma": "FMA55695",
+      "canals": 1,
+      "lumen_mm3": 21.78,
+      "core_mm3": 5.89
+    },
+    "30": {
+      "fma": "FMA55705",
+      "canals": 3,
+      "lumen_mm3": 40.45,
+      "core_mm3": 10.94
+    },
+    "31": {
+      "fma": "FMA55706",
+      "canals": 3,
+      "lumen_mm3": 40.28,
+      "core_mm3": 10.89
+    }
+  }
+}
