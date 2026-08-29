@@ -141,6 +141,28 @@ Three things worth not rediscovering:
    recovers tooth 9's canal at 20.4 mm³ with a 0.33 mm apical foramen. Do not
    "fix" it back into a threshold.
 
+### Whole-mouth pipeline (2026-08-29)
+
+**[docs/cbct-whole-mouth.md](docs/cbct-whole-mouth.md)** supersedes the
+hand-seeded per-tooth approach. DentalSegmentator runs standalone (no Slicer) in
+8 s on the GPU and gives all 28 teeth plus the mandibular canal; the arch is
+split by dynamic programming over arc length against a tooth-width prior; pulp is
+modelled per canal by intensity-deficit integration. Both arch maps are
+operator-verified.
+
+Four things worth not rediscovering:
+
+4. **DentalSegmentator is per-CLASS, not per-instance** — "Upper Teeth" is one
+   label. Its masks are already *solid* (pulp inside), so they need no per-slice
+   fill.
+5. **Do not split the arch by 3D shape.** A distance-transform watershed peaks
+   per cusp and per root, not per tooth. Teeth are sequential *along the arch*;
+   split by arc position.
+6. **When capping a count by an anatomical prior, fold the surplus in, never
+   drop it.** Dropping surplus canal tracks cost tooth 9 a third of its pulp.
+7. **The pulp count is a prior; the volume is a measurement.** An extra canal
+   will be neither found nor flagged.
+
 Node is **not installed** on the Fedora box: `sudo dnf install -y nodejs24
 nodejs24-npm`. Python side is `python3-pydicom python3-numpy python3-gdcm
 python3-scipy python3-scikit-image dcm2niix dcmtk`.

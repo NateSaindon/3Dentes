@@ -42,6 +42,7 @@ NOISE_HU = 70.0
 MIN_TRACK_MM = 3.0        # a canal shorter than this is noise
 MAX_GAP_PLANES = 3        # a canal may fade for a few planes without ending
 LINK_MM = 1.1             # basin-to-basin linking radius between planes
+LUMEN_CAP_MM = 1.5        # integration radius about each basin peak
 
 # Usual canal count by tooth type. Used the same way as the mesiodistal width
 # prior in split_teeth.py: the LUMEN is measured, the COUNT is constrained.
@@ -143,10 +144,24 @@ def track_canals(roi, mask, spacing, pulp_hu, enam_hu, max_canals=None):
         markers, nm = ndi.label(peak)
         if nm == 0:
             continue
-        basins = watershed(-Ds, markers, mask=D > 0.20 * Ds.max())
+        # Bound the integration region. Every voxel darker than the dentin
+        # reference contributes deficit, and half of any real dentin sits below
+        # its own 60th percentile -- so an unbounded basin accumulates dentin
+        # noise as lumen. It inflated the lower premolars and canines two- to
+        # threefold, reporting 3-4 mm "chambers" where a premolar's is 1.5-2 mm.
+        # The validated single-canal model integrated inside a 1.4 mm window; the
+        # equivalent here is a floor at the noise level plus a radius cap about
+        # each basin's own peak.
+        floor = 2.0 * NOISE_HU
+        basins = watershed(-Ds, markers, mask=(D > floor) & (D > 0.20 * Ds.max()))
         found = []
         for b in range(1, nm + 1):
             sel = basins == b
+            if not sel.any():
+                continue
+            pk = np.unravel_index(int(np.argmax(np.where(sel, Ds, -1))), Ds.shape)
+            near = (np.hypot(gy - gy[pk], gx - gx[pk]) < LUMEN_CAP_MM)
+            sel = sel & near
             w = float(D[sel].sum())
             if w <= 0:
                 continue

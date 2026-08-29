@@ -1,0 +1,942 @@
+{
+  "2": {
+    "fma": "FMA55697",
+    "universal": 2,
+    "arch": "upper",
+    "tooth_mm3": 1067.0,
+    "pulp_density_hu": 645,
+    "enamel_threshold_hu": 1499,
+    "canal_count_prior": 3,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 18.4,
+        "lumen_mm3": 10.76,
+        "max_diameter_mm": 1.519,
+        "apical_diameter_mm": 0.356,
+        "apical_position_lps": [
+          -37.44,
+          -52.21,
+          -22.38
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 17.92,
+        "lumen_mm3": 7.62,
+        "max_diameter_mm": 1.227,
+        "apical_diameter_mm": 0.272,
+        "apical_position_lps": [
+          -38.32,
+          -49.43,
+          -22.15
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 8.8,
+        "lumen_mm3": 5.53,
+        "max_diameter_mm": 1.281,
+        "apical_diameter_mm": 0.349,
+        "apical_position_lps": [
+          -29.56,
+          -50.26,
+          -27.24
+        ]
+      }
+    ],
+    "total_lumen_mm3": 23.91
+  },
+  "3": {
+    "fma": "FMA55698",
+    "universal": 3,
+    "arch": "upper",
+    "tooth_mm3": 1097.7,
+    "pulp_density_hu": 714,
+    "enamel_threshold_hu": 1473,
+    "canal_count_prior": 4,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 18.4,
+        "lumen_mm3": 13.75,
+        "max_diameter_mm": 1.635,
+        "apical_diameter_mm": 0.405,
+        "apical_position_lps": [
+          -38.42,
+          -46.34,
+          -24.07
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 9.28,
+        "lumen_mm3": 6.39,
+        "max_diameter_mm": 1.99,
+        "apical_diameter_mm": 0.418,
+        "apical_position_lps": [
+          -30.34,
+          -50.09,
+          -32.4
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 11.52,
+        "lumen_mm3": 6.68,
+        "max_diameter_mm": 1.825,
+        "apical_diameter_mm": 0.313,
+        "apical_position_lps": [
+          -29.16,
+          -47.41,
+          -29.47
+        ]
+      },
+      {
+        "index": 3,
+        "length_mm": 16.64,
+        "lumen_mm3": 6.86,
+        "max_diameter_mm": 1.462,
+        "apical_diameter_mm": 0.285,
+        "apical_position_lps": [
+          -35.74,
+          -50.94,
+          -24.5
+        ]
+      }
+    ],
+    "total_lumen_mm3": 33.68
+  },
+  "4": {
+    "fma": "FMA55688",
+    "universal": 4,
+    "arch": "upper",
+    "tooth_mm3": 503.3,
+    "pulp_density_hu": 666,
+    "enamel_threshold_hu": 1458,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 19.04,
+        "lumen_mm3": 27.6,
+        "max_diameter_mm": 2.401,
+        "apical_diameter_mm": 0.306,
+        "apical_position_lps": [
+          -33.94,
+          -48.14,
+          -24.24
+        ]
+      }
+    ],
+    "total_lumen_mm3": 27.6
+  },
+  "5": {
+    "fma": "FMA55689",
+    "universal": 5,
+    "arch": "upper",
+    "tooth_mm3": 469.7,
+    "pulp_density_hu": 541,
+    "enamel_threshold_hu": 1477,
+    "canal_count_prior": 2,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 15.84,
+        "lumen_mm3": 13.08,
+        "max_diameter_mm": 1.912,
+        "apical_diameter_mm": 0.269,
+        "apical_position_lps": [
+          -32.19,
+          -44.55,
+          -25.89
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 16.0,
+        "lumen_mm3": 14.4,
+        "max_diameter_mm": 1.732,
+        "apical_diameter_mm": 0.336,
+        "apical_position_lps": [
+          -35.16,
+          -46.88,
+          -26.47
+        ]
+      }
+    ],
+    "total_lumen_mm3": 27.48
+  },
+  "6": {
+    "fma": "FMA55798",
+    "universal": 6,
+    "arch": "upper",
+    "tooth_mm3": 672.2,
+    "pulp_density_hu": 523,
+    "enamel_threshold_hu": 1538,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 20.0,
+        "lumen_mm3": 18.25,
+        "max_diameter_mm": 1.78,
+        "apical_diameter_mm": 0.3,
+        "apical_position_lps": [
+          -31.56,
+          -41.99,
+          -21.27
+        ]
+      }
+    ],
+    "total_lumen_mm3": 18.25
+  },
+  "7": {
+    "fma": "FMA55680",
+    "universal": 7,
+    "arch": "upper",
+    "tooth_mm3": 295.6,
+    "pulp_density_hu": 513,
+    "enamel_threshold_hu": 1545,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 18.72,
+        "lumen_mm3": 21.7,
+        "max_diameter_mm": 2.013,
+        "apical_diameter_mm": 0.276,
+        "apical_position_lps": [
+          -33.35,
+          -42.25,
+          -26.51
+        ]
+      }
+    ],
+    "total_lumen_mm3": 21.7
+  },
+  "8": {
+    "fma": "FMA55681",
+    "universal": 8,
+    "arch": "upper",
+    "tooth_mm3": 515.6,
+    "pulp_density_hu": 538,
+    "enamel_threshold_hu": 1574,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 23.04,
+        "lumen_mm3": 13.65,
+        "max_diameter_mm": 1.439,
+        "apical_diameter_mm": 0.303,
+        "apical_position_lps": [
+          -34.99,
+          -40.59,
+          -24.47
+        ]
+      }
+    ],
+    "total_lumen_mm3": 13.65
+  },
+  "9": {
+    "fma": "FMA55682",
+    "universal": 9,
+    "arch": "upper",
+    "tooth_mm3": 525.2,
+    "pulp_density_hu": 568,
+    "enamel_threshold_hu": 1558,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 22.72,
+        "lumen_mm3": 19.65,
+        "max_diameter_mm": 1.747,
+        "apical_diameter_mm": 0.379,
+        "apical_position_lps": [
+          -35.17,
+          -39.61,
+          -25.89
+        ]
+      }
+    ],
+    "total_lumen_mm3": 19.65
+  },
+  "10": {
+    "fma": "FMA55683",
+    "universal": 10,
+    "arch": "upper",
+    "tooth_mm3": 303.1,
+    "pulp_density_hu": 530,
+    "enamel_threshold_hu": 1560,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 17.92,
+        "lumen_mm3": 19.36,
+        "max_diameter_mm": 1.904,
+        "apical_diameter_mm": 0.296,
+        "apical_position_lps": [
+          -38.57,
+          -43.28,
+          -27.62
+        ]
+      }
+    ],
+    "total_lumen_mm3": 19.36
+  },
+  "11": {
+    "fma": "FMA55799",
+    "universal": 11,
+    "arch": "upper",
+    "tooth_mm3": 704.8,
+    "pulp_density_hu": 564,
+    "enamel_threshold_hu": 1562,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 19.2,
+        "lumen_mm3": 21.56,
+        "max_diameter_mm": 1.934,
+        "apical_diameter_mm": 0.178,
+        "apical_position_lps": [
+          -37.98,
+          -40.94,
+          -22.32
+        ]
+      }
+    ],
+    "total_lumen_mm3": 21.56
+  },
+  "12": {
+    "fma": "FMA55690",
+    "universal": 12,
+    "arch": "upper",
+    "tooth_mm3": 467.8,
+    "pulp_density_hu": 452,
+    "enamel_threshold_hu": 1525,
+    "canal_count_prior": 2,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 12.16,
+        "lumen_mm3": 10.48,
+        "max_diameter_mm": 1.838,
+        "apical_diameter_mm": 0.234,
+        "apical_position_lps": [
+          -38.75,
+          -46.59,
+          -29.75
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 16.16,
+        "lumen_mm3": 10.04,
+        "max_diameter_mm": 1.581,
+        "apical_diameter_mm": 0.208,
+        "apical_position_lps": [
+          -35.8,
+          -48.06,
+          -26.89
+        ]
+      }
+    ],
+    "total_lumen_mm3": 20.52
+  },
+  "13": {
+    "fma": "FMA55691",
+    "universal": 13,
+    "arch": "upper",
+    "tooth_mm3": 528.9,
+    "pulp_density_hu": 551,
+    "enamel_threshold_hu": 1515,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 16.32,
+        "lumen_mm3": 18.82,
+        "max_diameter_mm": 1.913,
+        "apical_diameter_mm": 0.374,
+        "apical_position_lps": [
+          -34.57,
+          -47.72,
+          -25.23
+        ]
+      }
+    ],
+    "total_lumen_mm3": 18.82
+  },
+  "14": {
+    "fma": "FMA55699",
+    "universal": 14,
+    "arch": "upper",
+    "tooth_mm3": 1100.7,
+    "pulp_density_hu": 544,
+    "enamel_threshold_hu": 1541,
+    "canal_count_prior": 4,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 13.28,
+        "lumen_mm3": 7.94,
+        "max_diameter_mm": 1.573,
+        "apical_diameter_mm": 0.268,
+        "apical_position_lps": [
+          -36.64,
+          -47.04,
+          -27.16
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 13.92,
+        "lumen_mm3": 6.05,
+        "max_diameter_mm": 1.458,
+        "apical_diameter_mm": 0.314,
+        "apical_position_lps": [
+          -28.83,
+          -47.17,
+          -27.99
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 11.36,
+        "lumen_mm3": 5.63,
+        "max_diameter_mm": 1.37,
+        "apical_diameter_mm": 0.206,
+        "apical_position_lps": [
+          -35.69,
+          -46.4,
+          -29.09
+        ]
+      },
+      {
+        "index": 3,
+        "length_mm": 18.4,
+        "lumen_mm3": 5.17,
+        "max_diameter_mm": 1.496,
+        "apical_diameter_mm": 0.259,
+        "apical_position_lps": [
+          -28.72,
+          -50.77,
+          -22.04
+        ]
+      }
+    ],
+    "total_lumen_mm3": 24.79
+  },
+  "15": {
+    "fma": "FMA55700",
+    "universal": 15,
+    "arch": "upper",
+    "tooth_mm3": 1099.5,
+    "pulp_density_hu": 523,
+    "enamel_threshold_hu": 1586,
+    "canal_count_prior": 3,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 17.6,
+        "lumen_mm3": 7.88,
+        "max_diameter_mm": 1.248,
+        "apical_diameter_mm": 0.304,
+        "apical_position_lps": [
+          -29.63,
+          -51.7,
+          -22.5
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 8.16,
+        "lumen_mm3": 4.81,
+        "max_diameter_mm": 1.3,
+        "apical_diameter_mm": 0.467,
+        "apical_position_lps": [
+          -36.83,
+          -49.17,
+          -27.71
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 15.04,
+        "lumen_mm3": 4.17,
+        "max_diameter_mm": 0.957,
+        "apical_diameter_mm": 0.299,
+        "apical_position_lps": [
+          -29.21,
+          -49.07,
+          -22.12
+        ]
+      }
+    ],
+    "total_lumen_mm3": 16.86
+  },
+  "18": {
+    "fma": "FMA55703",
+    "universal": 18,
+    "arch": "lower",
+    "tooth_mm3": 1138.7,
+    "pulp_density_hu": 728,
+    "enamel_threshold_hu": 1429,
+    "canal_count_prior": 3,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 19.2,
+        "lumen_mm3": 12.76,
+        "max_diameter_mm": 1.542,
+        "apical_diameter_mm": 0.792,
+        "apical_position_lps": [
+          -35.92,
+          -53.75,
+          -23.98
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 19.2,
+        "lumen_mm3": 11.39,
+        "max_diameter_mm": 1.379,
+        "apical_diameter_mm": 0.331,
+        "apical_position_lps": [
+          -32.33,
+          -50.15,
+          -24.36
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 17.6,
+        "lumen_mm3": 14.05,
+        "max_diameter_mm": 2.203,
+        "apical_diameter_mm": 0.508,
+        "apical_position_lps": [
+          -37.01,
+          -53.18,
+          -21.76
+        ]
+      }
+    ],
+    "total_lumen_mm3": 38.2
+  },
+  "19": {
+    "fma": "FMA55704",
+    "universal": 19,
+    "arch": "lower",
+    "tooth_mm3": 1275.7,
+    "pulp_density_hu": 497,
+    "enamel_threshold_hu": 1982,
+    "canal_count_prior": 3,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 16.32,
+        "lumen_mm3": 15.09,
+        "max_diameter_mm": 1.795,
+        "apical_diameter_mm": 1.096,
+        "apical_position_lps": [
+          -34.16,
+          -47.1,
+          -26.42
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 18.4,
+        "lumen_mm3": 10.96,
+        "max_diameter_mm": 1.761,
+        "apical_diameter_mm": 0.687,
+        "apical_position_lps": [
+          -35.92,
+          -49.5,
+          -24.93
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 10.72,
+        "lumen_mm3": 4.97,
+        "max_diameter_mm": 1.399,
+        "apical_diameter_mm": 0.557,
+        "apical_position_lps": [
+          -32.2,
+          -51.05,
+          -27.14
+        ]
+      }
+    ],
+    "total_lumen_mm3": 31.02
+  },
+  "20": {
+    "fma": "FMA55692",
+    "universal": 20,
+    "arch": "lower",
+    "tooth_mm3": 545.0,
+    "pulp_density_hu": 619,
+    "enamel_threshold_hu": 2059,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 22.72,
+        "lumen_mm3": 35.12,
+        "max_diameter_mm": 2.848,
+        "apical_diameter_mm": 0.442,
+        "apical_position_lps": [
+          -34.6,
+          -53.75,
+          -20.25
+        ]
+      }
+    ],
+    "total_lumen_mm3": 35.12
+  },
+  "21": {
+    "fma": "FMA55693",
+    "universal": 21,
+    "arch": "lower",
+    "tooth_mm3": 411.7,
+    "pulp_density_hu": 610,
+    "enamel_threshold_hu": 1477,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 20.0,
+        "lumen_mm3": 30.46,
+        "max_diameter_mm": 2.566,
+        "apical_diameter_mm": 0.578,
+        "apical_position_lps": [
+          -36.22,
+          -53.97,
+          -22.93
+        ]
+      }
+    ],
+    "total_lumen_mm3": 30.46
+  },
+  "22": {
+    "fma": "FMA55687",
+    "universal": 22,
+    "arch": "lower",
+    "tooth_mm3": 641.0,
+    "pulp_density_hu": 564,
+    "enamel_threshold_hu": 1660,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 24.64,
+        "lumen_mm3": 28.91,
+        "max_diameter_mm": 1.989,
+        "apical_diameter_mm": 0.304,
+        "apical_position_lps": [
+          -35.72,
+          -54.22,
+          -19.95
+        ]
+      }
+    ],
+    "total_lumen_mm3": 28.91
+  },
+  "23": {
+    "fma": "FMA57141",
+    "universal": 23,
+    "arch": "lower",
+    "tooth_mm3": 329.6,
+    "pulp_density_hu": 571,
+    "enamel_threshold_hu": 1736,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 19.84,
+        "lumen_mm3": 11.15,
+        "max_diameter_mm": 1.347,
+        "apical_diameter_mm": 0.228,
+        "apical_position_lps": [
+          -37.87,
+          -54.86,
+          -23.99
+        ]
+      }
+    ],
+    "total_lumen_mm3": 11.15
+  },
+  "24": {
+    "fma": "FMA57143",
+    "universal": 24,
+    "arch": "lower",
+    "tooth_mm3": 246.3,
+    "pulp_density_hu": 601,
+    "enamel_threshold_hu": 1738,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 14.72,
+        "lumen_mm3": 9.22,
+        "max_diameter_mm": 1.356,
+        "apical_diameter_mm": 0.41,
+        "apical_position_lps": [
+          -37.38,
+          -54.1,
+          -29.78
+        ]
+      }
+    ],
+    "total_lumen_mm3": 9.22
+  },
+  "25": {
+    "fma": "FMA57142",
+    "universal": 25,
+    "arch": "lower",
+    "tooth_mm3": 236.2,
+    "pulp_density_hu": 609,
+    "enamel_threshold_hu": 1699,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 15.52,
+        "lumen_mm3": 8.01,
+        "max_diameter_mm": 1.311,
+        "apical_diameter_mm": 0.243,
+        "apical_position_lps": [
+          -37.94,
+          -55.25,
+          -29.8
+        ]
+      }
+    ],
+    "total_lumen_mm3": 8.01
+  },
+  "26": {
+    "fma": "FMA57140",
+    "universal": 26,
+    "arch": "lower",
+    "tooth_mm3": 316.4,
+    "pulp_density_hu": 528,
+    "enamel_threshold_hu": 1681,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 17.6,
+        "lumen_mm3": 12.24,
+        "max_diameter_mm": 1.458,
+        "apical_diameter_mm": 0.298,
+        "apical_position_lps": [
+          -36.15,
+          -53.64,
+          -26.45
+        ]
+      }
+    ],
+    "total_lumen_mm3": 12.24
+  },
+  "27": {
+    "fma": "FMA55686",
+    "universal": 27,
+    "arch": "lower",
+    "tooth_mm3": 622.9,
+    "pulp_density_hu": 675,
+    "enamel_threshold_hu": 1643,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 24.8,
+        "lumen_mm3": 39.57,
+        "max_diameter_mm": 2.475,
+        "apical_diameter_mm": 0.403,
+        "apical_position_lps": [
+          -35.28,
+          -53.89,
+          -19.82
+        ]
+      }
+    ],
+    "total_lumen_mm3": 39.57
+  },
+  "28": {
+    "fma": "FMA55694",
+    "universal": 28,
+    "arch": "lower",
+    "tooth_mm3": 407.2,
+    "pulp_density_hu": 568,
+    "enamel_threshold_hu": 1520,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 18.56,
+        "lumen_mm3": 31.22,
+        "max_diameter_mm": 2.799,
+        "apical_diameter_mm": 0.781,
+        "apical_position_lps": [
+          -36.02,
+          -53.4,
+          -22.23
+        ]
+      }
+    ],
+    "total_lumen_mm3": 31.22
+  },
+  "29": {
+    "fma": "FMA55695",
+    "universal": 29,
+    "arch": "lower",
+    "tooth_mm3": 524.0,
+    "pulp_density_hu": 602,
+    "enamel_threshold_hu": 2008,
+    "canal_count_prior": 1,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 21.6,
+        "lumen_mm3": 24.14,
+        "max_diameter_mm": 2.402,
+        "apical_diameter_mm": 1.017,
+        "apical_position_lps": [
+          -34.79,
+          -49.63,
+          -21.07
+        ]
+      }
+    ],
+    "total_lumen_mm3": 24.14
+  },
+  "30": {
+    "fma": "FMA55705",
+    "universal": 30,
+    "arch": "lower",
+    "tooth_mm3": 1283.0,
+    "pulp_density_hu": 527,
+    "enamel_threshold_hu": 1940,
+    "canal_count_prior": 3,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 17.44,
+        "lumen_mm3": 17.04,
+        "max_diameter_mm": 1.851,
+        "apical_diameter_mm": 0.794,
+        "apical_position_lps": [
+          -32.27,
+          -46.6,
+          -25.83
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 23.04,
+        "lumen_mm3": 14.36,
+        "max_diameter_mm": 1.896,
+        "apical_diameter_mm": 0.589,
+        "apical_position_lps": [
+          -32.07,
+          -50.13,
+          -20.48
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 15.68,
+        "lumen_mm3": 11.12,
+        "max_diameter_mm": 1.658,
+        "apical_diameter_mm": 0.639,
+        "apical_position_lps": [
+          -33.08,
+          -47.7,
+          -23.14
+        ]
+      }
+    ],
+    "total_lumen_mm3": 42.52
+  },
+  "31": {
+    "fma": "FMA55706",
+    "universal": 31,
+    "arch": "lower",
+    "tooth_mm3": 1126.7,
+    "pulp_density_hu": 577,
+    "enamel_threshold_hu": 1456,
+    "canal_count_prior": 3,
+    "note": "lumen volumes are measured; canal COUNT is capped by the usual anatomy for this tooth type -- verify",
+    "canals": [
+      {
+        "index": 0,
+        "length_mm": 17.28,
+        "lumen_mm3": 14.79,
+        "max_diameter_mm": 1.974,
+        "apical_diameter_mm": 0.707,
+        "apical_position_lps": [
+          -29.94,
+          -53.5,
+          -22.24
+        ]
+      },
+      {
+        "index": 1,
+        "length_mm": 16.0,
+        "lumen_mm3": 11.01,
+        "max_diameter_mm": 1.38,
+        "apical_diameter_mm": 0.325,
+        "apical_position_lps": [
+          -32.93,
+          -49.71,
+          -27.68
+        ]
+      },
+      {
+        "index": 2,
+        "length_mm": 21.12,
+        "lumen_mm3": 14.45,
+        "max_diameter_mm": 1.871,
+        "apical_diameter_mm": 0.566,
+        "apical_position_lps": [
+          -34.78,
+          -54.79,
+          -21.95
+        ]
+      }
+    ],
+    "total_lumen_mm3": 40.25
+  }
+}
