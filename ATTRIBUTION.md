@@ -34,3 +34,21 @@ morphology is genuine human anatomy, not an idealized textbook composite. Root
 counts, root curvature, and crown morphology reflect that one person's dentition
 and will differ from textbook norms in places. See README.md for the full list of
 what the source data does and does not contain.
+
+## DentalSegmentator (pretrained nnU-Net model)
+
+Per-class segmentation of the CBCT volumes (upper skull, mandible, upper teeth,
+lower teeth, mandibular canal) uses the DentalSegmentator pretrained nnU-Net
+model, Dataset112_DentalSegmentator_v100.
+
+- Model: https://zenodo.org/records/10829675 — **CC BY 4.0**
+- Extension and code: https://github.com/gaudot/SlicerDentalSegmentator
+- Dot, G. et al. *DentalSegmentator: Robust open source deep learning-based CT
+  and CBCT image segmentation.* Journal of Dentistry (2024).
+- nnU-Net: Isensee, F. et al. *nnU-Net: a self-configuring method for deep
+  learning-based biomedical image segmentation.* Nature Methods 18, 203-211 (2021).
+
+CC BY 4.0 requires attribution but, unlike the BodyParts3D licence, carries no
+ShareAlike obligation -- so meshes derived through this model do not inherit a
+copyleft term. The model is used for inference only; no weights are redistributed
+in this repository.

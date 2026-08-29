@@ -38,7 +38,32 @@ TEETH = {
         seeds=[(288, 61, 215), (290, 80, 258)],
         neighbours=[[(235, 61, 215), (238, 80, 258)],     # tooth 8
                     [(330, 70, 215), (333, 85, 255)]],    # tooth 10
-        bone_caps=[312, 318, 325], palatal_y=135,
+        # Bone basins as half-spaces in volume-index coordinates: periapical bone
+        # above the apex, and the palatal shelf behind the tooth.
+        bone_planes=[("z", ">=", 312), ("y", ">=", 135)],
+        canals=1,
+    ),
+    # Universal 5, maxillary right first premolar. Two roots, two canals -- the
+    # multi-canal test. The palate is medial here, so the palatal bone plane is
+    # on +x (toward the midline), not posterior as it is for an incisor.
+    "5": dict(
+        fma="FMA55689", name="maxillary right first premolar",
+        roi=dict(z=(195, 350), y=(95, 265), x=(105, 235)),
+        seeds=[(178, 168, 218), (155, 174, 257)],
+        neighbours=[[(171, 113, 227), (180, 133, 268)],   # tooth 6, canine
+                    [(137, 201, 216), (140, 218, 261)]],  # tooth 4
+        bone_planes=[("z", ">=", 335), ("x", ">=", 215)],
+        canals=2,
+    ),
+    # Universal 12, maxillary left first premolar. Mirror of 5; palatal is -x.
+    "12": dict(
+        fma="FMA55690", name="maxillary left first premolar",
+        roi=dict(z=(195, 350), y=(70, 255), x=(300, 460)),
+        seeds=[(392, 149, 216), (392, 168, 256)],
+        neighbours=[[(356, 100, 224), (357, 124, 268)],   # tooth 11, canine
+                    [(387, 191, 216), (402, 211, 258)]],  # tooth 13
+        bone_planes=[("z", ">=", 335), ("x", "<=", 316)],
+        canals=2,
     ),
 }
 
@@ -68,7 +93,7 @@ def write_binary_stl(path, verts, faces):
         f.write(bytes(buf))
 
 
-def mesh(mask, v, roi_origin_idx, roi=None, level=None, sigma=0.6):
+def mesh(mask, v, roi_origin_idx, roi=None, level=None, sigma=0.6, band=2):
     """Mask -> surface in world-space LPS millimetres.
 
     Where a grey-level `level` is given, marching cubes runs on the intensity
@@ -81,7 +106,7 @@ def mesh(mask, v, roi_origin_idx, roi=None, level=None, sigma=0.6):
     if mask.sum() < 64:
         return None
     if roi is not None and level is not None:
-        near = ndi.binary_dilation(mask, ndi.generate_binary_structure(3, 1), 2)
+        near = ndi.binary_dilation(mask, ndi.generate_binary_structure(3, 1), band)
         field = np.where(near, ndi.gaussian_filter(roi, 0.5), level - 1500.0)
         field = np.maximum(field, np.where(mask, level + 1.0, field))
         verts, faces, _, _ = marching_cubes(field.astype(np.float32), level=float(level))
@@ -113,11 +138,25 @@ def segment(v, spec):
     for n, seeds in enumerate(spec["neighbours"]):
         put(3 + n, seeds)
     bone = 3 + len(spec["neighbours"])
-    for cap in spec["bone_caps"]:                           # bone above the apex
-        k = cap - z0
-        markers[k][mask[k]] = bone
-    py = spec["palatal_y"] - y0                             # palatal shelf behind
-    markers[:, py:, :][mask[:, py:, :]] = bone
+    # Bone basins, given as half-spaces so the geometry can follow the tooth.
+    # An incisor's non-tooth neighbourhood is behind it (palatal shelf) and above
+    # it (periapical); a premolar's is medial, because the palate is toward the
+    # midline rather than posterior. A fixed posterior plane is wrong there.
+    axes = {"z": 0, "y": 1, "x": 2}
+    lows = {"z": z0, "y": y0, "x": x0}
+    for axis, op, idx in spec["bone_planes"]:
+        a = axes[axis]
+        local = idx - lows[axis]
+        n_a = roi.shape[a]
+        if op == ">=":
+            sl = slice(max(local, 0), n_a)
+        else:
+            sl = slice(0, min(local + 1, n_a))
+        view = [slice(None)] * 3
+        view[a] = sl
+        view = tuple(view)
+        sub = markers[view]
+        sub[mask[view]] = bone
 
     ws = watershed_isolate(roi, markers, mask)
     tooth = ws == 2
@@ -166,10 +205,33 @@ def segment(v, spec):
         en = l3 == (int(np.argmax(sz)) + 1)
     enamel = ndi.binary_closing(en, ndi.generate_binary_structure(3, 1), iterations=2) & body
     dentin = body & ~enamel
+    # --- diagnostic: the half-maximum level, and the tooth-to-bone contrast.
+    #
+    # Reported, NOT used for meshing. Placing the surface at the half-maximum was
+    # tried and over-grows: it made an incisor and a premolar measure identically
+    # (~21 mm long, ~490-530 mm3), which is wrong. It is kept because the numbers
+    # diagnose the real problem -- tooth 5's root dentin reads 1059 HU against
+    # tooth 9's 1305 with the same surrounding PDL, so the premolar's thin roots
+    # lose 42% of the tooth-to-bone contrast to partial volume. Density is a weak
+    # discriminator there; the PDL dark ring is a much stronger one.
+    zs = np.where(tooth)[0]
+    zmid = (zs.min() + zs.max()) // 2
+    rootband = np.zeros_like(tooth)
+    rootband[zmid:] = True
+    shell = (ndi.binary_dilation(tooth, _ball(4))
+             & ~ndi.binary_dilation(tooth, _ball(1)) & rootband)
+    core = tooth & (dist > 0.8) & rootband
+    if shell.sum() > 500 and core.sum() > 200:
+        surface_level = 0.5 * (float(np.percentile(roi[shell], 25))
+                               + float(np.percentile(roi[core], 60)))
+    else:
+        surface_level = float(BONE_CUT)
+
     pulp_contrast = (float(np.median(roi[dentin])) - float(np.median(roi[pulp]))
                      if pulp.any() else 0.0)
     return dict(tooth=tooth, enamel=enamel, dentin=dentin, pulp=pulp,
                 roi=roi, origin_idx=(x0, y0, z0), otsu=thr,
+                surface_level=surface_level,
                 pulp_fragments=n_frag, pulp_contrast_hu=pulp_contrast)
 
 
@@ -192,6 +254,7 @@ def main():
     report = dict(tooth=key, fma=spec["fma"], name=spec["name"],
                   source=os.path.basename(vol_path),
                   otsu_enamel_dentin_hu=round(r["otsu"]),
+                  surface_level_hu=round(r["surface_level"]),
                   qc=dict(pulp_fragments=r["pulp_fragments"],
                           pulp_dentin_contrast_hu=round(r["pulp_contrast_hu"]),
                           pulp_status="provisional - fragments, do not ship unreviewed"),

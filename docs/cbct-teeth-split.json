@@ -1,0 +1,378 @@
+{
+  "upper": {
+    "total_mm3": 9351.2,
+    "n_teeth": 14,
+    "teeth": [
+      {
+        "universal": 2,
+        "fma": "FMA55697",
+        "side": "right",
+        "position": 7,
+        "mm3": 1077.3,
+        "roots": 3,
+        "world": [
+          -21.53,
+          -3.67,
+          -5.84
+        ]
+      },
+      {
+        "universal": 3,
+        "fma": "FMA55698",
+        "side": "right",
+        "position": 6,
+        "mm3": 1089.3,
+        "roots": 3,
+        "world": [
+          -19.19,
+          -12.96,
+          -5.7
+        ]
+      },
+      {
+        "universal": 4,
+        "fma": "FMA55688",
+        "side": "right",
+        "position": 5,
+        "mm3": 504.7,
+        "roots": 1,
+        "world": [
+          -17.29,
+          -21.46,
+          -5.19
+        ]
+      },
+      {
+        "universal": 5,
+        "fma": "FMA55689",
+        "side": "right",
+        "position": 4,
+        "mm3": 460.8,
+        "roots": 1,
+        "world": [
+          -15.31,
+          -27.84,
+          -5.15
+        ]
+      },
+      {
+        "universal": 6,
+        "fma": "FMA55798",
+        "side": "right",
+        "position": 3,
+        "mm3": 679.3,
+        "roots": 1,
+        "world": [
+          -12.52,
+          -34.01,
+          -2.95
+        ]
+      },
+      {
+        "universal": 7,
+        "fma": "FMA55680",
+        "side": "right",
+        "position": 2,
+        "mm3": 300.7,
+        "roots": 1,
+        "world": [
+          -7.63,
+          -39.32,
+          -2.44
+        ]
+      },
+      {
+        "universal": 8,
+        "fma": "FMA55681",
+        "side": "right",
+        "position": 1,
+        "mm3": 511.2,
+        "roots": 1,
+        "world": [
+          -2.06,
+          -42.29,
+          -2.98
+        ]
+      },
+      {
+        "universal": 9,
+        "fma": "FMA55682",
+        "side": "left",
+        "position": 1,
+        "mm3": 531.4,
+        "roots": 1,
+        "world": [
+          5.33,
+          -42.33,
+          -3.53
+        ]
+      },
+      {
+        "universal": 10,
+        "fma": "FMA55683",
+        "side": "left",
+        "position": 2,
+        "mm3": 297.1,
+        "roots": 1,
+        "world": [
+          11.14,
+          -39.91,
+          -3.57
+        ]
+      },
+      {
+        "universal": 11,
+        "fma": "FMA55799",
+        "side": "left",
+        "position": 3,
+        "mm3": 718.3,
+        "roots": 1,
+        "world": [
+          16.15,
+          -35.28,
+          -4.02
+        ]
+      },
+      {
+        "universal": 12,
+        "fma": "FMA55690",
+        "side": "left",
+        "position": 4,
+        "mm3": 442.4,
+        "roots": 1,
+        "world": [
+          20.08,
+          -29.49,
+          -6.44
+        ]
+      },
+      {
+        "universal": 13,
+        "fma": "FMA55691",
+        "side": "left",
+        "position": 5,
+        "mm3": 536.6,
+        "roots": 1,
+        "world": [
+          23.0,
+          -23.05,
+          -6.61
+        ]
+      },
+      {
+        "universal": 14,
+        "fma": "FMA55699",
+        "side": "left",
+        "position": 6,
+        "mm3": 1110.2,
+        "roots": 3,
+        "world": [
+          26.0,
+          -15.17,
+          -6.85
+        ]
+      },
+      {
+        "universal": 15,
+        "fma": "FMA55700",
+        "side": "left",
+        "position": 7,
+        "mm3": 1091.8,
+        "roots": 2,
+        "world": [
+          28.61,
+          -5.96,
+          -7.08
+        ]
+      }
+    ]
+  },
+  "lower": {
+    "total_mm3": 9108.2,
+    "n_teeth": 14,
+    "teeth": [
+      {
+        "universal": 18,
+        "fma": "FMA55703",
+        "side": "left",
+        "position": 7,
+        "mm3": 1139.0,
+        "roots": 1,
+        "world": [
+          28.29,
+          -8.12,
+          -25.84
+        ]
+      },
+      {
+        "universal": 19,
+        "fma": "FMA55704",
+        "side": "left",
+        "position": 6,
+        "mm3": 550.5,
+        "roots": 1,
+        "world": [
+          25.59,
+          -17.0,
+          -25.1
+        ]
+      },
+      {
+        "universal": 20,
+        "fma": "FMA55692",
+        "side": "left",
+        "position": 5,
+        "mm3": 731.8,
+        "roots": 1,
+        "world": [
+          23.44,
+          -21.6,
+          -24.56
+        ]
+      },
+      {
+        "universal": 21,
+        "fma": "FMA55693",
+        "side": "left",
+        "position": 4,
+        "mm3": 539.5,
+        "roots": 1,
+        "world": [
+          21.11,
+          -27.69,
+          -24.65
+        ]
+      },
+      {
+        "universal": 22,
+        "fma": "FMA55687",
+        "side": "left",
+        "position": 3,
+        "mm3": 397.4,
+        "roots": 1,
+        "world": [
+          18.3,
+          -33.94,
+          -23.51
+        ]
+      },
+      {
+        "universal": 23,
+        "fma": "FMA57141",
+        "side": "left",
+        "position": 2,
+        "mm3": 657.0,
+        "roots": 1,
+        "world": [
+          14.04,
+          -38.62,
+          -25.33
+        ]
+      },
+      {
+        "universal": 24,
+        "fma": "FMA57143",
+        "side": "left",
+        "position": 1,
+        "mm3": 329.4,
+        "roots": 1,
+        "world": [
+          8.6,
+          -41.66,
+          -23.48
+        ]
+      },
+      {
+        "universal": 25,
+        "fma": "FMA57142",
+        "side": "right",
+        "position": 1,
+        "mm3": 230.6,
+        "roots": 1,
+        "world": [
+          4.46,
+          -43.3,
+          -23.14
+        ]
+      },
+      {
+        "universal": 26,
+        "fma": "FMA57140",
+        "side": "right",
+        "position": 2,
+        "mm3": 557.6,
+        "roots": 2,
+        "world": [
+          -1.62,
+          -42.32,
+          -23.02
+        ]
+      },
+      {
+        "universal": 27,
+        "fma": "FMA55686",
+        "side": "right",
+        "position": 3,
+        "mm3": 635.4,
+        "roots": 1,
+        "world": [
+          -8.38,
+          -38.19,
+          -24.28
+        ]
+      },
+      {
+        "universal": 28,
+        "fma": "FMA55694",
+        "side": "right",
+        "position": 4,
+        "mm3": 408.3,
+        "roots": 1,
+        "world": [
+          -12.38,
+          -33.17,
+          -22.82
+        ]
+      },
+      {
+        "universal": 29,
+        "fma": "FMA55695",
+        "side": "right",
+        "position": 5,
+        "mm3": 496.8,
+        "roots": 1,
+        "world": [
+          -14.2,
+          -26.62,
+          -24.17
+        ]
+      },
+      {
+        "universal": 30,
+        "fma": "FMA55705",
+        "side": "right",
+        "position": 6,
+        "mm3": 1302.4,
+        "roots": 2,
+        "world": [
+          -16.64,
+          -17.93,
+          -24.0
+        ]
+      },
+      {
+        "universal": 31,
+        "fma": "FMA55706",
+        "side": "right",
+        "position": 7,
+        "mm3": 1132.4,
+        "roots": 2,
+        "world": [
+          -19.9,
+          -6.59,
+          -25.07
+        ]
+      }
+    ]
+  }
+}
