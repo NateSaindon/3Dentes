@@ -194,3 +194,70 @@ Unchanged: imaging stays in `~/projects/3Dentes-cbct/`, never in the repo. The
 nnU-Net venv (~5 GB) and the model weights live there too, and both are
 reproducible from the commands in this document. Committed: the tooling, these
 docs, and the JSON results.
+
+---
+
+## Integration — measured anatomy in the actual atlas
+
+Everything above produced files. This is the step that put them in the app.
+
+### The two frames do not meet
+
+Building CBCT teeth alongside BodyParts3D jaws produced a model **1582 mm tall**.
+BodyParts3D is a *whole-body* frame with the head about 1470 mm off the floor;
+CBCT is scanner-centred at a few tens of millimetres. And even registered, they
+are **different people** — one individual's teeth do not sit in another's jaws.
+
+So the "drop-in hard-tissue replacement" the plan describes is not drop-in. The
+patient's own anatomy becomes the reference frame, and a CBCT build contains
+*fewer* structures rather than a mix: 32 against 45. The ten muscles are absent
+because this scan has no soft-tissue contrast at all, and three of the four
+maxilla parts because DentalSegmentator's Upper Skull is cropped here to the
+alveolar process. Borrowed soft tissue has to be registered **into** the
+patient's frame before it can be mixed in, and that is not done.
+
+### The laterality invariant fired, and was right to
+
+`FMA57142 Right lower central incisor: side=right but centroid x=1.5`.
+
+Nothing was mirrored. The check compared centroids against the **framing centre**
+— the middle of the model's bounding box — which is not the dental midline. The
+operator's arch sits 3.6 mm to their left of the scanner origin (head position,
+not anatomy) while the BodyParts3D dentition sits at −0.7 mm, so a box spanning
+both put the "centre" between two different people, and a tooth 2.8 mm from its
+own midline fell the wrong side of it.
+
+Against the CBCT teeth's own centre, **all 28 teeth were already correct**.
+
+Per CLAUDE.md — *fix the pipeline, don't relax the check* — the fix is that
+laterality is now measured from the **dental midline of the model's own teeth**,
+which makes it independent of framing and of how the subject was positioned. That
+is what it was always meant to test. The BodyParts3D build is byte-identical
+after the change.
+
+### Polygon budget
+
+BodyParts3D teeth average 7,101 triangles; raw CBCT teeth were ~70,000, ten times
+over. Quadric decimation to ~8,000 keeps cusp tips and the occlusal table while
+losing voxel noise.
+
+This does **not** conflict with the exact-welding invariant. Welding merges
+bitwise-identical vertices so that no cusp is rounded by a distance tolerance;
+decimation happens earlier and is a deliberate, measured reduction. The two
+answer different questions.
+
+| | BodyParts3D | CBCT |
+| --- | --- | --- |
+| Structures | 45 | 32 |
+| Triangles | 347,826 | 320,654 |
+| Extent | 100.5 × 105.6 × 89.2 mm | 81.6 × 76.7 × 73.3 mm |
+| Output | 6.29 MB | 6.89 MB |
+
+Both builds pass laterality. `TOOTH_SOURCE=cbct npm run build:assets` selects the
+measured set; the default is unchanged, so the two are a toggle rather than a
+migration — which also gives the atlas a generic-versus-patient comparison for
+free.
+
+FMA ids remain the join key throughout: `FMA55682` resolves to *Left upper
+central incisor, Universal 9, FDI 21, Palmer UL1*, still derived from arch, side
+and position rather than typed.

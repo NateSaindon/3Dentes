@@ -18,7 +18,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Document, NodeIO } from '@gltf-transform/core';
-import { STRUCTURES, LAYERS, toothNotation, structureName } from './manifest.mjs';
+import { STRUCTURES, LAYERS, toothNotation, structureName, SOURCE_DIRS, TOOTH_SOURCE } from './manifest.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const STL_DIR = join(ROOT, 'assets', 'source', 'stl');
@@ -152,11 +152,44 @@ function bounds(positions) {
  * FMA label says "right" but whose geometry sits on +x means the axes got
  * flipped somewhere, and the build must fail rather than ship it.
  */
-function checkLaterality(report) {
+/**
+ * Laterality is checked against the DENTAL MIDLINE, not the framing centre.
+ *
+ * Those are different things and conflating them is a real bug, not a
+ * technicality. The framing centre is the middle of the model's bounding box,
+ * chosen so the camera sits well; the dental midline is anatomy. They coincide
+ * only when the subject happened to be centred in the scanner.
+ *
+ * This surfaced when CBCT teeth were first built alongside BodyParts3D jaws.
+ * The operator's arch sits 3.6 mm to their left of the scanner's origin — head
+ * position, not anatomy — while the BodyParts3D dentition sits at -0.7 mm, so a
+ * bounding box spanning both put the "centre" between two different people. The
+ * lower right central incisor, 2.8 mm from its own true midline, fell on the
+ * wrong side of it and the check failed. Nothing was mirrored.
+ *
+ * Measuring the midline from the teeth of the model itself makes the check
+ * independent of framing and of how the subject was positioned, which is what it
+ * was always meant to test.
+ */
+function dentalMidline(meshes) {
+  const teeth = meshes.filter((m) => m.s.layer === 'teeth');
+  if (!teeth.length) return 0;
+  let lo = Infinity, hi = -Infinity;
+  for (const m of teeth) {
+    for (let i = 0; i < m.positions.length; i += 3) {
+      if (m.positions[i] < lo) lo = m.positions[i];
+      if (m.positions[i] > hi) hi = m.positions[i];
+    }
+  }
+  return (lo + hi) / 2;
+}
+
+function checkLaterality(report, midline = 0) {
   const failures = [];
   for (const { fma, name, side, centroidX } of report) {
-    if (side === 'right' && centroidX > 0) failures.push(`${fma} ${name}: side=right but centroid x=${centroidX.toFixed(1)}`);
-    if (side === 'left' && centroidX < 0) failures.push(`${fma} ${name}: side=left but centroid x=${centroidX.toFixed(1)}`);
+    const x = centroidX - midline;
+    if (side === 'right' && x > 0) failures.push(`${fma} ${name}: side=right but centroid x=${x.toFixed(1)} relative to the dental midline`);
+    if (side === 'left' && x < 0) failures.push(`${fma} ${name}: side=left but centroid x=${x.toFixed(1)} relative to the dental midline`);
   }
   return failures;
 }
@@ -181,7 +214,8 @@ async function main() {
   // the dental content.
   const meshes = [];
   for (const s of STRUCTURES) {
-    const raw = await readFile(join(STL_DIR, `${s.fma}.stl`));
+    const dir = s.source ? join(ROOT, ...SOURCE_DIRS[s.source]) : STL_DIR;
+    const raw = await readFile(join(dir, `${s.fma}.stl`));
     const soup = parseBinarySTL(raw);
     const rawVerts = soup.length / 3;
     const { positions, indices } = weldExact(soup);
@@ -241,7 +275,8 @@ async function main() {
     };
   }
 
-  const failures = checkLaterality(report);
+  const midline = dentalMidline(meshes) - center[0];
+  const failures = checkLaterality(report, midline);
   if (failures.length) {
     console.error('LATERALITY CHECK FAILED — the model may be mirrored:');
     for (const f of failures) console.error(`  ${f}`);

@@ -1,0 +1,20 @@
+{
+  "FMA52748": {
+    "name": "mandible",
+    "triangles": 23998,
+    "volume_mm3": 21551.7
+  },
+  "FMA53649": {
+    "name": "maxilla (alveolar process and palate)",
+    "triangles": 24000,
+    "volume_mm3": 27769.1
+  },
+  "FMA59763": {
+    "name": "gingiva of upper jaw",
+    "triangles": 12000
+  },
+  "FMA59764": {
+    "name": "gingiva of lower jaw",
+    "triangles": 12000
+  }
+}

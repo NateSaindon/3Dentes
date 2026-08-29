@@ -1,0 +1,254 @@
+{
+  "FMA55697": {
+    "universal": 2,
+    "arch": "upper",
+    "mask_mm3": 1067.0,
+    "raw_triangles": 101166,
+    "triangles": 12856,
+    "centroid_x": -20.26,
+    "side": "right"
+  },
+  "FMA55698": {
+    "universal": 3,
+    "arch": "upper",
+    "mask_mm3": 1097.7,
+    "raw_triangles": 114546,
+    "triangles": 15816,
+    "centroid_x": -19.37,
+    "side": "right"
+  },
+  "FMA55688": {
+    "universal": 4,
+    "arch": "upper",
+    "mask_mm3": 503.3,
+    "raw_triangles": 62102,
+    "triangles": 7998,
+    "centroid_x": -17.02,
+    "side": "right"
+  },
+  "FMA55689": {
+    "universal": 5,
+    "arch": "upper",
+    "mask_mm3": 469.7,
+    "raw_triangles": 62636,
+    "triangles": 11470,
+    "centroid_x": -15.36,
+    "side": "right"
+  },
+  "FMA55798": {
+    "universal": 6,
+    "arch": "upper",
+    "mask_mm3": 672.2,
+    "raw_triangles": 80828,
+    "triangles": 11612,
+    "centroid_x": -12.53,
+    "side": "right"
+  },
+  "FMA55680": {
+    "universal": 7,
+    "arch": "upper",
+    "mask_mm3": 295.6,
+    "raw_triangles": 40284,
+    "triangles": 7998,
+    "centroid_x": -7.99,
+    "side": "right"
+  },
+  "FMA55681": {
+    "universal": 8,
+    "arch": "upper",
+    "mask_mm3": 515.6,
+    "raw_triangles": 55532,
+    "triangles": 7998,
+    "centroid_x": -2.33,
+    "side": "right"
+  },
+  "FMA55682": {
+    "universal": 9,
+    "arch": "upper",
+    "mask_mm3": 525.2,
+    "raw_triangles": 56734,
+    "triangles": 8000,
+    "centroid_x": 5.54,
+    "side": "left"
+  },
+  "FMA55683": {
+    "universal": 10,
+    "arch": "upper",
+    "mask_mm3": 303.1,
+    "raw_triangles": 41430,
+    "triangles": 8000,
+    "centroid_x": 11.6,
+    "side": "left"
+  },
+  "FMA55799": {
+    "universal": 11,
+    "arch": "upper",
+    "mask_mm3": 704.8,
+    "raw_triangles": 77240,
+    "triangles": 7998,
+    "centroid_x": 16.23,
+    "side": "left"
+  },
+  "FMA55690": {
+    "universal": 12,
+    "arch": "upper",
+    "mask_mm3": 467.8,
+    "raw_triangles": 62276,
+    "triangles": 7998,
+    "centroid_x": 20.1,
+    "side": "left"
+  },
+  "FMA55691": {
+    "universal": 13,
+    "arch": "upper",
+    "mask_mm3": 528.9,
+    "raw_triangles": 70864,
+    "triangles": 7998,
+    "centroid_x": 23.07,
+    "side": "left"
+  },
+  "FMA55699": {
+    "universal": 14,
+    "arch": "upper",
+    "mask_mm3": 1100.7,
+    "raw_triangles": 128000,
+    "triangles": 9020,
+    "centroid_x": 26.62,
+    "side": "left"
+  },
+  "FMA55700": {
+    "universal": 15,
+    "arch": "upper",
+    "mask_mm3": 1099.5,
+    "raw_triangles": 103466,
+    "triangles": 8650,
+    "centroid_x": 27.61,
+    "side": "left"
+  },
+  "FMA55703": {
+    "universal": 18,
+    "arch": "lower",
+    "mask_mm3": 1138.7,
+    "raw_triangles": 112196,
+    "triangles": 8000,
+    "centroid_x": 27.37,
+    "side": "left"
+  },
+  "FMA55704": {
+    "universal": 19,
+    "arch": "lower",
+    "mask_mm3": 1275.7,
+    "raw_triangles": 123734,
+    "triangles": 7998,
+    "centroid_x": 23.76,
+    "side": "left"
+  },
+  "FMA55692": {
+    "universal": 20,
+    "arch": "lower",
+    "mask_mm3": 545.0,
+    "raw_triangles": 74908,
+    "triangles": 7998,
+    "centroid_x": 21.29,
+    "side": "left"
+  },
+  "FMA55693": {
+    "universal": 21,
+    "arch": "lower",
+    "mask_mm3": 411.7,
+    "raw_triangles": 61656,
+    "triangles": 7998,
+    "centroid_x": 18.41,
+    "side": "left"
+  },
+  "FMA55687": {
+    "universal": 22,
+    "arch": "lower",
+    "mask_mm3": 641.0,
+    "raw_triangles": 81574,
+    "triangles": 7998,
+    "centroid_x": 14.1,
+    "side": "left"
+  },
+  "FMA57141": {
+    "universal": 23,
+    "arch": "lower",
+    "mask_mm3": 329.6,
+    "raw_triangles": 53004,
+    "triangles": 7998,
+    "centroid_x": 8.9,
+    "side": "left"
+  },
+  "FMA57143": {
+    "universal": 24,
+    "arch": "lower",
+    "mask_mm3": 246.3,
+    "raw_triangles": 45728,
+    "triangles": 8000,
+    "centroid_x": 4.61,
+    "side": "left"
+  },
+  "FMA57142": {
+    "universal": 25,
+    "arch": "lower",
+    "mask_mm3": 236.2,
+    "raw_triangles": 39998,
+    "triangles": 8000,
+    "centroid_x": 0.38,
+    "side": "left"
+  },
+  "FMA57140": {
+    "universal": 26,
+    "arch": "lower",
+    "mask_mm3": 316.4,
+    "raw_triangles": 50524,
+    "triangles": 7998,
+    "centroid_x": -3.8,
+    "side": "right"
+  },
+  "FMA55686": {
+    "universal": 27,
+    "arch": "lower",
+    "mask_mm3": 622.9,
+    "raw_triangles": 81480,
+    "triangles": 7998,
+    "centroid_x": -8.35,
+    "side": "right"
+  },
+  "FMA55694": {
+    "universal": 28,
+    "arch": "lower",
+    "mask_mm3": 407.2,
+    "raw_triangles": 58480,
+    "triangles": 7998,
+    "centroid_x": -12.46,
+    "side": "right"
+  },
+  "FMA55695": {
+    "universal": 29,
+    "arch": "lower",
+    "mask_mm3": 524.0,
+    "raw_triangles": 72468,
+    "triangles": 8000,
+    "centroid_x": -14.5,
+    "side": "right"
+  },
+  "FMA55705": {
+    "universal": 30,
+    "arch": "lower",
+    "mask_mm3": 1283.0,
+    "raw_triangles": 115382,
+    "triangles": 10886,
+    "centroid_x": -16.69,
+    "side": "right"
+  },
+  "FMA55706": {
+    "universal": 31,
+    "arch": "lower",
+    "mask_mm3": 1126.7,
+    "raw_triangles": 102740,
+    "triangles": 8374,
+    "centroid_x": -18.8,
+    "side": "right"
+  }
+}

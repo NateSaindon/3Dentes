@@ -16,11 +16,32 @@
 export const SOURCE_BASE =
   'https://raw.githubusercontent.com/Kevin-Mattheus-Moerman/BodyParts3D/main/assets/BodyParts3D_data/stl';
 
+// Where a structure's mesh comes from. Two trees, kept physically separate
+// because their licences differ and ShareAlike is inherited by anything derived
+// from BodyParts3D meshes (invariant 3 in CLAUDE.md):
+//
+//   bodyparts3d  assets/source/stl  -- CC BY-SA 2.1 JP, external morphology of
+//                                      a different individual
+//   cbct         assets/cbct/stl    -- measured from the operator's own scan,
+//                                      unencumbered
+//
+// Teeth exist in both, under the SAME FMA ids, which is what makes the CBCT set
+// a drop-in replacement rather than a schema change. TOOTH_SOURCE selects which
+// one the build uses; everything else (jaws, gingiva, muscles) has no CBCT
+// equivalent and always comes from BodyParts3D.
+export const TOOTH_SOURCE =
+  process.env.TOOTH_SOURCE === 'cbct' ? 'cbct' : 'bodyparts3d';
+
+export const SOURCE_DIRS = {
+  bodyparts3d: ['assets', 'source', 'stl'],
+  cbct: ['assets', 'cbct', 'stl'],
+};
+
 const tooth = (fma, arch, side, position, type) => ({
-  fma, arch, side, position, type, layer: 'teeth',
+  fma, arch, side, position, type, layer: 'teeth', source: TOOTH_SOURCE,
 });
 
-export const STRUCTURES = [
+const BODYPARTS3D_STRUCTURES = [
   // --- Permanent teeth: 28. Third molars (position 8) are absent from BodyParts3D. ---
   // Maxillary right
   tooth('FMA55681', 'maxillary', 'right', 1, 'central incisor'),
@@ -105,6 +126,31 @@ const UNIVERSAL = {
 const PALMER_PREFIX = { 1: 'UR', 2: 'UL', 3: 'LL', 4: 'LR' };
 
 /** Derive clinical notation for a tooth. Returns null for non-tooth structures. */
+// Structures that exist as measured CBCT meshes. Everything else in the
+// BodyParts3D set -- the muscles, and three of the four maxilla parts -- has no
+// equivalent, because this scan has no soft-tissue contrast at all and because
+// DentalSegmentator's "Upper Skull" is cropped here to the alveolar process.
+//
+// A CBCT build therefore contains FEWER structures rather than a mix. That is
+// deliberate: BodyParts3D is a whole-body frame with the head about 1470 mm off
+// the floor, while CBCT is scanner-centred, so combining them naively produced a
+// model 1582 mm tall. They are also different people -- one individual's teeth
+// do not sit in another's jaws. Borrowed soft tissue has to be registered INTO
+// the patient's frame before it can be mixed in, and that is not done yet.
+const CBCT_AVAILABLE = new Set([
+  ...BODYPARTS3D_STRUCTURES.filter((s) => s.layer === 'teeth').map((s) => s.fma),
+  'FMA52748',   // mandible
+  'FMA53649',   // maxilla -- alveolar process and palate
+  'FMA59763', 'FMA59764',   // gingiva, upper and lower
+]);
+
+export const STRUCTURES =
+  TOOTH_SOURCE === 'cbct'
+    ? BODYPARTS3D_STRUCTURES
+        .filter((s) => CBCT_AVAILABLE.has(s.fma))
+        .map((s) => ({ ...s, source: 'cbct' }))
+    : BODYPARTS3D_STRUCTURES;
+
 export function toothNotation(s) {
   if (s.layer !== 'teeth') return null;
   const quadrant = QUADRANT[`${s.arch}:${s.side}`];
