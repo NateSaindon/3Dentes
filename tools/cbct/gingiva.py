@@ -51,8 +51,9 @@ from segment_tooth import write_binary_stl
 MARGIN_ABOVE_CEJ_MM = 1.0     # free gingival margin sits ~1 mm coronal to the CEJ
 THICKNESS_MM = 1.1            # gingival thickness on the tooth and bone
 MGJ_BELOW_CREST_MM = 4.0      # mucogingival junction, apical to the measured crest
-PAPILLA_CLOSE_MM = 2.2        # closes the interdental gap between adjacent collars
-N_ANGLES = 24
+PAPILLA_CLOSE_MM = 1.8        # closes the interdental gap between adjacent collars
+N_ANGLES = 24                 # aspects the CEJ and crest were MEASURED at
+N_SWEEP = 72                  # aspects the collar is SWEPT at, interpolated
 BONE = {"upper": 1, "lower": 2}
 
 
@@ -95,30 +96,43 @@ def sleeve(tooth, frame, cej_by_angle, crest_by_angle, spacing, shape):
     ang_all = np.degrees(np.arctan2(w, u))
 
     out = np.zeros(shape, bool)
-    step = 360.0 / N_ANGLES
     thick = THICKNESS_MM / spacing
-    for k in range(N_ANGLES):
-        cej = cej_by_angle.get(k)
-        crest = crest_by_angle.get(k)
-        if cej is None:
-            continue
+
+    # Interpolate the measured rings onto a finer sweep. The CEJ and crest are
+    # measured at 24 aspects, but sweeping the collar at 24 gives a scallop made
+    # of 15-degree facets -- it steps around the tooth instead of curving around
+    # it, and the interproximal rise and mid-facial dip both read as stairs.
+    # Both curves are periodic in angle, so they interpolate cleanly.
+    meas = 360.0 / N_ANGLES
+    ks = sorted(cej_by_angle)
+    if len(ks) < 6:
+        return out
+    ang_meas = np.array([-180 + k * meas + meas / 2 for k in ks])
+    cej_meas = np.array([cej_by_angle[k] for k in ks])
+    crest_meas = np.array([crest_by_angle.get(k, cej_by_angle[k] - 2.0) for k in ks])
+    wrap_a = np.concatenate([ang_meas - 360, ang_meas, ang_meas + 360])
+    wrap_c = np.tile(cej_meas, 3)
+    wrap_r = np.tile(crest_meas, 3)
+    step = 360.0 / N_SWEEP
+    for k in range(N_SWEEP):
+        a_mid_deg = -180 + k * step + step / 2
+        cej = float(np.interp(a_mid_deg, wrap_a, wrap_c))
+        crest = float(np.interp(a_mid_deg, wrap_a, wrap_r))
         top = (cej + MARGIN_ABOVE_CEJ_MM) / spacing
-        base = ((crest if crest is not None else cej - 2.0)
-                - MGJ_BELOW_CREST_MM) / spacing
+        base = (crest - MGJ_BELOW_CREST_MM) / spacing
         if base >= top:
             continue
-        a0 = -180 + k * step
-        sel = (ang_all >= a0 - step) & (ang_all < a0 + 2 * step)
+        sel = (ang_all >= a_mid_deg - meas) & (ang_all < a_mid_deg + meas)
         if sel.sum() < 20:
             continue
-        a_mid = np.radians(a0 + step / 2)
+        a_mid = np.radians(a_mid_deg)
         dirv = np.cos(a_mid) * e2 + np.sin(a_mid) * e3
-        for t in np.arange(base, top, 0.6):
+        for t in np.arange(base, top, 0.45):
             near = sel & (np.abs(t_all - t) < 2.0)
             r_surf = (float(np.percentile(r_all[near], 92)) if near.sum() > 8
                       else float(np.percentile(r_all[sel], 92)))
-            for rr in np.arange(r_surf - 0.5, r_surf + thick, 0.6):
-                for da in (-step / 3, 0.0, step / 3):
+            for rr in np.arange(r_surf - 0.5, r_surf + thick, 0.45):
+                for da in (-step / 2, 0.0, step / 2):
                     d2 = (np.cos(a_mid + np.radians(da)) * e2
                           + np.sin(a_mid + np.radians(da)) * e3)
                     p = c + t * ax + rr * d2

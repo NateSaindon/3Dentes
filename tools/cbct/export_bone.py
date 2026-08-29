@@ -33,6 +33,7 @@ from vol import Volume
 from read_nifti import read_nifti
 from segment_tooth import write_binary_stl
 from export_teeth import decimate
+from meshsmooth import taubin, weld
 
 MANDIBLE_FMA = "FMA52748"
 MAXILLA_FMA = "FMA53649"
@@ -51,7 +52,9 @@ def mesh_mask(mask, v, target, smooth=1.0):
     world[:, 0] = v.origin[0] + verts[:, 2] * sp
     world[:, 1] = v.origin[1] + verts[:, 1] * sp
     world[:, 2] = v.origin[2] + verts[:, 0] * sp
-    return decimate(world, faces, target)
+    world = taubin(world, faces, 16)
+    world, faces = decimate(world, faces, target)
+    return taubin(world, faces, 4), faces
 
 
 def main():
@@ -99,8 +102,10 @@ def main():
         nt = struct.unpack("<I", b[80:84])[0]
         rec = np.frombuffer(b[84:84 + nt * 50], dtype=np.uint8).reshape(nt, 50)
         tri = rec[:, 12:48].copy().view("<f4").reshape(nt * 3, 3).astype(np.float64)
-        faces = np.arange(nt * 3).reshape(nt, 3)
-        verts, faces = decimate(tri, faces, TARGET["gingiva"])
+        verts, faces = weld(tri)
+        verts = taubin(verts, faces, 10)
+        verts, faces = decimate(verts, faces, TARGET["gingiva"])
+        verts = taubin(verts, faces, 6)
         write_binary_stl(os.path.join(outdir, f"{fma}.stl"), verts, faces)
         rep[fma] = dict(name=f"gingiva of {arch} jaw", triangles=int(len(faces)))
         print(f"  gingiva   {fma}  {nt:,} -> {len(faces):,} tris")

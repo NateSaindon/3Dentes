@@ -34,9 +34,12 @@ from scipy import ndimage as ndi
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from vol import Volume
 from segment_tooth import mesh as grey_mesh, write_binary_stl
+from meshsmooth import taubin, mesh_volume
 
 SURFACE_HU = 1050.0
 TARGET_TRIS = 8000
+SMOOTH_BEFORE = 14        # Taubin passes on the raw marching-cubes surface
+SMOOTH_AFTER = 4          # a light pass to settle the decimated triangulation
 
 
 def decimate(verts, faces, target):
@@ -87,7 +90,12 @@ def main():
                 continue
             verts, faces = got
             raw = len(faces)
+            v0 = mesh_volume(verts, faces)
+            verts = taubin(verts, faces, SMOOTH_BEFORE)
             verts, faces = decimate(verts, faces, target)
+            verts = taubin(verts, faces, SMOOTH_AFTER)
+            v1 = mesh_volume(verts, faces)
+            shrink = 100.0 * (1.0 - v1 / v0) if v0 else 0.0
             path = os.path.join(outdir, f"{t['fma']}.stl")
             write_binary_stl(path, verts, faces)
             cx = float((verts[:, 0].min() + verts[:, 0].max()) / 2)
@@ -97,9 +105,11 @@ def main():
             out_report[t["fma"]] = dict(universal=t["universal"], arch=arch,
                                         mask_mm3=t["mm3"], raw_triangles=raw,
                                         triangles=int(len(faces)),
+                                        mesh_mm3=round(v1, 1),
+                                        shrink_pct=round(shrink, 2),
                                         centroid_x=round(cx, 2), side=side)
             print(f"{t['universal']:4d} {t['fma']:>9s} {t['mm3']:9.1f} {raw:9,d} "
-                  f"{len(faces):7,d}  {side:>5s}{flag}")
+                  f"{len(faces):7,d}  {side:>5s}  shrink {shrink:+5.1f}%{flag}")
     with open(os.path.join(outdir, "teeth.json"), "w") as f:
         json.dump(out_report, f, indent=2)
     tot = sum(r["triangles"] for r in out_report.values())
