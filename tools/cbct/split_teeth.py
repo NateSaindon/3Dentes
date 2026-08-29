@@ -41,6 +41,18 @@ UPPER, LOWER = 3, 4
 N_PER_ARCH = 14           # third molars are extracted; see docs/cbct-plan.md
 ARCH_CENTRE_OFFSET = 16.0  # mm posterior to the tooth-cloud centroid
 
+# Mean permanent mesiodistal crown widths (mm), in the order the arch is walked:
+# upper from the patient's right, lower from the patient's left. Population
+# averages, used only as a shape prior -- the image evidence dominates wherever
+# it is clear, and these break ties where it is not.
+WIDTHS = {
+    "upper": [9.0, 10.0, 6.5, 7.0, 7.5, 6.5, 8.5,      # 2..8   right
+              8.5, 6.5, 7.5, 7.0, 6.5, 10.0, 9.0],     # 9..15  left
+    "lower": [10.5, 11.0, 7.0, 7.0, 7.0, 5.5, 5.0,     # 18..24 left
+              5.0, 5.5, 7.0, 7.0, 7.0, 11.0, 10.5],    # 25..31 right
+}
+WIDTH_WEIGHT = 0.9        # how hard the width prior pulls against image evidence
+
 
 def load_manifest_fma(manifest_path):
     """{(arch, side, position): fma} parsed from tools/manifest.mjs."""
@@ -67,43 +79,119 @@ def side_and_position(arch, number):
     return ("left", 25 - number) if number <= 24 else ("right", number - 24)
 
 
-def split_arch(mask, v, n_expected=N_PER_ARCH):
+def clean_mask(mask, spacing, min_mm3=20.0):
+    """Drop disconnected specks before splitting.
+
+    A single stray voxel far around the arch stretches the angular range and the
+    partition spends a whole tooth on it, emitting a 0.4 mm3 "second molar" and
+    shifting every number after it.
+    """
+    lab, n = ndi.label(mask)
+    if n <= 1:
+        return mask
+    vox = float(np.prod(spacing))
+    sizes = ndi.sum(mask, lab, range(1, n + 1)) * vox
+    keep = [i + 1 for i in range(n) if sizes[i] >= min_mm3]
+    return np.isin(lab, keep)
+
+
+def _arc_histogram(mask, v):
+    """Voxel histogram along ARC LENGTH around the dental arch.
+
+    Angle alone is not enough: a molar sits at a larger radius than an incisor,
+    so equal angles are unequal millimetres, and a width prior expressed in mm
+    cannot be applied. Integrating the mean radius per angular bin converts the
+    sweep to arc length, where tooth widths mean what they say.
+    """
     zz, yy, xx = np.where(mask)
     wx = v.origin[0] + xx * v.spacing[0]
     wy = v.origin[1] + yy * v.spacing[1]
     cx = float(wx.mean())
     cy = float(wy.mean()) + ARCH_CENTRE_OFFSET
-    th = np.degrees(np.arctan2(wx - cx, -(wy - cy)))
+    dx, dy = wx - cx, -(wy - cy)
+    th = np.degrees(np.arctan2(dx, dy))
+    rad = np.hypot(dx, dy)
     lo, hi = float(th.min()) - 1.0, float(th.max()) + 1.0
-    nb = max(120, int(hi - lo))
-    hist, edges = np.histogram(th, bins=nb, range=(lo, hi))
-    hs = ndi.gaussian_filter1d(hist.astype(float), 1.6)
+    nb = max(160, int((hi - lo) * 1.5))
+    counts, edges = np.histogram(th, bins=nb, range=(lo, hi))
+    rsum, _ = np.histogram(th, bins=nb, range=(lo, hi), weights=rad)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        rmean = np.where(counts > 0, rsum / np.maximum(counts, 1), np.nan)
+    # fill empty bins so the arc-length axis stays monotonic
+    idx = np.arange(nb)
+    good = ~np.isnan(rmean)
+    rmean = np.interp(idx, idx[good], rmean[good])
+    dtheta = np.radians(edges[1] - edges[0])
+    ds = rmean * dtheta                      # mm of arc per bin
+    s_edge = np.concatenate([[0.0], np.cumsum(ds)])
+    dens = ndi.gaussian_filter1d(counts.astype(float), 1.6)
+    return dens, s_edge, edges, th, (cx, cy)
 
-    # The count is known -- 14 teeth per arch, third molars extracted -- so take
-    # the 13 most PROMINENT minima rather than thresholding. Thresholding fused
-    # the right canine and first premolar (one 1140 mm3 segment) while emitting a
-    # 0.1 mm3 sliver elsewhere; ranking by prominence cannot do either, because it
-    # always returns exactly the number of cuts asked for, at the best candidates.
-    from scipy.signal import find_peaks
-    idx, props = find_peaks(-hs, prominence=0)
-    if len(idx) < n_expected - 1:
-        raise SystemExit(f"only {len(idx)} interproximal minima; expected "
-                         f"{n_expected - 1}. Check the arch label.")
-    # Rank by prominence RELATIVE to the local lobe height, not absolute
-    # prominence. Absolute prominence is dominated by the wide gaps between
-    # molars and misses the shallow notches between the crowded lower incisors,
-    # which left both lower centrals fused in one 788 mm3 segment. A contact is
-    # a notch in its own neighbourhood regardless of how big its neighbours are,
-    # so normalising by local height makes small teeth compete on equal terms.
-    prom = props["prominences"]
-    local = np.array([max(hs[max(0, i - 10):i + 11].max(), 1.0) for i in idx])
-    best = sorted(idx[k] for k in np.argsort(prom / local)[::-1][:n_expected - 1])
 
-    bounds = [edges[i + 1] for i in best]
-    seg = np.digitize(th, bounds)          # 0..n_expected-1, one band per tooth
+def _dp_cuts(dens, s_edge, widths, weight=WIDTH_WEIGHT):
+    """Place len(widths)-1 cuts by dynamic programming.
+
+    Cost has two terms: the histogram density at each cut (a contact is a
+    trough, so a good cut is cheap) and squared deviation of each segment's arc
+    length from its expected mesiodistal width. Greedy selection of the most
+    prominent troughs cannot see the sequence as a whole -- it spent one cut
+    splitting a first molar diagonally while leaving two incisors fused. A
+    global optimum over the whole arch cannot make that trade, because the
+    fused pair and the bisected molar both cost width error.
+    """
+    n = len(widths)
+    B = len(dens)
+    scale = dens.max() if dens.max() > 0 else 1.0
+    cut = dens / scale                        # 0..1, low = good place to cut
+    total_w = float(sum(widths))
+    span = float(s_edge[-1])
+    exp = [w * span / total_w for w in widths]   # scale the prior to this arch
+    INF = 1e18
+    # dp[k][b] = best cost with k teeth placed, ending at bin boundary b
+    dp = np.full((n + 1, B + 1), INF)
+    back = np.zeros((n + 1, B + 1), np.int32)
+    dp[0][0] = 0.0
+    for k in range(1, n + 1):
+        e = exp[k - 1]
+        for b in range(1, B + 1):
+            s_b = s_edge[b]
+            lo = max(0, b - 1)
+            best, bestj = INF, 0
+            for j in range(0, b):
+                if dp[k - 1][j] >= INF:
+                    continue
+                w = s_b - s_edge[j]
+                if w <= 0.15 * e or w > 2.6 * e:
+                    continue
+                pen = weight * ((w - e) / e) ** 2
+                c = dp[k - 1][j] + pen + (cut[b - 1] if k < n else 0.0)
+                if c < best:
+                    best, bestj = c, j
+            dp[k][b] = best
+            back[k][b] = bestj
+    if dp[n][B] >= INF:
+        raise SystemExit("no valid arch partition found; check the arch label")
+    bounds, b = [], B
+    for k in range(n, 0, -1):
+        j = back[k][b]
+        bounds.append(j)
+        b = j
+    return sorted(x for x in bounds if 0 < x < B)
+
+
+def split_arch(mask, v, arch, n_expected=N_PER_ARCH):
+    mask = clean_mask(mask, tuple(v.spacing))
+    dens, s_edge, edges, th, centre = _arc_histogram(mask, v)
+    widths = WIDTHS[arch]
+    if len(widths) != n_expected:
+        raise SystemExit("width prior length does not match the expected count")
+    cut_bins = _dp_cuts(dens, s_edge, widths)
+    bounds = [edges[i] for i in cut_bins]
+    zz, yy, xx = np.where(mask)
+    seg = np.digitize(th, bounds)
     out = np.zeros(mask.shape, np.int32)
     out[zz, yy, xx] = seg + 1
-    return out, len(best) + 1, (cx, cy)
+    return out, len(bounds) + 1, centre
 
 
 def main():
@@ -120,7 +208,7 @@ def main():
         if not mask.any():
             print(f"{arch}: label absent")
             continue
-        split, n, centre = split_arch(mask, v)
+        split, n, centre = split_arch(mask, v, arch)
         print(f"\n{arch} arch: {mask.sum()*vox:8.1f} mm3 -> {n} teeth "
               f"(expected {N_PER_ARCH})   arch centre ({centre[0]:.1f}, {centre[1]:.1f})")
         print(f"  {'Univ':>4s} {'FMA':>9s} {'mm3':>8s} {'roots':>5s}  centroid (x, y, z) LPS")
