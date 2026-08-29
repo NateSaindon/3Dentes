@@ -311,18 +311,41 @@ sampled teeth 0.6–1.9 mm from their centroids, and the rings span the full arc
 This is the part worth keeping — it is genuinely this patient's gingival margin
 geometry rather than a generic curve.
 
-### The gingival surface is a first attempt and is not usable
+### The gingival surface: improved, still not shippable
 
-Upper 3666 mm³, lower 4633 mm³. The upper has the right form — a scalloped
-margin with teeth emerging through their sockets — but the lower renders as a
-flat slab rather than following the alveolar ridge, both are terraced, and 738k
-triangles for one arch means the bone envelope is being taken far too
-generously. **Do not ship this.** What it needs:
+Three defects from the first attempt are fixed:
 
-- The coronal/apical band to follow the ridge rather than a smoothed height field
-  over (x, y), which is what flattens the lower arch.
-- Interdental papillae, currently stubbed out at zero rise.
-- The mucogingival junction placed from anatomy rather than a fixed 7 mm.
+- **Ridge constraint.** The band was defined everywhere in (x, y), so the shell
+  draped the *entire* mandible and returned a 7300 mm³ slab. Restricting to
+  within 11 mm of a tooth is what gingiva actually does.
+- **Nearest-margin height instead of a smoothed field.** Smoothing over (x, y)
+  averages across the arch and flattens the scallop. Nearest-neighbour keeps each
+  tooth's own margin, and the interdental rise then appears on its own, because
+  the CEJ is already higher between the teeth.
+- **Apical limit from the measured crest**, per tooth, rather than a fixed 7 mm.
+
+Result: upper 3186 mm³, lower 2607 mm³ (from 3666 / 4633), 8–10 mm tall, which
+is the right scale.
+
+**It is still not shippable, and the reason is structural rather than a
+parameter.** The construction takes "shell outside bone, within a coronal-apical
+band". The alveolar ridge is roughly horizontal on top, so that shell is a flat
+sheet there, and the result reads as a **plate** rather than a collar wrapping
+each tooth. Real gingiva hugs the buccal and lingual *walls* of the alveolar
+process and closes interdentally as papillae.
+
+What it needs next — a different construction, not a tweak:
+
+1. Build the gingiva as a **per-tooth collar** lofted between two measured rings —
+   the margin ring (CEJ + 1 mm) and an apical ring at the crest — swept around
+   each tooth, then unioned across neighbours.
+2. Close the interdental spaces with **papillae** rising to the contact point,
+   which the current code stubs at zero rise.
+3. Keep the bone-draped sheet only for the *attached* gingiva apical to the
+   collar, where a shell over bone is the correct model.
+
+The measured inputs this needs are all in hand: margin rings verified on-tooth
+for 28/28, and a crest validated to +0.00 mm median across two exposures.
 
 ### The same coordinate bug, a third time
 

@@ -41,7 +41,8 @@ from segment_tooth import write_binary_stl
 MARGIN_ABOVE_CEJ_MM = 1.0     # free gingival margin sits ~1 mm coronal to the CEJ
 PAPILLA_RISE_MM = 2.5         # interdental papilla above the mid-facial margin
 THICKNESS_MM = 1.3            # gingival thickness over bone
-MGJ_BELOW_MARGIN_MM = 7.0     # mucogingival junction, apical to the margin
+MGJ_BELOW_CREST_MM = 4.0      # mucogingival junction, apical to the measured crest
+NEAR_TEETH_MM = 11.0          # gingiva hugs the alveolar ridge, not the whole jaw
 BONE = {"upper": 1, "lower": 2}
 
 
@@ -72,11 +73,12 @@ def margin_points(lm, v):
 
 
 def main():
-    vol_path, split_dir, pred_path, lm_path, outdir = sys.argv[1:6]
+    vol_path, split_dir, pred_path, lm_path, crest_path, outdir = sys.argv[1:7]
     os.makedirs(outdir, exist_ok=True)
     v = Volume.load(vol_path)
     lab, _, _ = read_nifti(pred_path)
     lm = json.load(open(lm_path))
+    crest = json.load(open(crest_path))
     sp = float(v.spacing[0])
 
     upper = np.load(os.path.join(split_dir, "upper_labels.npy")) > 0
@@ -88,6 +90,7 @@ def main():
                              "bone surface. Gingiva is not visible in CBCT.",
                   models="health -- no recession, no inflammation, average biotype",
                   margin_above_cej_mm=MARGIN_ABOVE_CEJ_MM,
+                  mgj_below_crest_mm=MGJ_BELOW_CREST_MM,
                   papilla_rise_mm=PAPILLA_RISE_MM,
                   thickness_mm=THICKNESS_MM, arches={})
 
@@ -97,46 +100,76 @@ def main():
         if not bone.any():
             continue
         pts = np.vstack([m["points"] for m in marg.values() if m["arch"] == arch])
-        # margin height field over (x, y), from the per-tooth margin points
-        ix = ((pts[:, 0] - v.origin[0]) / sp).astype(int)
-        iy = ((pts[:, 1] - v.origin[1]) / sp).astype(int)
-        iz = ((pts[:, 2] - v.origin[2]) / sp)
+
+        # Margin height from the NEAREST margin point, not a smoothed field.
+        # Smoothing over (x, y) averages across the arch and flattens the
+        # scallop; nearest-neighbour keeps each tooth's own margin, and the
+        # interdental rise appears on its own because the CEJ is already higher
+        # between the teeth.
+        ix = np.clip(((pts[:, 0] - v.origin[0]) / sp).astype(int), 0, bone.shape[2] - 1)
+        iy = np.clip(((pts[:, 1] - v.origin[1]) / sp).astype(int), 0, bone.shape[1] - 1)
+        iz = (pts[:, 2] - v.origin[2]) / sp
         H, W = bone.shape[1], bone.shape[2]
         acc = np.full((H, W), np.nan)
         for a, b, z in zip(iy, ix, iz):
-            if 0 <= a < H and 0 <= b < W:
-                acc[a, b] = z if np.isnan(acc[a, b]) else (
-                    max(acc[a, b], z) if sign > 0 else min(acc[a, b], z))
-        # spread the sparse margin samples into a smooth field, then add the
-        # interdental rise: papillae sit coronal to the mid-facial margin
+            acc[a, b] = z if np.isnan(acc[a, b]) else (
+                max(acc[a, b], z) if sign > 0 else min(acc[a, b], z))
         known = ~np.isnan(acc)
         if known.sum() < 10:
             continue
         idx = ndi.distance_transform_edt(~known, return_distances=False,
                                          return_indices=True)
-        field = acc[tuple(idx)]
-        field = ndi.gaussian_filter(field, 6.0)
-        field = field + sign * (PAPILLA_RISE_MM / sp) * 0.0   # papillae: see below
+        field = ndi.gaussian_filter(acc[tuple(idx)], 1.5)
+
+        # Apical limit from the MEASURED crest, per tooth, not a fixed depth.
+        capical = np.full((H, W), np.nan)
+        for key, m in marg.items():
+            if m["arch"] != arch:
+                continue
+            cr = crest.get(key)
+            if cr is None:
+                continue
+            depth = float(np.median(list(cr["crest_mm"].values())))
+            fr = lm[key]
+            c = np.array(fr["centre_index"], float)
+            ax = np.array(fr["axis"], float)
+            base = c + (depth / sp - MGJ_BELOW_CREST_MM / sp) * ax
+            w = v.world(base[2], base[1], base[0])
+            bx = int((w[0] - v.origin[0]) / sp); by = int((w[1] - v.origin[1]) / sp)
+            if 0 <= by < H and 0 <= bx < W:
+                capical[by, bx] = (w[2] - v.origin[2]) / sp
+        kn2 = ~np.isnan(capical)
+        if kn2.sum() >= 3:
+            i2 = ndi.distance_transform_edt(~kn2, return_distances=False,
+                                            return_indices=True)
+            apical_field = ndi.gaussian_filter(capical[tuple(i2)], 2.0)
+        else:
+            apical_field = field - sign * (7.0 / sp)
 
         zz = np.arange(bone.shape[0])[:, None, None]
-        coronal_of_margin = (zz - field[None, :, :]) * sign > 0
-        apical_of_mgj = (zz - (field[None, :, :]
-                               - sign * MGJ_BELOW_MARGIN_MM / sp)) * sign < 0
-        band = (~coronal_of_margin) & (~apical_of_mgj)
+        below_margin = (zz - field[None, :, :]) * sign <= 0
+        above_mgj = (zz - apical_field[None, :, :]) * sign >= 0
+        band = below_margin & above_mgj
+
+        # Hug the alveolar ridge. Without this the envelope wraps the entire
+        # mandible and returns a 7300 mm3 slab instead of gingiva.
+        near = ndi.distance_transform_edt(~teeth, sampling=(sp, sp, sp)) < NEAR_TEETH_MM
 
         env = ndi.binary_dilation(bone, np.ones((3, 3, 3)),
                                   int(round(THICKNESS_MM / sp)))
-        ging = env & ~bone & ~ndi.binary_dilation(teeth, np.ones((3, 3, 3)), 1) & band
+        ging = (env & ~bone
+                & ~ndi.binary_dilation(teeth, np.ones((3, 3, 3)), 1)
+                & band & near)
         ging = ndi.binary_closing(ging, np.ones((3, 3, 3)))
         l2, n2 = ndi.label(ging)
         if n2:
             szs = ndi.sum(ging, l2, range(1, n2 + 1)) * sp ** 3
-            ging = np.isin(l2, [i + 1 for i in range(n2) if szs[i] > 30.0])
+            ging = np.isin(l2, [i + 1 for i in range(n2) if szs[i] > 60.0])
 
         vol_mm3 = float(ging.sum()) * sp ** 3
         print(f"{arch}: {vol_mm3:8.1f} mm3 gingiva")
         if ging.sum() > 500:
-            f = ndi.gaussian_filter(ging.astype(np.float32), 0.8)
+            f = ndi.gaussian_filter(ging.astype(np.float32), 1.2)
             verts, faces, _, _ = marching_cubes(f, level=0.5)
             world = np.empty_like(verts)
             world[:, 0] = v.origin[0] + verts[:, 2] * sp
