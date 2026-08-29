@@ -7,13 +7,13 @@
   "thickness_mm": 1.1,
   "arches": {
     "upper": {
-      "volume_mm3": 1529.8,
-      "triangles": 369956,
+      "volume_mm3": 1403.3,
+      "triangles": 362216,
       "teeth": 14
     },
     "lower": {
-      "volume_mm3": 1240.6,
-      "triangles": 323910,
+      "volume_mm3": 1269.6,
+      "triangles": 353272,
       "teeth": 14
     }
   }

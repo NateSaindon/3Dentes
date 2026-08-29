@@ -10,170 +10,170 @@
     "2": {
       "fma": "FMA55697",
       "canals": 3,
-      "lumen_mm3": 23.91,
-      "core_mm3": 6.47
+      "lumen_mm3": 26.3,
+      "core_mm3": 7.11
     },
     "3": {
       "fma": "FMA55698",
       "canals": 4,
-      "lumen_mm3": 33.68,
-      "core_mm3": 9.11
+      "lumen_mm3": 31.69,
+      "core_mm3": 8.57
     },
     "4": {
       "fma": "FMA55688",
       "canals": 1,
-      "lumen_mm3": 27.6,
-      "core_mm3": 7.46
+      "lumen_mm3": 28.19,
+      "core_mm3": 7.62
     },
     "5": {
       "fma": "FMA55689",
       "canals": 2,
-      "lumen_mm3": 27.48,
-      "core_mm3": 7.43
+      "lumen_mm3": 30.51,
+      "core_mm3": 8.25
     },
     "6": {
       "fma": "FMA55798",
       "canals": 1,
-      "lumen_mm3": 18.25,
-      "core_mm3": 4.93
+      "lumen_mm3": 17.86,
+      "core_mm3": 4.83
     },
     "7": {
       "fma": "FMA55680",
       "canals": 1,
-      "lumen_mm3": 21.7,
-      "core_mm3": 5.87
+      "lumen_mm3": 23.96,
+      "core_mm3": 6.48
     },
     "8": {
       "fma": "FMA55681",
       "canals": 1,
-      "lumen_mm3": 13.65,
-      "core_mm3": 3.69
+      "lumen_mm3": 13.68,
+      "core_mm3": 3.7
     },
     "9": {
       "fma": "FMA55682",
       "canals": 1,
-      "lumen_mm3": 19.65,
-      "core_mm3": 5.31
+      "lumen_mm3": 19.77,
+      "core_mm3": 5.35
     },
     "10": {
       "fma": "FMA55683",
       "canals": 1,
-      "lumen_mm3": 19.36,
-      "core_mm3": 5.23
+      "lumen_mm3": 19.53,
+      "core_mm3": 5.28
     },
     "11": {
       "fma": "FMA55799",
       "canals": 1,
-      "lumen_mm3": 21.56,
-      "core_mm3": 5.83
+      "lumen_mm3": 19.94,
+      "core_mm3": 5.39
     },
     "12": {
       "fma": "FMA55690",
       "canals": 2,
-      "lumen_mm3": 20.52,
-      "core_mm3": 5.55
+      "lumen_mm3": 22.55,
+      "core_mm3": 6.1
     },
     "13": {
       "fma": "FMA55691",
       "canals": 1,
-      "lumen_mm3": 18.82,
-      "core_mm3": 5.09
+      "lumen_mm3": 21.67,
+      "core_mm3": 5.86
     },
     "14": {
       "fma": "FMA55699",
       "canals": 4,
-      "lumen_mm3": 24.79,
-      "core_mm3": 6.7
+      "lumen_mm3": 26.84,
+      "core_mm3": 7.26
     },
     "15": {
       "fma": "FMA55700",
       "canals": 3,
-      "lumen_mm3": 16.86,
-      "core_mm3": 4.56
+      "lumen_mm3": 19.06,
+      "core_mm3": 5.15
     },
     "18": {
       "fma": "FMA55703",
       "canals": 3,
-      "lumen_mm3": 41.21,
-      "core_mm3": 11.14
+      "lumen_mm3": 38.27,
+      "core_mm3": 10.35
     },
     "19": {
       "fma": "FMA55704",
       "canals": 3,
-      "lumen_mm3": 33.21,
-      "core_mm3": 8.98
+      "lumen_mm3": 33.01,
+      "core_mm3": 8.93
     },
     "20": {
       "fma": "FMA55692",
       "canals": 1,
-      "lumen_mm3": 36.56,
-      "core_mm3": 9.89
+      "lumen_mm3": 32.52,
+      "core_mm3": 8.79
     },
     "21": {
       "fma": "FMA55693",
       "canals": 1,
-      "lumen_mm3": 30.53,
-      "core_mm3": 8.26
+      "lumen_mm3": 31.43,
+      "core_mm3": 8.5
     },
     "22": {
       "fma": "FMA55687",
       "canals": 1,
-      "lumen_mm3": 36.09,
-      "core_mm3": 9.76
+      "lumen_mm3": 35.15,
+      "core_mm3": 9.5
     },
     "23": {
       "fma": "FMA57141",
       "canals": 1,
-      "lumen_mm3": 10.02,
+      "lumen_mm3": 10.04,
       "core_mm3": 2.71
     },
     "24": {
       "fma": "FMA57143",
       "canals": 1,
-      "lumen_mm3": 9.2,
-      "core_mm3": 2.49
+      "lumen_mm3": 9.16,
+      "core_mm3": 2.48
     },
     "25": {
       "fma": "FMA57142",
       "canals": 1,
-      "lumen_mm3": 7.78,
-      "core_mm3": 2.1
+      "lumen_mm3": 7.67,
+      "core_mm3": 2.07
     },
     "26": {
       "fma": "FMA57140",
       "canals": 1,
-      "lumen_mm3": 14.51,
-      "core_mm3": 3.92
+      "lumen_mm3": 14.83,
+      "core_mm3": 4.01
     },
     "27": {
       "fma": "FMA55686",
       "canals": 1,
-      "lumen_mm3": 37.18,
-      "core_mm3": 10.05
+      "lumen_mm3": 40.42,
+      "core_mm3": 10.93
     },
     "28": {
       "fma": "FMA55694",
       "canals": 1,
-      "lumen_mm3": 28.33,
-      "core_mm3": 7.66
+      "lumen_mm3": 30.39,
+      "core_mm3": 8.22
     },
     "29": {
       "fma": "FMA55695",
       "canals": 1,
-      "lumen_mm3": 21.78,
-      "core_mm3": 5.89
+      "lumen_mm3": 22.4,
+      "core_mm3": 6.06
     },
     "30": {
       "fma": "FMA55705",
       "canals": 3,
-      "lumen_mm3": 40.45,
-      "core_mm3": 10.94
+      "lumen_mm3": 37.59,
+      "core_mm3": 10.16
     },
     "31": {
       "fma": "FMA55706",
       "canals": 3,
-      "lumen_mm3": 40.28,
-      "core_mm3": 10.89
+      "lumen_mm3": 39.96,
+      "core_mm3": 10.81
     }
   }
 }

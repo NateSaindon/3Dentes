@@ -22,22 +22,22 @@
       "universal": 18,
       "fma": "FMA55703",
       "canal": 0,
-      "trunk_to_apex_mm": 9.22,
+      "trunk_to_apex_mm": 3.2,
       "apex_lps": [
-        28.98,
-        -8.2,
-        -34.92
+        32.51,
+        -5.16,
+        -39.45
       ]
     },
     {
       "universal": 18,
       "fma": "FMA55703",
       "canal": 1,
-      "trunk_to_apex_mm": 3.22,
+      "trunk_to_apex_mm": 18.74,
       "apex_lps": [
-        32.5,
-        -5.17,
-        -39.44
+        24.42,
+        -9.36,
+        -26.54
       ]
     },
     {
@@ -47,7 +47,7 @@
       "trunk_to_apex_mm": 5.39,
       "apex_lps": [
         28.96,
-        -6.33,
+        -6.32,
         -38.93
       ]
     },
@@ -55,64 +55,64 @@
       "universal": 19,
       "fma": "FMA55704",
       "canal": 0,
-      "trunk_to_apex_mm": 7.17,
+      "trunk_to_apex_mm": 7.22,
       "apex_lps": [
-        28.47,
-        -16.69,
-        -39.28
+        28.5,
+        -16.7,
+        -39.24
       ]
     },
     {
       "universal": 19,
       "fma": "FMA55704",
       "canal": 1,
-      "trunk_to_apex_mm": 3.44,
+      "trunk_to_apex_mm": 3.46,
       "apex_lps": [
-        26.16,
-        -21.27,
-        -39.86
+        26.1,
+        -21.29,
+        -39.81
       ]
     },
     {
       "universal": 19,
       "fma": "FMA55704",
       "canal": 2,
-      "trunk_to_apex_mm": 17.23,
+      "trunk_to_apex_mm": 7.27,
       "apex_lps": [
-        24.32,
-        -17.76,
-        -26.09
+        25.04,
+        -22.9,
+        -34.98
       ]
     },
     {
       "universal": 20,
       "fma": "FMA55692",
       "canal": 0,
-      "trunk_to_apex_mm": 5.76,
+      "trunk_to_apex_mm": 5.89,
       "apex_lps": [
-        21.95,
-        -25.95,
-        -39.05
+        21.92,
+        -26.04,
+        -38.92
       ]
     },
     {
       "universal": 21,
       "fma": "FMA55693",
       "canal": 0,
-      "trunk_to_apex_mm": 13.2,
+      "trunk_to_apex_mm": 13.26,
       "apex_lps": [
         17.73,
-        -31.91,
-        -36.19
+        -31.93,
+        -36.09
       ]
     },
     {
       "universal": 22,
       "fma": "FMA55687",
       "canal": 0,
-      "trunk_to_apex_mm": 16.7,
+      "trunk_to_apex_mm": 16.66,
       "apex_lps": [
-        12.49,
+        12.53,
         -33.04,
         -39.51
       ]
@@ -121,121 +121,121 @@
       "universal": 23,
       "fma": "FMA57141",
       "canal": 0,
-      "trunk_to_apex_mm": 24.4,
+      "trunk_to_apex_mm": 24.47,
       "apex_lps": [
-        7.19,
-        -36.79,
-        -34.21
+        7.22,
+        -36.87,
+        -34.07
       ]
     },
     {
       "universal": 26,
       "fma": "FMA57140",
       "canal": 0,
-      "trunk_to_apex_mm": 24.62,
+      "trunk_to_apex_mm": 24.63,
       "apex_lps": [
-        -1.48,
-        -36.03,
-        -32.84
+        -1.51,
+        -36.07,
+        -32.82
       ]
     },
     {
       "universal": 27,
       "fma": "FMA55686",
       "canal": 0,
-      "trunk_to_apex_mm": 16.06,
+      "trunk_to_apex_mm": 16.09,
       "apex_lps": [
-        -6.66,
-        -32.07,
-        -39.15
+        -6.63,
+        -32.08,
+        -39.14
       ]
     },
     {
       "universal": 28,
       "fma": "FMA55694",
       "canal": 0,
-      "trunk_to_apex_mm": 15.12,
+      "trunk_to_apex_mm": 14.99,
       "apex_lps": [
-        -12.07,
-        -31.5,
-        -34.32
+        -12.08,
+        -31.39,
+        -34.41
       ]
     },
     {
       "universal": 29,
       "fma": "FMA55695",
       "canal": 0,
-      "trunk_to_apex_mm": 7.7,
+      "trunk_to_apex_mm": 7.78,
       "apex_lps": [
-        -14.64,
-        -25.52,
-        -38.5
+        -14.6,
+        -25.54,
+        -38.42
       ]
     },
     {
       "universal": 30,
       "fma": "FMA55705",
       "canal": 0,
-      "trunk_to_apex_mm": 7.13,
+      "trunk_to_apex_mm": 7.3,
       "apex_lps": [
-        -20.29,
-        -13.26,
-        -38.93
+        -20.36,
+        -13.31,
+        -38.77
       ]
     },
     {
       "universal": 30,
       "fma": "FMA55705",
       "canal": 1,
-      "trunk_to_apex_mm": 6.34,
+      "trunk_to_apex_mm": 6.55,
       "apex_lps": [
-        -19.09,
-        -18.74,
-        -38.73
+        -18.18,
+        -18.73,
+        -38.46
       ]
     },
     {
       "universal": 30,
       "fma": "FMA55705",
       "canal": 2,
-      "trunk_to_apex_mm": 9.89,
+      "trunk_to_apex_mm": 20.19,
       "apex_lps": [
-        -16.6,
-        -20.4,
-        -34.56
+        -15.76,
+        -17.53,
+        -24.64
       ]
     },
     {
       "universal": 31,
       "fma": "FMA55706",
       "canal": 0,
-      "trunk_to_apex_mm": 3.79,
+      "trunk_to_apex_mm": 3.73,
       "apex_lps": [
-        -23.86,
-        -2.46,
-        -38.6
+        -23.85,
+        -2.4,
+        -38.64
       ]
     },
     {
       "universal": 31,
       "fma": "FMA55706",
       "canal": 1,
-      "trunk_to_apex_mm": 5.05,
+      "trunk_to_apex_mm": 5.2,
       "apex_lps": [
-        -21.66,
-        -5.15,
-        -38.43
+        -21.56,
+        -5.2,
+        -38.31
       ]
     },
     {
       "universal": 31,
       "fma": "FMA55706",
       "canal": 2,
-      "trunk_to_apex_mm": 9.65,
+      "trunk_to_apex_mm": 8.32,
       "apex_lps": [
-        -20.95,
-        -7.0,
-        -34.24
+        -21.31,
+        -6.48,
+        -35.43
       ]
     }
   ]
