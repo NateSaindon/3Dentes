@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate gingiva from the measured CEJ and the bone surface.
+"""Generate gingiva from the measured CEJ and alveolar crest.
 
 DERIVED, not measured. Gingiva is invisible in this scan -- soft tissue forms a
 single unimodal distribution around 195 HU with no boundary to find
@@ -19,8 +19,18 @@ tooth catches the neighbours' crowns instead. **No claim about bone level should
 be made from this pipeline**, and in particular the 4.5 mm CEJ-to-crest figure an
 earlier draft produced is an artefact, not periodontitis.
 
-So: the margin comes from the CEJ, and the attached gingiva is draped on the bone
-surface itself without ever needing a crest height.
+Built as a COLLAR, not as a shell over bone. An earlier version took "everything
+within 1.1 mm outside the bone, inside a coronal-apical band", which fails for a
+structural reason: the alveolar ridge is roughly horizontal on top, so that shell
+is a flat sheet there and the result reads as a plate. Real gingiva hugs the
+buccal and lingual *walls* of the alveolar process and closes interdentally as
+papillae.
+
+So each tooth gets a sleeve swept along its own surface, from the margin ring
+(CEJ + 1 mm, measured) down to an apical ring below the crest (measured). The
+collars are then closed together across the interdental gaps, which is what forms
+the papillae -- they appear on their own, because adjacent collars nearly touch
+at the contact point and are far apart lower down.
 
 Usage: python3 tools/cbct/gingiva.py <volume.nrrd> <split-dir> <pred.nii.gz>
                                      <landmarks.json> <out-dir>
@@ -39,10 +49,10 @@ from read_nifti import read_nifti
 from segment_tooth import write_binary_stl
 
 MARGIN_ABOVE_CEJ_MM = 1.0     # free gingival margin sits ~1 mm coronal to the CEJ
-PAPILLA_RISE_MM = 2.5         # interdental papilla above the mid-facial margin
-THICKNESS_MM = 1.3            # gingival thickness over bone
+THICKNESS_MM = 1.1            # gingival thickness on the tooth and bone
 MGJ_BELOW_CREST_MM = 4.0      # mucogingival junction, apical to the measured crest
-NEAR_TEETH_MM = 11.0          # gingiva hugs the alveolar ridge, not the whole jaw
+PAPILLA_CLOSE_MM = 2.2        # closes the interdental gap between adjacent collars
+N_ANGLES = 24
 BONE = {"upper": 1, "lower": 2}
 
 
@@ -72,6 +82,54 @@ def margin_points(lm, v):
     return out
 
 
+def sleeve(tooth, frame, cej_by_angle, crest_by_angle, spacing, shape):
+    """A gingival collar hugging one tooth, from the margin ring to below the crest."""
+    c = np.array(frame["centre_index"], float)
+    ax = np.array(frame["axis"], float)
+    e2 = np.array(frame["e2"], float)
+    e3 = np.array(frame["e3"], float)
+    pts = np.argwhere(tooth).astype(float) - c
+    t_all = pts @ ax
+    u, w = pts @ e2, pts @ e3
+    r_all = np.hypot(u, w)
+    ang_all = np.degrees(np.arctan2(w, u))
+
+    out = np.zeros(shape, bool)
+    step = 360.0 / N_ANGLES
+    thick = THICKNESS_MM / spacing
+    for k in range(N_ANGLES):
+        cej = cej_by_angle.get(k)
+        crest = crest_by_angle.get(k)
+        if cej is None:
+            continue
+        top = (cej + MARGIN_ABOVE_CEJ_MM) / spacing
+        base = ((crest if crest is not None else cej - 2.0)
+                - MGJ_BELOW_CREST_MM) / spacing
+        if base >= top:
+            continue
+        a0 = -180 + k * step
+        sel = (ang_all >= a0 - step) & (ang_all < a0 + 2 * step)
+        if sel.sum() < 20:
+            continue
+        a_mid = np.radians(a0 + step / 2)
+        dirv = np.cos(a_mid) * e2 + np.sin(a_mid) * e3
+        for t in np.arange(base, top, 0.6):
+            near = sel & (np.abs(t_all - t) < 2.0)
+            r_surf = (float(np.percentile(r_all[near], 92)) if near.sum() > 8
+                      else float(np.percentile(r_all[sel], 92)))
+            for rr in np.arange(r_surf - 0.5, r_surf + thick, 0.6):
+                for da in (-step / 3, 0.0, step / 3):
+                    d2 = (np.cos(a_mid + np.radians(da)) * e2
+                          + np.sin(a_mid + np.radians(da)) * e3)
+                    p = c + t * ax + rr * d2
+                    iz, iy, ix = (int(round(p[0])), int(round(p[1])),
+                                  int(round(p[2])))
+                    if (0 <= iz < shape[0] and 0 <= iy < shape[1]
+                            and 0 <= ix < shape[2]):
+                        out[iz, iy, ix] = True
+    return out
+
+
 def main():
     vol_path, split_dir, pred_path, lm_path, crest_path, outdir = sys.argv[1:7]
     os.makedirs(outdir, exist_ok=True)
@@ -81,95 +139,65 @@ def main():
     crest = json.load(open(crest_path))
     sp = float(v.spacing[0])
 
-    upper = np.load(os.path.join(split_dir, "upper_labels.npy")) > 0
-    lower = np.load(os.path.join(split_dir, "lower_labels.npy")) > 0
-    teeth = upper | lower
-    marg = margin_points(lm, v)
+    upper = np.load(os.path.join(split_dir, "upper_labels.npy"))
+    lower = np.load(os.path.join(split_dir, "lower_labels.npy"))
+    teeth = (upper > 0) | (lower > 0)
 
-    report = dict(provenance="DERIVED from the measured CEJ and the segmented "
-                             "bone surface. Gingiva is not visible in CBCT.",
+    report = dict(provenance="DERIVED from the measured CEJ and alveolar crest. "
+                             "Gingiva is not visible in CBCT.",
                   models="health -- no recession, no inflammation, average biotype",
+                  construction="per-tooth collar lofted from the margin ring to "
+                               "below the crest, closed interdentally into papillae",
                   margin_above_cej_mm=MARGIN_ABOVE_CEJ_MM,
                   mgj_below_crest_mm=MGJ_BELOW_CREST_MM,
-                  papilla_rise_mm=PAPILLA_RISE_MM,
                   thickness_mm=THICKNESS_MM, arches={})
 
-    for arch, sign in (("upper", -1.0), ("lower", +1.0)):
-        # `sign` is the coronal direction in z: maxillary crowns hang down.
-        bone = lab == BONE[arch]
-        if not bone.any():
-            continue
-        pts = np.vstack([m["points"] for m in marg.values() if m["arch"] == arch])
-
-        # Margin height from the NEAREST margin point, not a smoothed field.
-        # Smoothing over (x, y) averages across the arch and flattens the
-        # scallop; nearest-neighbour keeps each tooth's own margin, and the
-        # interdental rise appears on its own because the CEJ is already higher
-        # between the teeth.
-        ix = np.clip(((pts[:, 0] - v.origin[0]) / sp).astype(int), 0, bone.shape[2] - 1)
-        iy = np.clip(((pts[:, 1] - v.origin[1]) / sp).astype(int), 0, bone.shape[1] - 1)
-        iz = (pts[:, 2] - v.origin[2]) / sp
-        H, W = bone.shape[1], bone.shape[2]
-        acc = np.full((H, W), np.nan)
-        for a, b, z in zip(iy, ix, iz):
-            acc[a, b] = z if np.isnan(acc[a, b]) else (
-                max(acc[a, b], z) if sign > 0 else min(acc[a, b], z))
-        known = ~np.isnan(acc)
-        if known.sum() < 10:
-            continue
-        idx = ndi.distance_transform_edt(~known, return_distances=False,
-                                         return_indices=True)
-        field = ndi.gaussian_filter(acc[tuple(idx)], 1.5)
-
-        # Apical limit from the MEASURED crest, per tooth, not a fixed depth.
-        capical = np.full((H, W), np.nan)
-        for key, m in marg.items():
+    for arch, arr in (("upper", upper), ("lower", lower)):
+        ids = list(range(1, int(arr.max()) + 1))
+        cents = ndi.center_of_mass(arr > 0, arr, ids)
+        boxes = ndi.find_objects(arr)
+        acc = np.zeros(arr.shape, bool)
+        n_teeth = 0
+        for key, m in lm.items():
             if m["arch"] != arch:
                 continue
-            cr = crest.get(key)
-            if cr is None:
-                continue
-            depth = float(np.median(list(cr["crest_mm"].values())))
-            fr = lm[key]
-            c = np.array(fr["centre_index"], float)
-            ax = np.array(fr["axis"], float)
-            base = c + (depth / sp - MGJ_BELOW_CREST_MM / sp) * ax
-            w = v.world(base[2], base[1], base[0])
-            bx = int((w[0] - v.origin[0]) / sp); by = int((w[1] - v.origin[1]) / sp)
-            if 0 <= by < H and 0 <= bx < W:
-                capical[by, bx] = (w[2] - v.origin[2]) / sp
-        kn2 = ~np.isnan(capical)
-        if kn2.sum() >= 3:
-            i2 = ndi.distance_transform_edt(~kn2, return_distances=False,
-                                            return_indices=True)
-            apical_field = ndi.gaussian_filter(capical[tuple(i2)], 2.0)
-        else:
-            apical_field = field - sign * (7.0 / sp)
+            c = np.array(m["centre_index"], float)
+            best = min(ids, key=lambda s: np.linalg.norm(np.array(cents[s - 1]) - c))
+            box = boxes[best - 1]
+            pad = 46
+            sl = tuple(slice(max(0, b.start - pad), min(n, b.stop + pad))
+                       for b, n in zip(box, arr.shape))
+            tsub = np.zeros(tuple(x.stop - x.start for x in sl), bool)
+            tsub[tuple(slice(b.start - x.start, b.stop - x.start)
+                       for b, x in zip(box, sl))] = arr[box] == best
+            fr = dict(m)
+            fr["centre_index"] = [c[i] - sl[i].start for i in range(3)]
+            cej_by = {}
+            for ang, cj in zip(m["angles"], m["cej_mm"]):
+                if cj is not None:
+                    cej_by[int((ang + 180 - 7.5) // 15)] = cj
+            cr = crest.get(key, {}).get("crest_mm", {})
+            crest_by = {int(k2): val for k2, val in cr.items()}
+            acc[sl] |= sleeve(tsub, fr, cej_by, crest_by, sp, tsub.shape)
+            n_teeth += 1
 
-        zz = np.arange(bone.shape[0])[:, None, None]
-        below_margin = (zz - field[None, :, :]) * sign <= 0
-        above_mgj = (zz - apical_field[None, :, :]) * sign >= 0
-        band = below_margin & above_mgj
-
-        # Hug the alveolar ridge. Without this the envelope wraps the entire
-        # mandible and returns a 7300 mm3 slab instead of gingiva.
-        near = ndi.distance_transform_edt(~teeth, sampling=(sp, sp, sp)) < NEAR_TEETH_MM
-
-        env = ndi.binary_dilation(bone, np.ones((3, 3, 3)),
-                                  int(round(THICKNESS_MM / sp)))
-        ging = (env & ~bone
-                & ~ndi.binary_dilation(teeth, np.ones((3, 3, 3)), 1)
-                & band & near)
-        ging = ndi.binary_closing(ging, np.ones((3, 3, 3)))
+        # Close the interdental gaps. Adjacent collars nearly touch at the
+        # contact point and are far apart lower down, so a closing of this size
+        # fills exactly the wedge a papilla occupies and leaves the embrasure
+        # below it open.
+        r = int(round(PAPILLA_CLOSE_MM / sp))
+        ging = ndi.binary_closing(acc, np.ones((3, 3, 3)), iterations=r)
+        ging &= ~ndi.binary_dilation(teeth, np.ones((3, 3, 3)), 1)
+        ging &= ~(lab == BONE[arch])
         l2, n2 = ndi.label(ging)
         if n2:
             szs = ndi.sum(ging, l2, range(1, n2 + 1)) * sp ** 3
-            ging = np.isin(l2, [i + 1 for i in range(n2) if szs[i] > 60.0])
+            ging = np.isin(l2, [i + 1 for i in range(n2) if szs[i] > 40.0])
 
         vol_mm3 = float(ging.sum()) * sp ** 3
-        print(f"{arch}: {vol_mm3:8.1f} mm3 gingiva")
+        print(f"{arch}: {n_teeth} collars -> {vol_mm3:7.1f} mm3")
         if ging.sum() > 500:
-            f = ndi.gaussian_filter(ging.astype(np.float32), 1.2)
+            f = ndi.gaussian_filter(ging.astype(np.float32), 1.1)
             verts, faces, _, _ = marching_cubes(f, level=0.5)
             world = np.empty_like(verts)
             world[:, 0] = v.origin[0] + verts[:, 2] * sp
@@ -178,7 +206,8 @@ def main():
             write_binary_stl(os.path.join(outdir, f"gingiva-{arch}.stl"),
                              world, faces)
             report["arches"][arch] = dict(volume_mm3=round(vol_mm3, 1),
-                                          triangles=int(len(faces)))
+                                          triangles=int(len(faces)),
+                                          teeth=n_teeth)
     with open(os.path.join(outdir, "gingiva.json"), "w") as f:
         json.dump(report, f, indent=2)
     print(f"-> {outdir}")

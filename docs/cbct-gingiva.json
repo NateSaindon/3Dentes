@@ -1,18 +1,20 @@
 {
-  "provenance": "DERIVED from the measured CEJ and the segmented bone surface. Gingiva is not visible in CBCT.",
+  "provenance": "DERIVED from the measured CEJ and alveolar crest. Gingiva is not visible in CBCT.",
   "models": "health -- no recession, no inflammation, average biotype",
+  "construction": "per-tooth collar lofted from the margin ring to below the crest, closed interdentally into papillae",
   "margin_above_cej_mm": 1.0,
   "mgj_below_crest_mm": 4.0,
-  "papilla_rise_mm": 2.5,
-  "thickness_mm": 1.3,
+  "thickness_mm": 1.1,
   "arches": {
     "upper": {
-      "volume_mm3": 3186.2,
-      "triangles": 494596
+      "volume_mm3": 1529.8,
+      "triangles": 369956,
+      "teeth": 14
     },
     "lower": {
-      "volume_mm3": 2606.5,
-      "triangles": 425220
+      "volume_mm3": 1240.6,
+      "triangles": 323910,
+      "teeth": 14
     }
   }
 }

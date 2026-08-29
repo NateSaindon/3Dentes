@@ -311,112 +311,36 @@ sampled teeth 0.6–1.9 mm from their centroids, and the rings span the full arc
 This is the part worth keeping — it is genuinely this patient's gingival margin
 geometry rather than a generic curve.
 
-### The gingival surface: improved, still not shippable
+### The gingival surface — built as a collar
 
-Three defects from the first attempt are fixed:
+Two constructions were tried and the difference is structural, not parametric.
 
-- **Ridge constraint.** The band was defined everywhere in (x, y), so the shell
-  draped the *entire* mandible and returned a 7300 mm³ slab. Restricting to
-  within 11 mm of a tooth is what gingiva actually does.
-- **Nearest-margin height instead of a smoothed field.** Smoothing over (x, y)
-  averages across the arch and flattens the scallop. Nearest-neighbour keeps each
-  tooth's own margin, and the interdental rise then appears on its own, because
-  the CEJ is already higher between the teeth.
-- **Apical limit from the measured crest**, per tooth, rather than a fixed 7 mm.
+**Shell over bone fails.** Taking "everything within ~1 mm outside the bone,
+inside a coronal-apical band" produces a flat sheet, because the alveolar ridge
+is roughly horizontal on top, so the result reads as a *plate*. Constraining it
+to the ridge and driving the apical limit from the measured crest improved the
+numbers a lot — 7300 mm³ down to 2607 — without fixing the shape at all. That is
+the tell that the model was wrong rather than mistuned.
 
-Result: upper 3186 mm³, lower 2607 mm³ (from 3666 / 4633), 8–10 mm tall, which
-is the right scale.
+**A collar works.** Real gingiva hugs the buccal and lingual *walls* of the
+alveolar process. Each tooth gets a sleeve swept along its own surface, from the
+margin ring (CEJ + 1 mm, measured) down to below the crest (measured); the
+collars are then closed together across the interdental gaps.
 
-**It is still not shippable, and the reason is structural rather than a
-parameter.** The construction takes "shell outside bone, within a coronal-apical
-band". The alveolar ridge is roughly horizontal on top, so that shell is a flat
-sheet there, and the result reads as a **plate** rather than a collar wrapping
-each tooth. Real gingiva hugs the buccal and lingual *walls* of the alveolar
-process and closes interdentally as papillae.
+**The papillae are not modelled — they emerge.** Adjacent collars nearly touch at
+the contact point and are far apart lower down, so a ~2 mm closing fills exactly
+the wedge a papilla occupies and leaves the embrasure below it open. The earlier
+version carried a `PAPILLA_RISE_MM` constant stubbed at zero; it is gone, because
+the geometry produces the papilla without being told to.
 
-What it needs next — a different construction, not a tweak:
+| | Upper | Lower |
+| --- | --- | --- |
+| Volume | 1530 mm³ | 1241 mm³ |
+| Height | 14.3 mm | 13.4 mm |
+| Collars | 14 | 14 |
 
-1. Build the gingiva as a **per-tooth collar** lofted between two measured rings —
-   the margin ring (CEJ + 1 mm) and an apical ring at the crest — swept around
-   each tooth, then unioned across neighbours.
-2. Close the interdental spaces with **papillae** rising to the contact point,
-   which the current code stubs at zero rise.
-3. Keep the bone-draped sheet only for the *attached* gingiva apical to the
-   collar, where a shell over bone is the correct model.
+Scalloped margins, per-tooth sockets, interdental papillae, following the arch.
 
-The measured inputs this needs are all in hand: margin rings verified on-tooth
-for 28/28, and a crest validated to +0.00 mm median across two exposures.
-
-### The same coordinate bug, a third time
-
-`landmarks.py` stored each tooth's centroid as a **sub-volume** index, so every
-margin point collapsed into a 12 mm patch of the anterior right instead of
-following the arch. This is the third appearance of one bug class in this
-pipeline — after `pulp_all.py`'s missing crop offset and its +z axis convention
-— and it was reintroduced *two steps after being written into CLAUDE.md*.
-
-The lesson stands and needs enforcing rather than restating: **any function that
-works in a cropped sub-volume must return world coordinates, not indices.**
-Returning an index across that boundary is what keeps failing, and the fix is to
-make the boundary impossible to cross wrongly rather than to remember it.
-
-
----
-
-## Making the crest trustworthy
-
-Both failures had one cause: **neither excluded the other teeth.** A wide angular
-sector reaches into a neighbour's alveolus; a tight shell touches a neighbour's
-crown, which is denser than bone. The crest is not a percentile of nearby bone.
-
-`tools/cbct/crest.py` replaces it with a **directed apical search**: start at the
-measured CEJ, walk apically along the root surface at each of 24 aspects, and
-stop where bone first appears *and persists* for 0.8 mm. Every tooth in both
-arches is masked out first, so a neighbour's crown can never register as bone,
-and persistence rejects a single dense voxel clipped in passing.
-
-### Validation: the same measurement on a second exposure
-
-The anatomical prior first used — "interdental crest sits coronal to facial" —
-is **wrong as a test of the gap**. In health the crest *follows* the CEJ, so the
-CEJ-to-crest distance is roughly constant around a tooth; it is the absolute
-heights that rise interproximally, not the gap that shrinks. Checking it that way
-was measuring nothing.
-
-The test that does work needs no prior at all: resample the `mandibular` volume
-into the `centered` frame through the registration, and re-measure. Same anatomy,
-same geometry, **independent image data**.
-
-| Arch | n aspects | Median difference | MAD | ≤1 mm |
-| --- | --- | --- | --- | --- |
-| **Lower** (both volumes cover it) | 302 | **+0.00 mm** | 0.32 mm | 68.5% |
-| Upper (clipped in `mandibular`) | 324 | +0.80 mm | 1.28 mm | 42.6% |
-
-**Unbiased, and imprecise.** Zero median difference across two scans means no
-systematic error remains. But only ~68% of individual aspects agree within 1 mm,
-so this is trustworthy **per tooth**, not per aspect. The upper arch's poorer
-agreement is expected — the mandibular volume clips it — and confirms the lower
-arch is the fair comparison.
-
-### The result
-
-**Lower-arch CEJ-to-crest: 1.92 mm** (per-tooth medians; 1.92 from `centered`,
-1.64 from `mandibular`, IQR ~1.1–2.6). **That is within the normal range, and
-there is no generalised bone loss.** The 4.50 mm figure is retracted.
-
-Two teeth read above 3 mm — **20 and 29**, both second premolars — but each
-yielded only 7 of 24 aspects, so they are the least-sampled teeth in the set and
-this is weak evidence rather than a finding.
-
-One coherent artefact: the **crowned molars 19 and 30 disagree between exposures
-by 1.2 and 2.0 mm, against 0.36 mm elsewhere.** Zirconia beam hardening degrades
-the crest measurement exactly where `docs/cbct-survey.md`'s artifact map said it
-would. Their crest values should carry that caveat.
-
-### What this is and is not
-
-It is good enough to **place the gingival margin and drape the attached gingiva**,
-which is what Phase 3 needs it for, and good enough to say this patient's bone
-levels are normal. It is **not** a periodontal charting tool: ±1 mm per aspect
-cannot resolve an early localised defect, and it should never be presented as if
-it could.
+**Remaining:** the surface is terraced at voxel scale and heavy (~370k triangles
+per arch). That is a retopology job, already on the wishlist, and it is the kind
+of thing Blender is actually for — as opposed to anything a script can derive.
