@@ -1,0 +1,160 @@
+{
+  "tooth": "9",
+  "fma": "FMA55682",
+  "name": "maxillary left central incisor",
+  "source": "centered.nrrd",
+  "method": "cross-sectional area by intensity-deficit integration; elliptical sweep",
+  "pulp_density_hu": 497,
+  "planes": 114,
+  "canal_length_mm": 18.24,
+  "lumen_volume_mm3": 20.39,
+  "max_diameter_mm": 1.916,
+  "apical_foramen": {
+    "t_mm": 5.44,
+    "diameter_mm": 0.329,
+    "area_mm2": 0.0849,
+    "position_lps": [
+      5.13,
+      -37.25,
+      3.55
+    ]
+  },
+  "stl": "FMA55682-pulp-model.stl",
+  "triangles": 5472,
+  "caveat": "apical millimetre is a taper extrapolation; sub-resolution. Lateral canals and deltas are not modelled.",
+  "profile": [
+    {
+      "t": -12.8,
+      "dia_mm": 0.277
+    },
+    {
+      "t": -12.16,
+      "dia_mm": 0.41
+    },
+    {
+      "t": -11.52,
+      "dia_mm": 0.575
+    },
+    {
+      "t": -10.88,
+      "dia_mm": 0.732
+    },
+    {
+      "t": -10.24,
+      "dia_mm": 0.881
+    },
+    {
+      "t": -9.6,
+      "dia_mm": 1.081
+    },
+    {
+      "t": -8.96,
+      "dia_mm": 1.157
+    },
+    {
+      "t": -8.32,
+      "dia_mm": 1.104
+    },
+    {
+      "t": -7.68,
+      "dia_mm": 1.102
+    },
+    {
+      "t": -7.04,
+      "dia_mm": 1.113
+    },
+    {
+      "t": -6.4,
+      "dia_mm": 1.115
+    },
+    {
+      "t": -5.76,
+      "dia_mm": 1.228
+    },
+    {
+      "t": -5.12,
+      "dia_mm": 1.413
+    },
+    {
+      "t": -4.48,
+      "dia_mm": 1.58
+    },
+    {
+      "t": -3.84,
+      "dia_mm": 1.623
+    },
+    {
+      "t": -3.2,
+      "dia_mm": 1.367
+    },
+    {
+      "t": -2.56,
+      "dia_mm": 1.274
+    },
+    {
+      "t": -1.92,
+      "dia_mm": 1.677
+    },
+    {
+      "t": -1.28,
+      "dia_mm": 1.908
+    },
+    {
+      "t": -0.64,
+      "dia_mm": 1.814
+    },
+    {
+      "t": 0.16,
+      "dia_mm": 1.627
+    },
+    {
+      "t": 0.8,
+      "dia_mm": 1.419
+    },
+    {
+      "t": 1.44,
+      "dia_mm": 1.271
+    },
+    {
+      "t": 2.08,
+      "dia_mm": 1.124
+    },
+    {
+      "t": 2.72,
+      "dia_mm": 0.921
+    },
+    {
+      "t": 3.36,
+      "dia_mm": 0.646
+    },
+    {
+      "t": 4.0,
+      "dia_mm": 0.487
+    },
+    {
+      "t": 4.64,
+      "dia_mm": 0.424
+    },
+    {
+      "t": 5.28,
+      "dia_mm": 0.36
+    }
+  ],
+  "repaired_tissues": {
+    "tooth": {
+      "volume_mm3": 467.5,
+      "triangles": 50908
+    },
+    "dentin": {
+      "volume_mm3": 307.0,
+      "triangles": 72328
+    },
+    "enamel": {
+      "volume_mm3": 140.2,
+      "triangles": 43554
+    },
+    "pulp_voxelised": {
+      "volume_mm3": 20.29
+    }
+  }
+}

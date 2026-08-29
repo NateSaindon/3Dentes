@@ -134,6 +134,12 @@ Three things worth not rediscovering:
    confidently report that the canal does not exist. It does.
 3. **Mesh from grey levels, not the binary mask.** Marching cubes on a mask
    terraces at 0.16 mm however much you smooth it.
+4. **The pulp cannot be thresholded at all**, at any setting — below ~3 voxels
+   wide, partial volume means no voxel ever reaches pulp density. Measure the
+   lumen by integrating the intensity deficit across each cross-section, which
+   survives sub-resolution blurring. `tools/cbct/pulp_model.py` does this and
+   recovers tooth 9's canal at 20.4 mm³ with a 0.33 mm apical foramen. Do not
+   "fix" it back into a threshold.
 
 Node is **not installed** on the Fedora box: `sudo dnf install -y nodejs24
 nodejs24-npm`. Python side is `python3-pydicom python3-numpy python3-gdcm

@@ -31,7 +31,7 @@ Working data (**outside the repo**, see "Repository contents" below):
 ~/projects/3Dentes-cbct/
   usb-mirror/     5.4 GB   read-only mirror of NLSCBCT, chmod a-w
   nrrd/           551 MB   centered/mandibular/maxillary .nrrd + volumes.json
-  pilot/          9.0 MB   FMA55682{,-enamel,-dentin,-pulp}.stl + tooth9.json
+  pilot/          9.0 MB   FMA55682{,-enamel,-dentin,-pulp-model}.stl + JSON reports
 ```
 
 New tooling in the repo:
@@ -40,7 +40,8 @@ New tooling in the repo:
 | --- | --- |
 | `tools/cbct/vol.py` | Loads the gzipped NRRDs; keeps (z,y,x) index order and (x,y,z) world order straight |
 | `tools/cbct/prepare.py` | DICOM → de-identified NRRD, with geometry assertions |
-| `tools/cbct/segment_tooth.py` | One tooth → enamel / dentin / pulp → binary STL in LPS mm |
+| `tools/cbct/segment_tooth.py` | One tooth → watershed isolation, enamel / dentin split → binary STL in LPS mm |
+| `tools/cbct/pulp_model.py` | Pulp lumen and apical foramen by intensity-deficit integration; repairs the solid |
 
 ### De-identification and conversion (steps 3–4)
 
@@ -116,25 +117,91 @@ Morphometry sanity: 8.0 mm mesiodistal, 16.4 mm vertical, 18.2 mm along the long
 axis, cross-section narrow at the incisal edge, widest at the cervix (54 mm²),
 tapering smoothly to the apex. All consistent with a maxillary central incisor.
 
-### Pulp is real, but the extraction is provisional
+### Pulp: measured by intensity deficit, not by threshold
 
-The cavity is unambiguously present and strongly contrasted — **714 HU inside
-against 1481 HU in dentin**, roughly ten times the noise floor. This validates
-the project's headline premise: real measured pulp anatomy is in this data.
+The cavity is unambiguously present and strongly contrasted — **497 HU inside
+against 1444 HU in dentin**, roughly ten times the noise floor. But no threshold
+recovers it, and the reason is physical rather than algorithmic.
 
-The *extraction*, though, is not shippable. The canal wall is not consistently
-above the isolation threshold, so the recovered space breaks into 5 components
-and its cross-section varies more than real canal anatomy does (0.7–3.0 mm
-equivalent diameter over adjacent levels). Nothing large is missing — the
-unlabelled dark material inside the tooth totals 1.98 mm³ in 118 specks — but the
-surface should not ship without review. `tooth9.json` carries this as a `qc`
-block.
+A root canal is 0.2–1 mm across. At 0.16 mm voxels, and with CBCT's effective
+resolution several times its voxel size, the apical half of the canal is
+narrower than the point-spread function. **No voxel there ever reaches true pulp
+density.** Thresholding either misses the narrow canal or swallows dentin around
+the wide chamber. Global cuts, per-slice relative cuts, black top-hat, Sato
+tubularity and hysteresis combinations were all tried; each fails on one end or
+the other. The best of them returned 47–92 mm³ at a mean of 1000–1100 HU, i.e.
+roughly half dentin.
 
-**This is the strongest argument yet for evaluating DentalSegmentator**, which
-the plan already flags. Per-tooth instance masks from a trained model would
-remove exactly the fragile step here.
+What survives sub-resolution blurring is the **integral**. Blurring moves
+density around but neither creates nor destroys it, so the total intensity
+deficit across a cross-section is conserved even when the lumen is invisible
+voxel by voxel:
 
-### The apical third is rough
+```
+area = Σ(dentin_local − I) · pixel_area / (dentin_local − pulp_density)
+```
+
+`tools/cbct/pulp_model.py` tracks the lumen plane by plane perpendicular to the
+tooth's long axis, recovers its area by that integral, takes the cross-sectional
+shape from the deficit's second moments, and sweeps the result into an
+elliptical tube.
+
+Both densities are **measured from this tooth**, not assumed: pulp from the
+eroded core of the coronal chamber, where the lumen is wide enough that partial
+volume is negligible; dentin from an annulus around the canal on each plane,
+**with enamel excluded** — include enamel and the crown's reference inflates to
+~2100 HU, over-measuring the chamber by roughly a factor of two.
+
+#### Result
+
+| | |
+| --- | --- |
+| Canal length | 18.24 mm (the tooth's full long-axis length) |
+| Lumen volume | **20.39 mm³** — expected range for a central incisor is 15–25 |
+| Maximum diameter | 1.92 mm, at the chamber |
+| **Apical foramen** | **0.329 mm**, at LPS (5.13, −37.25, 3.55) |
+
+The foramen sits 0.36 mm inside the root surface and 1.23 mm from the
+anatomical apex; clinically it sits 0.5–1 mm short of the apex, so this is the
+right anatomy in the right direction. Literature foramen diameter for a
+maxillary central incisor is 0.2–0.4 mm.
+
+Two independent consistency checks pass: the voxelised tube measures 20.29 mm³
+against the analytic integral's 20.39 mm³ (0.5%), and the modelled surface sits
+at a median 1054 HU, against the expected dentin/pulp midpoint of 948.
+
+#### It also repairs the solid
+
+`segment_tooth.py` isolates above 1050 HU, so the lumen is not in its watershed
+basin, and the per-slice fill closes it only where the dentin ring is unbroken.
+Where the ring breaks the canal stays *outside* the solid — 17 of 114 planes for
+tooth 9. Unioning the modelled lumen back in closes those gaps, and the tissues
+then partition the tooth exactly:
+
+| Tissue | Volume | Triangles |
+| --- | --- | --- |
+| Tooth (solid) | 467.50 mm³ | 50,908 |
+| Dentin | 307.00 mm³ | 72,328 |
+| Enamel | 140.20 mm³ | 43,554 |
+| Pulp | 20.29 mm³ | 5,472 |
+
+307.00 + 140.20 + 20.29 = 467.49. The threshold-based pulp mesh is superseded
+and deleted.
+
+#### Honest limits
+
+- Cross-sections below ~0.3 mm equivalent diameter are at the noise floor of the
+  integral; **the apical millimetre is an extrapolation of the taper**, not a
+  measurement.
+- **Lateral canals, apical deltas and isthmuses are not modelled**, and are not
+  present in the data to model. The plan predicted this.
+- A **single lumen** is assumed. Teeth 5 and 12 typically have two canals, so
+  the tracker must be run per canal there — that is the next real test of this
+  method, and the reason those teeth are the right second pilot.
+- This is a **model fitted to measured cross-sectional area**, not a voxel
+  segmentation. It should be labelled as such wherever the atlas presents it.
+
+### The apical third of the outer surface is rough
 
 The crown surface is clean. The apical third is spiky, because that is where the
 PDL stops being resolved and the tooth–bone boundary genuinely becomes ambiguous
@@ -176,9 +243,10 @@ must stay physically separate.
 
 ## Next
 
-1. **Evaluate DentalSegmentator** before hand-building more teeth. The pilot has
-   shown exactly which step it would replace.
-2. **Second pilot tooth: 5 or 12** (maxillary first premolar) — the multi-canal
-   case, still clear of the crown streak fan. The plan's choice, still right.
+1. **Second pilot tooth: 5 or 12** (maxillary first premolar). Two canals, so it
+   is the real test of the deficit-integration tracker, which currently assumes
+   a single lumen. Still clear of the crown streak fan.
+2. **Evaluate DentalSegmentator** for the per-tooth isolation step — the part
+   that still needs hand-placed seeds. The pulp modelling no longer needs it.
 3. **Registration** (step 6) once a second volume's geometry is actually needed.
 4. **Install Node** and run a real `build:assets` with a CBCT mesh in the tree.
