@@ -289,7 +289,8 @@ matches published crown heights to **within 0.6 mm** across incisors, canines an
 molars. All 28 teeth yielded a full 24-aspect CEJ curve — which is what carries
 the scallop, since the CEJ rises interproximally and dips mid-facially.
 
-**The alveolar crest is not reliable by any method tried.** Two definitions
+**The alveolar crest was not reliable by the first methods tried** — since
+fixed, see "Making the crest trustworthy" below. Two definitions
 disagreed by roughly 8 mm *in opposite directions*:
 
 | Crest definition | CEJ-to-crest, tooth 9 | What goes wrong |
@@ -297,15 +298,10 @@ disagreed by roughly 8 mm *in opposite directions*:
 | 95th percentile of bone within a 9.6 mm angular sector | +4.2 mm | Catches bone belonging to neighbouring teeth |
 | Bone contacting the root within 0.6 mm | −4.2 mm | Catches the neighbours' *crowns* instead |
 
-> **No claim about this patient's bone level should be drawn from this
-> pipeline.** An earlier draft reported a 4.50 mm median CEJ-to-crest across all
-> 28 teeth, which would be generalised periodontitis. It is an artefact of the
-> crest definition, not a finding. The uniformity across every tooth — including
+> An earlier draft reported a 4.50 mm median CEJ-to-crest across all 28 teeth,
+> which would be generalised periodontitis. **It was an artefact of the crest
+> definition, not a finding**, and the uniformity across every tooth — including
 > teeth that would have to be independently affected — was the tell.
-
-Locating the crest properly needs a directed search: walk apically along the root
-surface from the CEJ and find where bone first appears, excluding neighbouring
-teeth explicitly. That is not done.
 
 ### The gingival margin is correct and patient-specific
 
@@ -340,3 +336,64 @@ The lesson stands and needs enforcing rather than restating: **any function that
 works in a cropped sub-volume must return world coordinates, not indices.**
 Returning an index across that boundary is what keeps failing, and the fix is to
 make the boundary impossible to cross wrongly rather than to remember it.
+
+
+---
+
+## Making the crest trustworthy
+
+Both failures had one cause: **neither excluded the other teeth.** A wide angular
+sector reaches into a neighbour's alveolus; a tight shell touches a neighbour's
+crown, which is denser than bone. The crest is not a percentile of nearby bone.
+
+`tools/cbct/crest.py` replaces it with a **directed apical search**: start at the
+measured CEJ, walk apically along the root surface at each of 24 aspects, and
+stop where bone first appears *and persists* for 0.8 mm. Every tooth in both
+arches is masked out first, so a neighbour's crown can never register as bone,
+and persistence rejects a single dense voxel clipped in passing.
+
+### Validation: the same measurement on a second exposure
+
+The anatomical prior first used — "interdental crest sits coronal to facial" —
+is **wrong as a test of the gap**. In health the crest *follows* the CEJ, so the
+CEJ-to-crest distance is roughly constant around a tooth; it is the absolute
+heights that rise interproximally, not the gap that shrinks. Checking it that way
+was measuring nothing.
+
+The test that does work needs no prior at all: resample the `mandibular` volume
+into the `centered` frame through the registration, and re-measure. Same anatomy,
+same geometry, **independent image data**.
+
+| Arch | n aspects | Median difference | MAD | ≤1 mm |
+| --- | --- | --- | --- | --- |
+| **Lower** (both volumes cover it) | 302 | **+0.00 mm** | 0.32 mm | 68.5% |
+| Upper (clipped in `mandibular`) | 324 | +0.80 mm | 1.28 mm | 42.6% |
+
+**Unbiased, and imprecise.** Zero median difference across two scans means no
+systematic error remains. But only ~68% of individual aspects agree within 1 mm,
+so this is trustworthy **per tooth**, not per aspect. The upper arch's poorer
+agreement is expected — the mandibular volume clips it — and confirms the lower
+arch is the fair comparison.
+
+### The result
+
+**Lower-arch CEJ-to-crest: 1.92 mm** (per-tooth medians; 1.92 from `centered`,
+1.64 from `mandibular`, IQR ~1.1–2.6). **That is within the normal range, and
+there is no generalised bone loss.** The 4.50 mm figure is retracted.
+
+Two teeth read above 3 mm — **20 and 29**, both second premolars — but each
+yielded only 7 of 24 aspects, so they are the least-sampled teeth in the set and
+this is weak evidence rather than a finding.
+
+One coherent artefact: the **crowned molars 19 and 30 disagree between exposures
+by 1.2 and 2.0 mm, against 0.36 mm elsewhere.** Zirconia beam hardening degrades
+the crest measurement exactly where `docs/cbct-survey.md`'s artifact map said it
+would. Their crest values should carry that caveat.
+
+### What this is and is not
+
+It is good enough to **place the gingival margin and drape the attached gingiva**,
+which is what Phase 3 needs it for, and good enough to say this patient's bone
+levels are normal. It is **not** a periodontal charting tool: ±1 mm per aspect
+cannot resolve an early localised defect, and it should never be presented as if
+it could.
