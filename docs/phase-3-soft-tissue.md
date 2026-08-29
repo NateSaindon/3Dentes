@@ -153,9 +153,7 @@ can derive.
 
 ## Order of work
 
-1. **Register the `mandibular` volume onto `centered`** (plan step 6, now
-   justified by the truncated canal) and rebuild the canal continuous, foramen to
-   foramen.
+1. ~~**Register the `mandibular` volume onto `centered`**~~ — **done**, see below.
 2. **Pulp as tissue** — relabel, add the lining and neurovascular core, and wire
    the apical foramina to the IAN.
 3. **Generate gingiva** from CEJ and alveolar crest.
@@ -163,3 +161,68 @@ can derive.
 5. **Muscles fitted to measured attachments; tongue authored.** Blender, and last.
 
 See [wishlist.md](wishlist.md) for what this anatomy would later enable.
+
+---
+
+## Step 1 as executed — registration and the canal
+
+**The plan called for Mattes mutual information**, chosen because CBCT gray
+values are uncalibrated and shift between exposures. A better option existed once
+DentalSegmentator was in place: register **mandible label to mandible label**,
+which never looks at intensities at all. That removes the intensity-scaling
+problem rather than tolerating it, and it is the plan's "mask the metric to
+mandibular structure only" taken to its limit — the mask *is* the signal.
+
+Coarse-to-fine Powell over 6 DOF, 93 seconds. Result: rotation 3.96° / 1.76° /
+−0.50°, translation −34.88 / 1.59 / 3.46 mm — dominated by a 35 mm shift along z,
+which is simply that the mandibular scan was aimed lower.
+
+### Validation
+
+Raw Dice understates this: the two mandible masks differ in volume because the
+fields of view differ, capping achievable Dice. Reported against its ceiling:
+
+| Label | Dice | Ceiling | Note |
+| --- | --- | --- | --- |
+| Mandible | 0.870 | 0.974 | fitted on this |
+| **Lower Teeth** | **0.956** | 1.000 | **held out — never seen by the optimiser** |
+| Mandibular canal | 0.722 | 0.971 | thin structure, unforgiving of small error |
+| Upper Teeth | 0.742 | 0.947 | *expected* to disagree |
+
+Surface distance from the fixed mandible boundary to the transformed moving one:
+median **0.23 mm**, 82.2% within 0.5 mm, against 0.16 mm voxels.
+
+The held-out test is the one that matters. The transform was fitted to the
+mandible alone, so the lower teeth — rigidly attached to it but never seen by the
+optimiser — are independent evidence, and they land at 0.956.
+
+**The upper teeth at 0.742 against the lower teeth at 0.956 is not a failure; it
+is a measurement.** That gap is the maxilla having moved relative to the mandible
+between exposures, and it confirms the plan's central claim that no single rigid
+transform can align both jaws.
+
+An unplanned cross-check fell out of segmenting both volumes: the lower teeth
+measure 9108.2 mm³ in `centered` and 9106.2 mm³ in `mandibular` — **two
+independent exposures, segmented separately, agreeing to 0.02%.**
+
+### The canal
+
+Fused on an **expanded grid**, not the fixed volume's own. The transform is
+dominated by that 35 mm z-shift, so resampling into the centered grid pushed a
+third of the mandibular canal off the end — throwing away exactly the coverage
+the registration existed to gain. Growing the grid to hold the union first
+recovered it.
+
+| | Volume | Pieces |
+| --- | --- | --- |
+| `centered` alone | 328.7 mm³ | 5 |
+| `mandibular`, transformed | 542.7 mm³ | 4 |
+| Union, closed | **618.9 mm³** | **2 — one per side** |
+
+Right canal 335.1 mm³ over 47.2 mm; left 283.8 mm³ over 42.4 mm. Both run
+continuously from the anterior loop at the mental foramen back to the ramus, and
+both extend beyond the `centered` field of view — to x = +45.4 mm against a
+boundary at +40.96, and down to z = −49.2 against a floor at −44.5.
+
+**The inferior alveolar nerve now has a measured course**, which is what item 2
+of the order of work needs to wire the apical foramina to.

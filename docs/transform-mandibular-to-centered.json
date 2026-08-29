@@ -1,0 +1,37 @@
+{
+  "fixed": "DS_000.nii.gz",
+  "moving": "DS_001.nii.gz",
+  "label": 2,
+  "metric": "soft Dice on the segmentation label",
+  "rotation_deg": [
+    3.9633,
+    1.7553,
+    -0.5006
+  ],
+  "translation_mm": [
+    -34.8791,
+    1.5914,
+    3.4622
+  ],
+  "rotation_matrix": [
+    [
+      0.999493,
+      0.010834,
+      0.029952
+    ],
+    [
+      -0.008734,
+      0.997552,
+      -0.069382
+    ],
+    [
+      -0.030631,
+      0.069085,
+      0.99714
+    ]
+  ],
+  "final_dice": 0.7684,
+  "seconds": 93.2,
+  "convention": "x_fixed = R @ (x_moving - centre) + centre + t, LPS mm, index order (z, y, x)",
+  "note": "rigid, mandible only. The mandible is NOT rigid with respect to the maxilla across these exposures."
+}

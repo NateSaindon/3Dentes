@@ -1,0 +1,9 @@
+{
+  "centered_mm3": 328.7,
+  "mandibular_mm3": 542.7,
+  "fused_mm3": 618.9,
+  "pieces": 2,
+  "stl": "mandibular-canal.stl",
+  "triangles": 121088,
+  "source": "union of both volumes' canal labels through transform-mandibular-to-centered.json"
+}
