@@ -162,8 +162,11 @@ Four things worth not rediscovering:
    drop it.** Dropping surplus canal tracks cost tooth 9 a third of its pulp.
 7. **The pulp count is a prior; the volume is a measurement.** An extra canal
    will be neither found nor flagged.
-8. **Every ROI-local index must have its crop corner added back before it
-   becomes a world coordinate.** `pulp_all.py` omitted it and placed all 28 pulp
+8. **Any function that works in a cropped sub-volume must return WORLD
+   coordinates, not indices.** This bug class has now appeared three times
+   (`pulp_all.py` twice, `landmarks.py` once), the last time two steps after
+   being documented here. Restating it does not work; make the boundary
+   impossible to cross wrongly. `pulp_all.py` omitted it and placed all 28 pulp
    meshes at the wrong point in the volume. Nothing in the *numbers* looked
    wrong -- volumes and diameters are counts and differences, so they stayed
    correct -- and it surfaced only when nerve branches were wired to the apices

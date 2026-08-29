@@ -155,7 +155,7 @@ can derive.
 
 1. ~~**Register the `mandibular` volume onto `centered`**~~ — **done**, see below.
 2. ~~**Pulp as tissue**~~ — **done**, see below.
-3. **Generate gingiva** from CEJ and alveolar crest.
+3. **Generate gingiva** from CEJ and alveolar crest — *landmarks done, surface incomplete; see below.*
 4. **PDL shell.**
 5. **Muscles fitted to measured attachments; tongue authored.** Blender, and last.
 
@@ -272,3 +272,71 @@ side** — upper apices above their crowns, lower apices below.
 **The lesson worth keeping:** when a geometry bug cannot change any scalar you
 are printing, print a coordinate. Both bugs were invisible to volume-based
 validation and obvious the moment a position was checked against anatomy.
+
+
+---
+
+## Step 3 as executed — landmarks solid, surface not yet
+
+### The CEJ is measurable. The alveolar crest is not.
+
+This is the substantive finding, and it revises the plan above.
+
+**The cementoenamel junction is reliable.** It is found as the apical edge of the
+enamel cap, per tooth, at 24 angular aspects. The check that matters is crown
+height, because the CEJ is exactly where the enamel ends: detected enamel extent
+matches published crown heights to **within 0.6 mm** across incisors, canines and
+molars. All 28 teeth yielded a full 24-aspect CEJ curve — which is what carries
+the scallop, since the CEJ rises interproximally and dips mid-facially.
+
+**The alveolar crest is not reliable by any method tried.** Two definitions
+disagreed by roughly 8 mm *in opposite directions*:
+
+| Crest definition | CEJ-to-crest, tooth 9 | What goes wrong |
+| --- | --- | --- |
+| 95th percentile of bone within a 9.6 mm angular sector | +4.2 mm | Catches bone belonging to neighbouring teeth |
+| Bone contacting the root within 0.6 mm | −4.2 mm | Catches the neighbours' *crowns* instead |
+
+> **No claim about this patient's bone level should be drawn from this
+> pipeline.** An earlier draft reported a 4.50 mm median CEJ-to-crest across all
+> 28 teeth, which would be generalised periodontitis. It is an artefact of the
+> crest definition, not a finding. The uniformity across every tooth — including
+> teeth that would have to be independently affected — was the tell.
+
+Locating the crest properly needs a directed search: walk apically along the root
+surface from the CEJ and find where bone first appears, excluding neighbouring
+teeth explicitly. That is not done.
+
+### The gingival margin is correct and patient-specific
+
+Built from the measured CEJ, offset 1 mm coronally along each tooth's own axis.
+Verified: **0 of 28 margin rings sit more than 6 mm from their tooth**, with
+sampled teeth 0.6–1.9 mm from their centroids, and the rings span the full arch.
+This is the part worth keeping — it is genuinely this patient's gingival margin
+geometry rather than a generic curve.
+
+### The gingival surface is a first attempt and is not usable
+
+Upper 3666 mm³, lower 4633 mm³. The upper has the right form — a scalloped
+margin with teeth emerging through their sockets — but the lower renders as a
+flat slab rather than following the alveolar ridge, both are terraced, and 738k
+triangles for one arch means the bone envelope is being taken far too
+generously. **Do not ship this.** What it needs:
+
+- The coronal/apical band to follow the ridge rather than a smoothed height field
+  over (x, y), which is what flattens the lower arch.
+- Interdental papillae, currently stubbed out at zero rise.
+- The mucogingival junction placed from anatomy rather than a fixed 7 mm.
+
+### The same coordinate bug, a third time
+
+`landmarks.py` stored each tooth's centroid as a **sub-volume** index, so every
+margin point collapsed into a 12 mm patch of the anterior right instead of
+following the arch. This is the third appearance of one bug class in this
+pipeline — after `pulp_all.py`'s missing crop offset and its +z axis convention
+— and it was reintroduced *two steps after being written into CLAUDE.md*.
+
+The lesson stands and needs enforcing rather than restating: **any function that
+works in a cropped sub-volume must return world coordinates, not indices.**
+Returning an index across that boundary is what keeps failing, and the fix is to
+make the boundary impossible to cross wrongly rather than to remember it.
