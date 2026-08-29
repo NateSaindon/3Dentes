@@ -14,3 +14,18 @@ public/teeth.json
 public/sw.js
 public/workbox-*.js
 public/registerSW.js
+
+# CBCT imaging data and derived volumes. These live in ~/projects/3Dentes-cbct/,
+# never in the repo: the USB mirror is 5.4 GB and the NRRDs 551 MB, both far past
+# what belongs in git (and GitHub's per-file hard limit is 100 MB). Both are
+# reproducible — the mirror from the USB, the NRRDs from tools/cbct/prepare.py.
+*.nrrd
+*.nrrd.gz
+*.dcm
+DICOMDIR
+usb-mirror/
+nrrd/
+
+# Python bytecode from tools/cbct/
+__pycache__/
+*.pyc

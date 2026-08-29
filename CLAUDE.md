@@ -99,3 +99,42 @@ The four things from it that matter most:
 
 The privacy question that used to gate this work is **settled: public is
 approved.** De-identify headers anyway.
+
+### CBCT: where things actually stand (2026-08-29)
+
+The USB has been surveyed and a pilot tooth segmented. **Two documents now sit
+between you and `cbct-plan.md`, and they win where they disagree with it:**
+
+- **[docs/cbct-survey.md](docs/cbct-survey.md)** — what is really on the disc.
+  Read it before touching the data. Four of the plan's premises were wrong:
+  all three volumes are the *same* 0.16 mm isotropic resolution and FOV (not
+  focused, higher-res); the **maxillary volume truncates the upper crowns** and
+  is a sinus/root volume, not an upper-arch source; **`centered` is the only
+  volume with both complete arches** and should be the primary segmentation
+  source, not just the registration anchor; and it was acquired **2025-06-27**,
+  fourteen months before the other two.
+- **[docs/cbct-pilot.md](docs/cbct-pilot.md)** — tooth 9 segmented end to end,
+  what worked, and two traps that cost real time (see below).
+
+**Laterality is resolved.** The operator confirms the septum deviates right,
+matching the headers' LPS reading. The volumes are not mirrored.
+
+Working data is in `~/projects/3Dentes-cbct/` and is **not** committed — see the
+`.gitignore` note. Regenerate with `tools/cbct/prepare.py`.
+
+Three things worth not rediscovering:
+
+1. **A tooth cannot be thresholded out of its socket.** Root dentin and alveolar
+   bone overlap in density and neighbours touch at their contacts. Use the
+   marker-based watershed in `tools/cbct/segment_tooth.py`, and seed **bone** as
+   its own basin or the result leaks up the socket.
+2. **The watershed basin has the pulp cut out of it**, and 3D `fill_holes` will
+   not close it, because the canal opens at the apical foramen. Fill **per axial
+   slice**. Any analysis of interior anatomy against an unfilled mask will
+   confidently report that the canal does not exist. It does.
+3. **Mesh from grey levels, not the binary mask.** Marching cubes on a mask
+   terraces at 0.16 mm however much you smooth it.
+
+Node is **not installed** on the Fedora box: `sudo dnf install -y nodejs24
+nodejs24-npm`. Python side is `python3-pydicom python3-numpy python3-gdcm
+python3-scipy python3-scikit-image dcm2niix dcmtk`.

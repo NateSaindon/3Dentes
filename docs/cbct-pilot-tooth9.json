@@ -1,0 +1,78 @@
+{
+  "tooth": "9",
+  "fma": "FMA55682",
+  "name": "maxillary left central incisor",
+  "source": "centered.nrrd",
+  "otsu_enamel_dentin_hu": 1586,
+  "qc": {
+    "pulp_fragments": 5,
+    "pulp_dentin_contrast_hu": 398,
+    "pulp_status": "provisional - fragments, do not ship unreviewed"
+  },
+  "tissues": {
+    "tooth": {
+      "volume_mm3": 466.0,
+      "voxels": 113760,
+      "stl": "FMA55682.stl",
+      "triangles": 54480,
+      "bbox_lps_min": [
+        0.9,
+        -49.64,
+        -11.57
+      ],
+      "bbox_lps_max": [
+        9.49,
+        -36.29,
+        5.1
+      ]
+    },
+    "enamel": {
+      "volume_mm3": 140.3,
+      "voxels": 34259,
+      "stl": "FMA55682-enamel.stl",
+      "triangles": 43510,
+      "bbox_lps_min": [
+        0.93,
+        -49.53,
+        -11.47
+      ],
+      "bbox_lps_max": [
+        9.21,
+        -39.39,
+        -0.84
+      ]
+    },
+    "dentin": {
+      "volume_mm3": 302.5,
+      "voxels": 73856,
+      "stl": "FMA55682-dentin.stl",
+      "triangles": 77968,
+      "bbox_lps_min": [
+        1.2,
+        -49.65,
+        -11.45
+      ],
+      "bbox_lps_max": [
+        9.35,
+        -36.55,
+        4.83
+      ]
+    },
+    "pulp": {
+      "volume_mm3": 23.1,
+      "voxels": 5645,
+      "stl": "FMA55682-pulp.stl",
+      "triangles": 12250,
+      "bbox_lps_min": [
+        3.83,
+        -47.89,
+        -9.99
+      ],
+      "bbox_lps_max": [
+        8.36,
+        -37.18,
+        0.57
+      ]
+    }
+  }
+}
