@@ -33,13 +33,15 @@ from scipy import ndimage as ndi
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from vol import Volume
+from read_nifti import read_nifti
 from segment_tooth import mesh as grey_mesh, write_binary_stl
 from meshsmooth import taubin, mesh_volume
 
 SURFACE_HU = 1050.0
 TARGET_TRIS = 8000
-SMOOTH_BEFORE = 14        # Taubin passes on the raw marching-cubes surface
-SMOOTH_AFTER = 4          # a light pass to settle the decimated triangulation
+EXCLUDE_PAD = 1     # voxels of the neighbour/bone mask to keep clear of
+SMOOTH_BEFORE = 26        # Taubin passes on the raw marching-cubes surface
+SMOOTH_AFTER = 10         # settles the decimated triangulation
 
 
 def decimate(verts, faces, target):
@@ -53,12 +55,21 @@ def decimate(verts, faces, target):
 
 
 def main():
-    vol_path, split_dir, outdir = sys.argv[1:4]
-    target = int(sys.argv[4]) if len(sys.argv) > 4 else TARGET_TRIS
+    vol_path, split_dir, pred_path, outdir = sys.argv[1:5]
+    target = int(sys.argv[5]) if len(sys.argv) > 5 else TARGET_TRIS
     os.makedirs(outdir, exist_ok=True)
     v = Volume.load(vol_path)
     roi_full = v.data.astype(np.float32)
     rep = json.load(open(os.path.join(split_dir, "split.json")))
+    # Everything the tooth's own surface must not run into: the jaws, and every
+    # other tooth. Meshing the grey field inside a dilation of the mask picks up
+    # whatever is dense nearby, and the lamina dura is DENSE and CLOSE -- the PDL
+    # measures 0.08-0.16 mm apparent, well inside the dilation band. That is what
+    # put a crusty, barnacled surface along one side of every lower root.
+    lab, _, _ = read_nifti(pred_path)
+    jaws = (lab == 1) | (lab == 2)
+    all_teeth = ((np.load(os.path.join(split_dir, "upper_labels.npy")) > 0)
+                 | (np.load(os.path.join(split_dir, "lower_labels.npy")) > 0))
     vox = float(np.prod(v.spacing))
     out_report = {}
     print(f"{'Univ':>4s} {'FMA':>9s} {'mask mm3':>9s} {'raw tris':>9s} "
@@ -82,7 +93,40 @@ def main():
             m = np.zeros(tuple(x.stop - x.start for x in sl), bool)
             m[tuple(slice(b.start - x.start, b.stop - x.start)
                     for b, x in zip(box, sl))] = arr[box] == best
-            sub = roi_full[sl]
+            sub = roi_full[sl].copy()
+            # Push everything that is not this tooth below the isolevel, so the
+            # surface cannot cross into bone or into a neighbour no matter how
+            # dense they are or how close they sit.
+            exclude = (jaws[sl] | all_teeth[sl]) & ~m
+            if EXCLUDE_PAD:
+                exclude = ndi.binary_dilation(exclude, np.ones((3, 3, 3)),
+                                              EXCLUDE_PAD) & ~m
+            # Blend two surface definitions rather than clamping one of them.
+            #
+            # Grey-level meshing is the right model where the tooth borders SPACE
+            # -- PDL, air, soft tissue -- because there is a real density edge to
+            # find. It is meaningless where the tooth borders another tooth: at a
+            # true contact there is no gap, both sides are dentin, and there is no
+            # edge. Clamping the neighbour to a low value there just substitutes
+            # one artefact for another, a flat terraced facet where the field
+            # falls off a cliff.
+            #
+            # So near a neighbour the surface follows the SEGMENTATION boundary,
+            # expressed as a signed distance ramp through the isolevel, and away
+            # from one it follows the grey levels. The weight moves smoothly
+            # between them so neither transition is itself an edge.
+            # The shape field comes from a SMOOTHED occupancy, not a distance
+            # transform of the raw mask. DentalSegmentator infers at 0.43 mm and
+            # the label is resampled to 0.16 mm, so the mask boundary is a
+            # staircase; a distance transform of it inherits every step, and the
+            # isosurface then reproduces them as striations. Blurring occupancy
+            # puts the boundary at a sub-voxel position instead.
+            occ = ndi.gaussian_filter(m.astype(np.float32), 1.3)
+            far = ndi.distance_transform_edt(~exclude)
+            w = np.clip((far - 1.0) / 3.0, 0.0, 1.0)
+            shape_field = SURFACE_HU + 900.0 * (occ - 0.5)
+            sub = w * ndi.gaussian_filter(sub, 0.5) + (1.0 - w) * shape_field
+            sub = ndi.gaussian_filter(sub, 0.7)
             origin_idx = (sl[2].start, sl[1].start, sl[0].start)
             got = grey_mesh(m, v, origin_idx, roi=sub, level=SURFACE_HU, band=3)
             if got is None:
