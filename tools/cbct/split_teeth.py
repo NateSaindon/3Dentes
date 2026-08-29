@@ -179,6 +179,71 @@ def _dp_cuts(dens, s_edge, widths, weight=WIDTH_WEIGHT):
     return sorted(x for x in bounds if 0 < x < B)
 
 
+def refine_boundaries(labels, mask, spacing, erode=3):
+    """Move the inter-tooth boundaries off the sector planes and onto the necks.
+
+    The arc-length partition cuts with PLANES through the arch centre. Teeth
+    interdigitate at their contacts, so wherever a neighbour's proximal bulge
+    crosses into this tooth's angular wedge it is assigned to this tooth, and it
+    arrives as a flat blade -- the plane's cross-section through the neighbour.
+    It is visible on the molars once the surfaces are rendered.
+
+    The partition is right about WHICH teeth exist and wrong only about where one
+    ends. So it is used as seeds rather than as an answer: erode each segment to
+    a safely interior marker, then let a watershed on the distance transform grow
+    the markers back out. Watershed boundaries settle at the narrowest
+    cross-section between two markers, which for teeth is the contact point --
+    the anatomy, not a plane.
+    """
+    from skimage.segmentation import watershed as _ws
+    markers = np.zeros_like(labels)
+    for i in range(1, int(labels.max()) + 1):
+        m = labels == i
+        if not m.any():
+            continue
+        e = ndi.binary_erosion(m, np.ones((3, 3, 3)), erode)
+        if not e.any():                      # a small tooth: keep it whole
+            e = m
+        markers[e] = i
+    dist = ndi.distance_transform_edt(mask, sampling=spacing)
+    grown = _ws(-dist, markers, mask=mask)
+
+    # Two cleanups, in order.
+    #
+    # First, shave thin blades. Where two teeth are in true contact the distance
+    # transform has no minimum to cut at, so a flake of the neighbour can survive
+    # the watershed still attached. A blade is thin and a tooth body is not, so
+    # an opening severs it while leaving the tooth intact; dilating the surviving
+    # core back inside the original mask restores the real surface without
+    # restoring the flake.
+    #
+    # Second, keep one connected piece per tooth. Anything else is a fragment of
+    # a neighbour, and shipping it is what put a plane-cut slice of tooth 2 on
+    # the side of tooth 3.
+    out = np.zeros_like(grown)
+    ball = np.ones((3, 3, 3))
+    for i in range(1, int(grown.max()) + 1):
+        m = grown == i
+        if not m.any():
+            continue
+        core = ndi.binary_opening(m, ball, 2)
+        if core.any():
+            cc, n = ndi.label(core, structure=ball)
+            if n > 1:
+                szs = ndi.sum(core, cc, range(1, n + 1))
+                core = cc == (int(np.argmax(szs)) + 1)
+            grown_back = core.copy()
+            for _ in range(4):               # reconstruct inside the original
+                grown_back = ndi.binary_dilation(grown_back, ball) & m
+            m = grown_back
+        cc, n = ndi.label(m, structure=ball)
+        if n > 1:
+            szs = ndi.sum(m, cc, range(1, n + 1))
+            m = cc == (int(np.argmax(szs)) + 1)
+        out[m] = i
+    return out
+
+
 def split_arch(mask, v, arch, n_expected=N_PER_ARCH):
     mask = clean_mask(mask, tuple(v.spacing))
     dens, s_edge, edges, th, centre = _arc_histogram(mask, v)
@@ -191,7 +256,8 @@ def split_arch(mask, v, arch, n_expected=N_PER_ARCH):
     seg = np.digitize(th, bounds)
     out = np.zeros(mask.shape, np.int32)
     out[zz, yy, xx] = seg + 1
-    return out, len(bounds) + 1, centre
+    out = refine_boundaries(out, mask, tuple(v.spacing))
+    return out, int(out.max()), centre
 
 
 def main():
