@@ -195,12 +195,25 @@ def main():
             acc[sl] |= sleeve(tsub, fr, cej_by, crest_by, sp, tsub.shape)
             n_teeth += 1
 
-        # Close the interdental gaps. Adjacent collars nearly touch at the
-        # contact point and are far apart lower down, so a closing of this size
-        # fills exactly the wedge a papilla occupies and leaves the embrasure
-        # below it open.
+        # Close the interdental gaps IN PLANE, slice by slice.
+        #
+        # A 3D closing at this radius reaches ~1.8 mm in every direction, and in
+        # the crowded posterior that bridges vertically across the occlusal
+        # embrasures as readily as it bridges between neighbours -- fusing the
+        # collars into flat slabs that lie over the buccal surfaces of the
+        # molars. The operator spotted exactly that, and only in the posterior.
+        #
+        # An interdental gap is in-plane: it separates two teeth standing side by
+        # side around the arch. Closing per axial slice fills it and cannot reach
+        # over a crown, because it has no vertical extent to reach with.
         r = int(round(PAPILLA_CLOSE_MM / sp))
-        ging = ndi.binary_closing(acc, np.ones((3, 3, 3)), iterations=r)
+        disk = np.zeros((2 * r + 1, 2 * r + 1), bool)
+        yy, xx = np.ogrid[-r:r + 1, -r:r + 1]
+        disk[yy * yy + xx * xx <= r * r] = True
+        ging = np.zeros_like(acc)
+        for z in range(acc.shape[0]):
+            if acc[z].any():
+                ging[z] = ndi.binary_closing(acc[z], disk)
         ging &= ~ndi.binary_dilation(teeth, np.ones((3, 3, 3)), 1)
         ging &= ~(lab == BONE[arch])
         l2, n2 = ndi.label(ging)

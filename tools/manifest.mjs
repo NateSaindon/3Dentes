@@ -100,7 +100,7 @@ const BODYPARTS3D_STRUCTURES = [
   { fma: 'FMA49023', name: 'Left lateral pterygoid, lower head',  layer: 'muscles', side: 'left'  },
 ];
 
-export const LAYERS = {
+const ALL_LAYERS = {
   teeth:    { label: 'Teeth',                  defaultOpacity: 1.0,  visible: true  },
   mandible: { label: 'Mandible',               defaultOpacity: 1.0,  visible: true  },
   maxilla:  { label: 'Maxilla & palatine',     defaultOpacity: 1.0,  visible: true  },
@@ -108,7 +108,14 @@ export const LAYERS = {
   gingiva:  { label: 'Gingiva',                defaultOpacity: 0.45, visible: true  },
   // Muscles enclose the whole jaw; visible by default they hide everything else.
   muscles:  { label: 'Muscles of mastication', defaultOpacity: 0.9,  visible: false },
+  // Pulp and PDL exist only in the CBCT build -- BodyParts3D has no equivalent,
+  // being external morphology. Both are off by default: they sit INSIDE the
+  // teeth, so showing them on load reveals nothing and costs draw calls. The
+  // teeth layer's opacity is what makes them visible.
+  pulp:     { label: 'Pulp',                   defaultOpacity: 1.0,  visible: false },
+  pdl:      { label: 'Periodontal ligament',   defaultOpacity: 0.85, visible: false },
 };
+
 
 // Quadrant numbers follow the ISO/FDI convention:
 //   1 = upper right, 2 = upper left, 3 = lower left, 4 = lower right.
@@ -144,12 +151,34 @@ const CBCT_AVAILABLE = new Set([
   'FMA59763', 'FMA59764',   // gingiva, upper and lower
 ]);
 
+// Pulp and PDL are per-tooth and derived, so they inherit each tooth's arch,
+// side and position -- which is what lets the app associate them with their
+// tooth and keeps the notation derived rather than retyped. Their ids suffix the
+// tooth's FMA id, so FMA55682-pulp belongs unambiguously to FMA55682.
+const perTooth = (layer) =>
+  BODYPARTS3D_STRUCTURES
+    .filter((s) => s.layer === 'teeth')
+    .map((s) => ({ ...s, fma: `${s.fma}-${layer}`, layer, source: 'cbct',
+                   tooth: s.fma }));
+
 export const STRUCTURES =
   TOOTH_SOURCE === 'cbct'
-    ? BODYPARTS3D_STRUCTURES
-        .filter((s) => CBCT_AVAILABLE.has(s.fma))
-        .map((s) => ({ ...s, source: 'cbct' }))
+    ? [
+        ...BODYPARTS3D_STRUCTURES
+          .filter((s) => CBCT_AVAILABLE.has(s.fma))
+          .map((s) => ({ ...s, source: 'cbct' })),
+        ...perTooth('pulp'),
+        ...perTooth('pdl'),
+      ]
     : BODYPARTS3D_STRUCTURES;
+
+// Only expose layers that actually have geometry in this build. The CBCT set has
+// no muscles -- there is no soft-tissue contrast in the scan to segment them
+// from -- and a toggle that controls nothing reads as a broken feature.
+export const LAYERS = Object.fromEntries(
+  Object.entries(ALL_LAYERS).filter(([k]) => STRUCTURES.some((s) => s.layer === k)),
+);
+
 
 export function toothNotation(s) {
   if (s.layer !== 'teeth') return null;
@@ -165,7 +194,14 @@ export function toothNotation(s) {
 }
 
 /** Human-readable name, derived for teeth and explicit for everything else. */
+const PER_TOOTH_LABEL = { pulp: 'Pulp of', pdl: 'Periodontal ligament of' };
+
 export function structureName(s) {
+  if (s.arch && PER_TOOTH_LABEL[s.layer]) {
+    const arch = s.arch === 'maxillary' ? 'upper' : 'lower';
+    const side = s.side === 'right' ? 'right' : 'left';
+    return `${PER_TOOTH_LABEL[s.layer]} the ${side} ${arch} ${s.type}`;
+  }
   if (s.layer !== 'teeth') return s.name;
   const arch = s.arch === 'maxillary' ? 'upper' : 'lower';
   return `${s.side === 'right' ? 'Right' : 'Left'} ${arch} ${s.type}`;

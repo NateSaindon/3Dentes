@@ -32,6 +32,8 @@ const MATERIALS = {
   maxilla:  { baseColorFactor: [0.898, 0.855, 0.761, 1], roughnessFactor: 0.70, metallicFactor: 0 },
   gingiva:  { baseColorFactor: [0.804, 0.451, 0.435, 1], roughnessFactor: 0.75, metallicFactor: 0 },
   muscles:  { baseColorFactor: [0.647, 0.271, 0.259, 1], roughnessFactor: 0.65, metallicFactor: 0 },
+  pulp:     { baseColorFactor: [0.804, 0.286, 0.271, 1], roughnessFactor: 0.55, metallicFactor: 0 },
+  pdl:      { baseColorFactor: [0.612, 0.784, 0.878, 1], roughnessFactor: 0.80, metallicFactor: 0 },
 };
 
 /** Parse a binary STL into a flat, non-indexed Float32Array of positions. */
