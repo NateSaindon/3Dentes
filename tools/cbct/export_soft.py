@@ -55,13 +55,11 @@ def main():
              for a in ("upper", "lower") for t in rep[a]["teeth"]]
     made = {"pulp": 0, "pdl": 0}
 
-    for num, fma, arch in sorted(teeth):
-        src = os.path.join(pulp_dir, f"{fma}-pulp.stl")
-        if os.path.exists(src):
-            got = process(load_stl(src), TARGET_PULP)
-            if got:
-                write_binary_stl(os.path.join(outdir, f"{fma}-pulp.stl"), *got)
-                made["pulp"] += 1
+    # Pulp is NOT exported here. pulp_solid.py owns <FMA>-pulp.stl, and this
+    # module used to write the same filenames from the older tube model -- so
+    # running it afterwards silently replaced solid pulp with thin filaments.
+    # The pulp directory is still read below, for the centroids the PDL split
+    # needs.
 
     # The PDL is produced per arch, not per tooth. Split it by proximity to each
     # tooth's own pulp centroid so every tooth carries its own ligament and the
@@ -77,7 +75,9 @@ def main():
         for num, fma, a in sorted(teeth):
             if a != arch:
                 continue
-            p = os.path.join(outdir, f"{fma}-pulp.stl")
+            p = os.path.join(pulp_dir, f"{fma}-pulp.stl")
+            if not os.path.exists(p):
+                p = os.path.join(outdir, f"{fma}-pulp.stl")
             if not os.path.exists(p):
                 continue
             v = load_stl(p)

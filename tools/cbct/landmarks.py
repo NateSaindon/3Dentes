@@ -88,7 +88,7 @@ def measure(vol, tooth, bone, arch, spacing):
         a0 = -180 + k * step
         a1 = a0 + step
         sel_e = (ang_e >= a0) & (ang_e < a1)
-        if sel_e.sum() < 5:
+        if sel_e.sum() < 2:
             continue
         # CEJ = the most APICAL enamel at this angle (t is coronal-positive)
         cej = float(np.percentile(t_e[sel_e], 5)) * spacing
@@ -102,6 +102,40 @@ def measure(vol, tooth, bone, arch, spacing):
         out["cej_mm"].append(round(cej, 2))
         out["crest_mm"].append(None if np.isnan(crest) else round(crest, 2))
         out["cej_to_crest_mm"].append(None if np.isnan(crest) else round(cej - crest, 2))
+    # Always emit a COMPLETE 24-aspect ring, interpolating any sector where the
+    # enamel cap was not detected, and recording which were measured.
+    #
+    # Teeth 20 and 29 sit next to the crowned molars 19 and 30, and zirconia beam
+    # hardening inflates their apparent density enough that Otsu cuts most of
+    # their enamel away -- 5% of tooth volume against 11-16% for their
+    # neighbours, and fragmented. They yielded 7 and 6 aspects of 24, which left
+    # holes in the gingival collar on their distal aspects. A partial ring is
+    # worse than an interpolated one: the collar has nothing to follow and simply
+    # stops.
+    if out["angles"]:
+        full = [-180 + k * step + step / 2 for k in range(N_ANGLES)]
+        meas = list(out["angles"])
+        wrap_a = np.array(meas + [a + 360 for a in meas] + [a - 360 for a in meas])
+        order = np.argsort(wrap_a)
+        def fill(vals):
+            arr = np.array([v if v is not None else np.nan for v in vals], float)
+            good = ~np.isnan(arr)
+            if good.sum() < 3:
+                return [None] * len(full)
+            src_a = np.array(meas)[good]
+            src_v = arr[good]
+            wa = np.concatenate([src_a - 360, src_a, src_a + 360])
+            wv = np.tile(src_v, 3)
+            o = np.argsort(wa)
+            return [round(float(np.interp(a, wa[o], wv[o])), 2) for a in full]
+        out["cej_mm"] = fill(out["cej_mm"])
+        out["crest_mm"] = fill(out["crest_mm"])
+        out["cej_to_crest_mm"] = [
+            None if (a is None or b is None) else round(a - b, 2)
+            for a, b in zip(out["cej_mm"], out["crest_mm"])]
+        out["measured_angles"] = meas
+        out["angles"] = full
+        out["interpolated_aspects"] = N_ANGLES - len(meas)
     out["enamel_threshold_hu"] = round(enamel_thr)
     out["centre_index"] = [round(float(x), 2) for x in c]
     out["axis"] = [round(float(x), 4) for x in ax]
