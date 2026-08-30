@@ -2,41 +2,41 @@
   "FMA55697": {
     "universal": 2,
     "arch": "upper",
-    "solid_mm3": 26.3,
-    "tube_only_mm3": 4.4,
-    "total_mm3": 39.5,
+    "solid_mm3": 37.8,
+    "tube_only_mm3": 10.2,
+    "total_mm3": 54.9,
     "triangles": 3500
   },
   "FMA55698": {
     "universal": 3,
     "arch": "upper",
-    "solid_mm3": 38.8,
-    "tube_only_mm3": 7.0,
-    "total_mm3": 69.5,
-    "triangles": 3500
+    "solid_mm3": 66.4,
+    "tube_only_mm3": 12.6,
+    "total_mm3": 99.8,
+    "triangles": 3498
   },
   "FMA55688": {
     "universal": 4,
     "arch": "upper",
-    "solid_mm3": 34.0,
-    "tube_only_mm3": 7.3,
-    "total_mm3": 61.6,
+    "solid_mm3": 30.1,
+    "tube_only_mm3": 11.5,
+    "total_mm3": 57.5,
     "triangles": 3500
   },
   "FMA55689": {
     "universal": 5,
     "arch": "upper",
-    "solid_mm3": 35.7,
-    "tube_only_mm3": 0.9,
-    "total_mm3": 50.2,
-    "triangles": 3500
+    "solid_mm3": 34.6,
+    "tube_only_mm3": 1.3,
+    "total_mm3": 47.8,
+    "triangles": 3498
   },
   "FMA55798": {
     "universal": 6,
     "arch": "upper",
-    "solid_mm3": 17.2,
-    "tube_only_mm3": 0.2,
-    "total_mm3": 20.2,
+    "solid_mm3": 17.8,
+    "tube_only_mm3": 2.5,
+    "total_mm3": 24.8,
     "triangles": 3500
   },
   "FMA55680": {
@@ -50,105 +50,105 @@
   "FMA55681": {
     "universal": 8,
     "arch": "upper",
-    "solid_mm3": 13.8,
-    "tube_only_mm3": 0.6,
-    "total_mm3": 15.2,
-    "triangles": 3498
+    "solid_mm3": 13.3,
+    "tube_only_mm3": 3.5,
+    "total_mm3": 17.7,
+    "triangles": 3500
   },
   "FMA55682": {
     "universal": 9,
     "arch": "upper",
-    "solid_mm3": 19.4,
-    "tube_only_mm3": 0.1,
-    "total_mm3": 21.5,
+    "solid_mm3": 19.9,
+    "tube_only_mm3": 2.6,
+    "total_mm3": 25.1,
     "triangles": 3500
   },
   "FMA55683": {
     "universal": 10,
     "arch": "upper",
-    "solid_mm3": 23.2,
-    "tube_only_mm3": 0.9,
-    "total_mm3": 31.3,
+    "solid_mm3": 21.3,
+    "tube_only_mm3": 1.6,
+    "total_mm3": 29.1,
     "triangles": 3500
   },
   "FMA55799": {
     "universal": 11,
     "arch": "upper",
-    "solid_mm3": 19.2,
-    "tube_only_mm3": 0.8,
-    "total_mm3": 23.7,
-    "triangles": 3500
+    "solid_mm3": 20.1,
+    "tube_only_mm3": 1.9,
+    "total_mm3": 26.0,
+    "triangles": 3498
   },
   "FMA55690": {
     "universal": 12,
     "arch": "upper",
-    "solid_mm3": 23.9,
-    "tube_only_mm3": 2.7,
-    "total_mm3": 31.1,
-    "triangles": 3500
+    "solid_mm3": 24.0,
+    "tube_only_mm3": 3.3,
+    "total_mm3": 28.6,
+    "triangles": 3498
   },
   "FMA55691": {
     "universal": 13,
     "arch": "upper",
-    "solid_mm3": 23.4,
-    "tube_only_mm3": 12.2,
-    "total_mm3": 47.9,
+    "solid_mm3": 21.6,
+    "tube_only_mm3": 18.6,
+    "total_mm3": 46.0,
     "triangles": 3500
   },
   "FMA55699": {
     "universal": 14,
     "arch": "upper",
-    "solid_mm3": 26.0,
-    "tube_only_mm3": 12.8,
-    "total_mm3": 54.7,
-    "triangles": 3500
+    "solid_mm3": 34.6,
+    "tube_only_mm3": 20.1,
+    "total_mm3": 70.0,
+    "triangles": 3498
   },
   "FMA55700": {
     "universal": 15,
     "arch": "upper",
-    "solid_mm3": 17.8,
-    "tube_only_mm3": 3.1,
-    "total_mm3": 23.2,
+    "solid_mm3": 28.6,
+    "tube_only_mm3": 8.6,
+    "total_mm3": 40.6,
     "triangles": 3498
   },
   "FMA55703": {
     "universal": 18,
     "arch": "lower",
-    "solid_mm3": 42.6,
-    "tube_only_mm3": 3.0,
-    "total_mm3": 61.3,
-    "triangles": 3498
+    "solid_mm3": 39.3,
+    "tube_only_mm3": 20.2,
+    "total_mm3": 73.9,
+    "triangles": 3500
   },
   "FMA55704": {
     "universal": 19,
     "arch": "lower",
-    "solid_mm3": 33.9,
-    "tube_only_mm3": 3.6,
-    "total_mm3": 43.7,
-    "triangles": 3498
+    "solid_mm3": 33.4,
+    "tube_only_mm3": 6.9,
+    "total_mm3": 46.7,
+    "triangles": 3500
   },
   "FMA55692": {
     "universal": 20,
     "arch": "lower",
-    "solid_mm3": 35.8,
-    "tube_only_mm3": 3.7,
-    "total_mm3": 50.5,
-    "triangles": 3500
+    "solid_mm3": 44.2,
+    "tube_only_mm3": 5.7,
+    "total_mm3": 63.0,
+    "triangles": 3498
   },
   "FMA55693": {
     "universal": 21,
     "arch": "lower",
-    "solid_mm3": 33.5,
-    "tube_only_mm3": 2.9,
-    "total_mm3": 44.4,
+    "solid_mm3": 33.3,
+    "tube_only_mm3": 4.0,
+    "total_mm3": 45.1,
     "triangles": 3500
   },
   "FMA55687": {
     "universal": 22,
     "arch": "lower",
-    "solid_mm3": 37.1,
-    "tube_only_mm3": 8.2,
-    "total_mm3": 58.4,
+    "solid_mm3": 36.7,
+    "tube_only_mm3": 8.6,
+    "total_mm3": 58.1,
     "triangles": 3500
   },
   "FMA57141": {
@@ -186,41 +186,41 @@
   "FMA55686": {
     "universal": 27,
     "arch": "lower",
-    "solid_mm3": 43.9,
-    "tube_only_mm3": 3.9,
-    "total_mm3": 63.3,
-    "triangles": 3500
+    "solid_mm3": 42.5,
+    "tube_only_mm3": 4.5,
+    "total_mm3": 61.4,
+    "triangles": 3498
   },
   "FMA55694": {
     "universal": 28,
     "arch": "lower",
-    "solid_mm3": 32.8,
-    "tube_only_mm3": 5.2,
-    "total_mm3": 49.4,
+    "solid_mm3": 31.4,
+    "tube_only_mm3": 6.0,
+    "total_mm3": 49.3,
     "triangles": 3500
   },
   "FMA55695": {
     "universal": 29,
     "arch": "lower",
-    "solid_mm3": 24.0,
-    "tube_only_mm3": 3.8,
-    "total_mm3": 39.6,
-    "triangles": 3500
+    "solid_mm3": 28.8,
+    "tube_only_mm3": 6.4,
+    "total_mm3": 48.9,
+    "triangles": 3498
   },
   "FMA55705": {
     "universal": 30,
     "arch": "lower",
-    "solid_mm3": 40.6,
-    "tube_only_mm3": 4.1,
-    "total_mm3": 55.6,
-    "triangles": 3500
+    "solid_mm3": 38.7,
+    "tube_only_mm3": 16.8,
+    "total_mm3": 68.2,
+    "triangles": 3498
   },
   "FMA55706": {
     "universal": 31,
     "arch": "lower",
-    "solid_mm3": 43.3,
-    "tube_only_mm3": 7.3,
-    "total_mm3": 62.2,
-    "triangles": 3498
+    "solid_mm3": 40.9,
+    "tube_only_mm3": 24.4,
+    "total_mm3": 77.9,
+    "triangles": 3500
   }
 }

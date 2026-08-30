@@ -78,6 +78,25 @@ def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None):
     dentition come to roughly 760 mm3, so the measurement is the trustworthy
     number and the threshold is what should bend to it.
     """
+    # THE MASK HAS THE PULP CUT OUT OF IT.
+    #
+    # DentalSegmentator's tooth label excludes the chamber -- it is a hole, not
+    # part of the mask -- so `tooth & dist>0.3` excludes the very thing being
+    # looked for, and the threshold could only ever find the speckle AROUND the
+    # chamber. That is why molar pulp rendered as a cloud of fragments and why an
+    # obvious dark chamber on an incisor slice came back unselected.
+    #
+    # CLAUDE.md records this exact trap from the pilot -- "the watershed basin
+    # has the pulp cut out of it, fill per axial slice" -- and it applies to
+    # these masks too. Filling per slice both fixes the search domain and hands
+    # over the answer: the filled region minus the mask IS the enclosed void,
+    # which is the operator's definition of pulp.
+    solid_tooth = tooth.copy()
+    for k in range(tooth.shape[0]):
+        if tooth[k].any():
+            solid_tooth[k] = ndi.binary_fill_holes(tooth[k])
+    enclosed_void = solid_tooth & ~tooth
+    tooth = solid_tooth
     dist = ndi.distance_transform_edt(tooth, sampling=spacing)
     interior = tooth & (dist > 0.30)
     vox = float(np.prod(spacing))
@@ -90,7 +109,8 @@ def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None):
         lo, hi = 0.25, 0.99
         for _ in range(12):
             mid = 0.5 * (lo + hi)
-            got = solid_at(roi, tooth, interior, spacing, pulp_hu, mid).sum() * vox
+            got = ((solid_at(roi, tooth, interior, spacing, pulp_hu, mid)
+                    | enclosed_void).sum() * vox)
             # frac is the fraction of the way from dentin DOWN to pulp density,
             # so a larger frac is a lower cut and includes LESS. The bounds move
             # the opposite way to the intuition.
@@ -101,7 +121,7 @@ def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None):
         frac = 0.5 * (lo + hi)
     else:
         frac = 0.5
-    out = solid_at(roi, tooth, interior, spacing, pulp_hu, frac)
+    out = solid_at(roi, tooth, interior, spacing, pulp_hu, frac) | enclosed_void
     # keep pieces that are actually enclosed, and close them into a solid
     out = ndi.binary_closing(out, np.ones((3, 3, 3)))
     for k in range(out.shape[0]):
@@ -190,7 +210,11 @@ def main():
             # length just re-adds volume the solid already has, which is what put
             # the total at 1329 mm3 against a measured 704.
             tub = tub & ~ndi.binary_dilation(sol, np.ones((3, 3, 3)), 2)
-            both = (sol | tub) & m
+            m_solid = m.copy()
+            for k in range(m.shape[0]):
+                if m[k].any():
+                    m_solid[k] = ndi.binary_fill_holes(m[k])
+            both = (sol | tub) & m_solid
             # Close hard enough to join the chamber to its canals, then keep
             # only what belongs to the main pulp body. Radiolucency thresholding
             # scatters small dark specks through the coronal dentin of the
