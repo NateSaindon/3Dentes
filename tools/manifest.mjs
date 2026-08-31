@@ -88,18 +88,6 @@ const BODYPARTS3D_STRUCTURES = [
   // The mandibular canal is MEASURED; its contents are not. Everything
   // maxillary is SCHEMATIC -- the superior alveolar canals are not reliably
   // visible at 0.16 mm and nothing here was seen in the scan but the foramina.
-  { fma: 'FMA53381', name: 'Inferior alveolar nerve (canal measured)',
-    layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53381B', name: 'Inferior alveolar dental branches',
-    layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53381T', name: 'Mental and incisive branches (schematic)',
-    layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088', name: 'Superior dental plexus (schematic)',
-    layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088B', name: 'Superior alveolar dental branches (schematic)',
-    layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088T', name: 'Infraorbital, PSA, MSA and ASA nerves (schematic)',
-    layer: 'nerves', side: 'midline' },
   { fma: 'FMA59763', name: 'Gingiva of upper jaw', layer: 'gingiva', side: 'midline' },
   { fma: 'FMA59764', name: 'Gingiva of lower jaw', layer: 'gingiva', side: 'midline' },
 
@@ -171,9 +159,27 @@ const CBCT_AVAILABLE = new Set([
   'FMA52748',   // mandible
   'FMA53649',   // maxilla -- alveolar process and palate
   'FMA59763', 'FMA59764',   // gingiva, upper and lower
-  'FMA53381', 'FMA53381B', 'FMA53381T',    // IAN, dental branches, mental+incisive
-  'FMA53088', 'FMA53088B', 'FMA53088T',    // superior alveolar, all schematic
 ]);
+
+// Nerves exist ONLY in the CBCT build. BodyParts3D has no neural anatomy at all,
+// so listing them alongside it made the default build ask for source STLs that
+// cannot exist and broke the Pages deploy with ENOENT on FMA53381. They are
+// CBCT-only for the same reason pulp and PDL are, and belong on this side of the
+// split rather than behind a filter.
+const CBCT_ONLY_STRUCTURES = [
+  { fma: 'FMA53381', name: 'Inferior alveolar nerve (canal measured)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53381B', name: 'Inferior alveolar dental branches',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53381T', name: 'Mental and incisive branches (schematic)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53088', name: 'Superior dental plexus (schematic)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53088B', name: 'Superior alveolar dental branches (schematic)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53088T', name: 'Infraorbital, PSA, MSA and ASA nerves (schematic)',
+    layer: 'nerves', side: 'midline' },
+];
 
 // Pulp and PDL are per-tooth and derived, so they inherit each tooth's arch,
 // side and position -- which is what lets the app associate them with their
@@ -191,6 +197,7 @@ export const STRUCTURES =
         ...BODYPARTS3D_STRUCTURES
           .filter((s) => CBCT_AVAILABLE.has(s.fma))
           .map((s) => ({ ...s, source: 'cbct' })),
+        ...CBCT_ONLY_STRUCTURES.map((s) => ({ ...s, source: 'cbct' })),
         ...perTooth('pulp'),
         ...perTooth('pdl'),
       ]
