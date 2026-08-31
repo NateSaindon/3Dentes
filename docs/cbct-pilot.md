@@ -241,6 +241,11 @@ their own tree — *not* `assets/source/stl/`, which is CC BY-SA BodyParts3D
 material. Anatomy measured from the operator's own scan is a separate work and
 must stay physically separate.
 
+> **Update 2026-08-31.** They were kept separate, and then `assets/source/` was
+> deleted outright: the measured set had replaced every mesh in it. Invariant 3
+> has been rewritten accordingly — there is no ShareAlike tree left to stay clear
+> of, and the point now is not to acquire a new one.
+
 ## Next
 
 1. **Second pilot tooth: 5 or 12** (maxillary first premolar). Two canals, so it

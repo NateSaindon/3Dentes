@@ -31,14 +31,11 @@ jobs:
       # The .glb is not committed — it is rebuilt from the vendored STLs, which
       # also re-runs the laterality assertion on every deploy.
       #
-      # TOOTH_SOURCE=cbct publishes the build made from the operator's own CBCT
-      # (hard tissue, pulp, PDL, gingiva and nerves) rather than the BodyParts3D
-      # alpha. Without it the deploy silently shipped the older model while every
-      # local review ran against the CBCT one. The operator has explicitly
-      # consented to publishing their own anatomy; see CLAUDE.md.
+      # There is one source now. This step used to need TOOTH_SOURCE=cbct to pick
+      # it, and without that the deploy silently shipped the older BodyParts3D
+      # alpha while every local review ran against the CBCT build. That failure
+      # mode is gone with the alpha itself.
       - run: npm run build:assets
-        env:
-          TOOTH_SOURCE: cbct
 
       - run: npm run build
 

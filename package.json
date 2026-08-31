@@ -5,9 +5,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "fetch:assets": "node tools/fetch-assets.mjs",
     "build:assets": "node tools/build-assets.mjs",
-    "build:assets:cbct": "TOOTH_SOURCE=cbct node tools/build-assets.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

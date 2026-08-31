@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build assets/source/stl/*.stl into a single public/dentition.glb, plus the
+// Build assets/cbct/stl/*.stl into a single public/dentition.glb, plus the
 // public/teeth.json metadata the app joins against by FMA id.
 //
 //   node tools/build-assets.mjs
@@ -18,10 +18,10 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Document, NodeIO } from '@gltf-transform/core';
-import { STRUCTURES, LAYERS, toothNotation, structureName, SOURCE_DIRS, TOOTH_SOURCE } from './manifest.mjs';
+import { STRUCTURES, LAYERS, toothNotation, structureName, STL_DIR as STL_SUBDIR } from './manifest.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const STL_DIR = join(ROOT, 'assets', 'source', 'stl');
+const STL_DIR = join(ROOT, ...STL_SUBDIR);
 const OUT_DIR = join(ROOT, 'public');
 
 // Per-layer appearance. Kept here so the built .glb looks right in any glTF
@@ -219,8 +219,7 @@ async function main() {
   // the dental content.
   const meshes = [];
   for (const s of STRUCTURES) {
-    const dir = s.source ? join(ROOT, ...SOURCE_DIRS[s.source]) : STL_DIR;
-    const raw = await readFile(join(dir, `${s.fma}.stl`));
+    const raw = await readFile(join(STL_DIR, `${s.fma}.stl`));
     const soup = parseBinarySTL(raw);
     const rawVerts = soup.length / 3;
     const { positions, indices } = weldExact(soup);
@@ -297,11 +296,7 @@ async function main() {
   await new NodeIO().write(join(OUT_DIR, 'dentition.glb'), doc);
   await writeFile(
     join(OUT_DIR, 'teeth.json'),
-    // The UI caveat (CLAUDE.md invariant 4) has to say what THIS build is made
-    // of. The CBCT build ships pulp and PDL measured from the operator's own
-    // scan, so the BodyParts3D wording -- "no pulp, no periodontal ligament" --
-    // is not merely stale there, it is false on a page that reads as clinical.
-    JSON.stringify({ source: TOOTH_SOURCE, layers: LAYERS, structures: teethJson },
+    JSON.stringify({ source: 'cbct', layers: LAYERS, structures: teethJson },
                    null, 2) + '\n',
   );
 
@@ -314,7 +309,7 @@ async function main() {
   console.log(`vertices        ${rawVerts.toLocaleString()} -> ${weldedVerts.toLocaleString()} welded (${(100 - (weldedVerts / rawVerts) * 100).toFixed(1)}% reduction)`);
   console.log(`extent (mm)     ${extent.map((v) => v.toFixed(1)).join(' x ')}  (dental content, centered)`);
   console.log(`laterality      OK — all ${report.filter((r) => r.side !== 'midline').length} sided structures on the expected side`);
-  console.log(`teeth           ${Object.values(teethJson).filter((t) => t.layer === 'teeth').length} (third molars absent from source)`);
+  console.log(`teeth           ${Object.values(teethJson).filter((t) => t.layer === 'teeth').length} (third molars extracted, not scanned)`);
   console.log(`output          public/dentition.glb  ${(size / 1e6).toFixed(2)} MB`);
 }
 

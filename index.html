@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#14161a" />
-    <meta name="description" content="Interactive 3D atlas of human oral anatomy — 28 individually selectable permanent teeth, jaws, gingiva and muscles of mastication." />
+    <meta name="description" content="Interactive 3D atlas of human oral anatomy — 28 individually selectable permanent teeth, jaws, gingiva, pulp, periodontal ligament and nerve supply, segmented from one cone-beam CT." />
     <link rel="icon" type="image/png" href="./favicon.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -39,11 +39,20 @@
         <h2 class="panel-title">Notation</h2>
         <div id="notation" class="segmented"></div>
       </section>
+      <!-- Invariant 4 (CLAUDE.md): this must describe the build that ships. It
+           used to be rewritten at runtime because there were two builds; there
+           is one now, so it is static and correct before any script runs. -->
       <p class="caveat" id="caveat">
-        <strong>Source data limits.</strong> Built from BodyParts3D, a single individual.
-        No third molars, no enamel/dentin/pulp, no nerves, periodontal ligament, tongue,
-        TMJ disc, or salivary glands. External morphology only — not a complete clinical
-        reference.
+        <strong>Source data limits.</strong> Hard tissue, pulp and periodontal ligament
+        are segmented from one CBCT of a single individual at 0.16 mm. The mandibular
+        canal is measured; its nerve content and every maxillary nerve are schematic —
+        the superior alveolar canals are not resolved at this voxel size. No third
+        molars. Pulp is traced by hand from the slices, because no threshold separates
+        it from dentin at this resolution; apical deltas and canals under about 0.5 mm
+        are below the voxel size, and each apical foramen is the apical end of a
+        tracing. The mental and incisive branches and the whole maxillary nerve supply
+        are schematic. Gingiva is derived from the measured CEJ, not seen. Not a
+        clinical reference.
       </p>
     </aside>
 

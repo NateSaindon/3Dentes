@@ -23,8 +23,9 @@ SOFTWARE.
 ---
 
 NOTE: This MIT license covers the SOURCE CODE of 3Dentes only — everything in
-`src/`, `tools/`, and `data/`.
+`src/` and `tools/`.
 
-It does NOT cover the 3D anatomical models under `assets/`. Those are derived
-from BodyParts3D and are licensed separately under Creative Commons
-Attribution-ShareAlike 2.1 Japan. See LICENSE-ASSETS and ATTRIBUTION.md.
+It does NOT cover the 3D anatomical models under `assets/`. Those are segmented
+from one named living person's cone-beam CT, published for this project with his
+explicit consent and under NO reuse grant. Ask before redistributing them. See
+ATTRIBUTION.md.

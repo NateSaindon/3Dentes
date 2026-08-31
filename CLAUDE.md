@@ -7,6 +7,14 @@ Deploys to https://natesaindon.github.io/3Dentes/ from `main` via Actions.
 CBCT-derived anatomy — they have explicitly consented to it. See "Next on the
 docket" below. This is not a general licence: no third-party patient data, ever.
 
+**As of 2026-08-31 the CBCT set is the ONLY geometry here.** The BodyParts3D
+alpha, its `assets/source/` tree, `tools/fetch-assets.mjs`, the `TOOTH_SOURCE`
+switch and `LICENSE-ASSETS` are all gone — every mesh it supplied had been
+replaced by measured anatomy, so the attribution and the ShareAlike inheritance
+went with it. Do not reintroduce a BodyParts3D dependency without saying so out
+loud: it would put a copyleft obligation back onto a tree that is now free of
+one. See ATTRIBUTION.md.
+
 ## Machines
 
 - **Arch ThinkPad** — where the alpha was built. Fine for app work.
@@ -18,7 +26,6 @@ docket" below. This is not a general licence: no third-party patient data, ever.
 
 ```bash
 npm install
-npm run fetch:assets   # re-download source STLs + rewrite provenance (rarely needed)
 npm run build:assets   # STL -> public/dentition.glb + public/teeth.json
 npm run dev            # http://localhost:5173/3Dentes/
 npm run dev -- --host  # reachable from the iPad on the same network
@@ -37,28 +44,28 @@ Run `build:assets` after cloning or nothing loads.
 2. **Exact vertex welding.** `weldExact` merges only bitwise-identical vertices.
    Never add a distance tolerance: it would round off cusp tips and occlusal
    fissures, which is precisely the anatomy that matters here.
-3. **The dual license split.** Code MIT; anything under `assets/` (and
-   `dentition.glb` built from it) is CC BY-SA 2.1 JP from BodyParts3D.
-   ShareAlike is inherited by *anything derived from those meshes*, including
-   Blender edits. Anatomy authored from scratch is a separate work — keep the two
-   physically separate in the tree.
+3. **The anatomy is not open-licensed.** Code is MIT; everything under
+   `assets/cbct/` (and the `dentition.glb` built from it) is a named living
+   person's medical imaging, published for this project with consent and under
+   no reuse grant. Do not add a licence to it, and do not treat "the repo is
+   public" as one. The former CC BY-SA obligation from BodyParts3D is retired
+   along with those meshes — keep it that way; anything borrowed in later brings
+   its licence with it and needs its own tree.
 4. **The source-data caveat stays visible in the UI.** The `.caveat` block in
    `index.html`. The user is a dental professional; a tool that looks like a
    clinical reference while omitting pulp and the inferior alveolar nerve must say so.
 
 ## Deployment
 
-`.github/workflows/deploy.yml` sets **`TOOTH_SOURCE=cbct`** on `build:assets`.
-Without it the deploy published the BodyParts3D alpha while every local review
-ran against the CBCT build — the site was a different model from the one being
-approved, and nothing said so. If the live site ever looks a generation behind,
-check that env var first.
+`.github/workflows/deploy.yml` runs `build:assets` with no environment. It used
+to need `TOOTH_SOURCE=cbct`, and without it the deploy published the BodyParts3D
+alpha while every local review ran against the CBCT build — the site was a
+different model from the one being approved and nothing said so. That whole class
+of bug went away with the second build; there is one model now.
 
-Nerves are **CBCT-only** (`CBCT_ONLY_STRUCTURES` in `tools/manifest.mjs`), like
-pulp and PDL. BodyParts3D has no neural anatomy, so listing them alongside it
-makes the default build ask for source meshes that cannot exist — the deploy
-fails with ENOENT on `assets/source/stl/FMA53381.stl`. Anything CBCT-only goes
-on that side of the split, never behind a membership filter.
+Every structure in `tools/manifest.mjs` must have a mesh in `assets/cbct/stl/`.
+Listing one that does not fails the deploy with ENOENT, which is how the nerves
+broke the build once. Add the STL first.
 
 ## Architecture
 

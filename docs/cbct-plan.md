@@ -99,8 +99,11 @@ Set expectations before investing segmentation effort:
   differ substantially from the central one.
 - **Restorations destroy their local neighbourhood.** See the artifact map below.
 - **No soft tissue.** CBCT resolves the *canal*, not the nerve; no gingiva,
-  tongue, or muscle. BodyParts3D therefore stays in the project for soft tissue
-  even once the hard tissue is replaced.
+  tongue, or muscle. ~~BodyParts3D therefore stays in the project for soft tissue
+  even once the hard tissue is replaced.~~ **Wrong, as it turned out:** the
+  gingiva was derived from the measured CEJ rather than borrowed, and nothing
+  else BodyParts3D supplied survived into the build, so it was removed entirely
+  on 2026-08-31. Remaining soft tissue will be authored.
 
 ---
 

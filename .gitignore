@@ -6,7 +6,7 @@ dist-ssr/
 .vite/
 
 # Build products of tools/build-assets.mjs — regenerate with `npm run build:assets`.
-# The source STLs in assets/source/ ARE committed; these are derived from them.
+# The source STLs in assets/cbct/stl/ ARE committed; these are derived from them.
 public/dentition.glb
 public/teeth.json
 

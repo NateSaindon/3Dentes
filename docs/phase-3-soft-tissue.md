@@ -110,8 +110,11 @@ between the root surface and the lamina dura.
 
 ## Tier 3 — authored
 
-Nothing here is in the data. The honest options are BodyParts3D (CC BY-SA) or
-authoring from scratch.
+Nothing here is in the data, so it has to be authored. Borrowing from an
+existing atlas was the other option, and it is now the *worse* one: the
+BodyParts3D meshes were deleted on 2026-08-31 once measured anatomy replaced
+them, leaving the repo with no inherited licence at all. Pulling geometry back in
+from a CC BY-SA source would reimpose ShareAlike on everything derived from it.
 
 **Muscles of mastication** have a middle path worth taking: their *attachments*
 are measurable — coronoid process, angle of the mandible, zygomatic arch — so a
@@ -134,11 +137,15 @@ separate:
 | --- | --- | --- |
 | Measured | Teeth, pulp, canal | The operator's own data — unencumbered |
 | Derived | Gingiva, PDL, pulp lining | Derived from measured data — our own work |
-| Atlas-derived | Muscles, tongue if sourced | **CC BY-SA**, inherited |
+| Atlas-derived | Muscles, tongue if sourced | Whatever the source imposes |
 
-Anything Blender touches downstream of a BodyParts3D mesh stays ShareAlike. Part
-of the appeal of generating gingiva is that it moves a whole structure out of the
-third tree.
+> **Updated 2026-08-31.** The third tree is now **empty**. Generating the gingiva
+> moved the last structure out of it, and the BodyParts3D meshes were then
+> deleted, so nothing in the repo carries a ShareAlike term. That is a state
+> worth protecting: step 5 below is the moment it is most at risk, because the
+> easy way to get a muscle belly is to borrow one. Authoring the bellies and
+> fitting them to measured attachments keeps the tree empty; borrowing from a
+> CC BY-SA atlas refills it and the obligation reaches every derivative.
 
 ## Where Blender fits
 

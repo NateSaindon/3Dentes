@@ -38,10 +38,10 @@ export function createOdontogram(root, structures, { onSelect }) {
         btn.title = s.name;
         btn.addEventListener('click', () => onSelect(s.fma));
       } else {
-        // Third molars: present as chart positions, absent from the source model.
+        // Third molars: present as chart positions, absent from the patient.
         btn.disabled = true;
         btn.classList.add('is-absent');
-        btn.title = 'Third molar — not present in the BodyParts3D source model';
+        btn.title = 'Third molar — extracted, so not present in the scan';
       }
       row.appendChild(btn);
       cells.set(u, btn);

@@ -40,25 +40,6 @@ async function main() {
   const meta = await fetch(`${import.meta.env.BASE_URL}teeth.json`).then((r) => r.json());
   const { layers, structures } = meta;
 
-  // Invariant 4: the caveat must describe THIS build. The CBCT build measures
-  // pulp and PDL from the operator's own scan, so it must not keep claiming it
-  // has neither -- but it gains its own limits, and understating those on a
-  // page that reads as clinical is the same failure in the other direction.
-  if (meta.source === 'cbct') {
-    $('#caveat').innerHTML =
-      '<strong>Source data limits.</strong> Hard tissue, pulp and periodontal ' +
-      'ligament are segmented from one CBCT of a single individual at 0.16 mm. ' +
-      'The mandibular canal is measured; its nerve content and every ' +
-      'maxillary nerve are schematic — the superior alveolar canals are ' +
-      'not resolved at this voxel size. ' +
-      'No third molars. Pulp is traced by hand from the slices, because no ' +
-      'threshold separates it from dentin at this resolution; apical deltas ' +
-      'and canals under about 0.5 mm are below the voxel size, and each ' +
-      'apical foramen is the apical end of a tracing. The mental and incisive ' +
-      'branches and the whole maxillary nerve supply are schematic. Gingiva ' +
-      'is derived from the measured CEJ, not seen. Not a clinical reference.';
-  }
-
   const view = createScene(canvas);
 
   status.textContent = 'Loading anatomy…';

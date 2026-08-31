@@ -14,8 +14,8 @@ person. Fading the teeth back is what the layer opacity is for.
 
 ## What it does
 
-- **28 individually selectable permanent teeth**, plus mandible, maxillae and
-  palatine bones, and upper and lower gingiva.
+- **28 individually selectable permanent teeth**, plus the mandible, the
+  maxillary alveolar process and palate, and upper and lower gingiva.
 - **Internal anatomy**: the **pulp** chamber and canal system of every tooth,
   the **periodontal ligament** space, and the **nerve supply** — the inferior
   alveolar nerve in its measured canal, a branch to all 14 lower apices, the
@@ -69,22 +69,17 @@ arteries and veins — is in [docs/wishlist.md](docs/wishlist.md).
 
 ```bash
 npm install
-TOOTH_SOURCE=cbct npm run build:assets   # -> public/dentition.glb + teeth.json
-npm run dev                              # http://localhost:5173/3Dentes/
+npm run build:assets   # -> public/dentition.glb + teeth.json
+npm run dev            # http://localhost:5173/3Dentes/
 ```
 
-**`TOOTH_SOURCE=cbct` is what builds the model above**, and it is what the
-deploy workflow sets. Without it the build falls back to the original
-BodyParts3D alpha in `assets/source/stl/` — external morphology only, no pulp,
-no ligament, no nerves, but it does carry the muscles of mastication, which the
-CBCT has no soft-tissue contrast to segment. Both sets of STLs are vendored, so
-either build works offline.
+The STLs are vendored in `assets/cbct/stl/`, so the build works offline. Earlier
+versions had a second, BodyParts3D-derived asset tree selected by a
+`TOOTH_SOURCE` environment variable; that tree has been removed and there is one
+source now.
 
-`npm run fetch:assets` re-downloads the BodyParts3D set and rewrites
-`assets/source/provenance.json`; re-running it against an unchanged upstream
-should leave `git diff` empty. The CBCT pipeline is not part of `npm` — it is
-the Python in `tools/cbct/`, and it needs the imaging data, which is not in this
-repo.
+The CBCT pipeline itself is not part of `npm` — it is the Python in
+`tools/cbct/`, and it needs the imaging data, which is not in this repo.
 
 To reach the dev server from an iPad on the same network, `npm run dev -- --host`.
 
@@ -93,7 +88,6 @@ To reach the dev server from an iPad on the same network, `npm run dev -- --host
 ```
 tools/manifest.mjs      which structures to use, their layer, anatomical side,
                         and the notation derivation (single source of truth)
-tools/fetch-assets.mjs  reproducible download + provenance/checksums
 tools/build-assets.mjs  STL -> welded, smooth-shaded, y-up, centred .glb
 tools/cbct/             the Python that produced assets/cbct/ from the scan:
                         segmentation, arch split, pulp tracing, gingiva, nerves
@@ -138,25 +132,18 @@ A few things that were not obvious and are easy to regress:
 
 ## Licensing
 
-Three things with three different standings, kept deliberately separate:
+Two things with two different standings:
 
-- **Code** (`src/`, `tools/`, `data/`) — MIT. See [LICENSE](LICENSE).
-- **BodyParts3D models** (`assets/source/`) — CC BY-SA 2.1 Japan. See
-  [LICENSE-ASSETS](LICENSE-ASSETS).
+- **Code** (`src/`, `tools/`) — MIT. See [LICENSE](LICENSE).
+- **The anatomy** (`assets/cbct/`, and the `dentition.glb` built from it) — Nate
+  Saindon's own scan, published with his explicit consent. **No reuse licence
+  has been granted for it**; ask before redistributing.
 
-  > BodyParts3D, © The Database Center for Life Science
-  > licensed under CC Attribution-Share Alike 2.1 Japan
-
-  ShareAlike is inherited by anything derived from those meshes, including
-  models edited in Blender.
-- **CBCT-derived models** (`assets/cbct/`, and the `dentition.glb` the live site
-  now serves) — Nate Saindon's own anatomy, published with his explicit consent.
-  These are segmented from his scan, not derived from BodyParts3D, so the
-  ShareAlike obligation does not reach them. **No reuse licence has been granted
-  for them**; ask before redistributing.
-
-That last point is the reason the two asset trees stay physically separate.
-Full detail in [ATTRIBUTION.md](ATTRIBUTION.md).
+The atlas previously vendored BodyParts3D meshes under CC BY-SA 2.1 Japan. All
+of them have been replaced by measured CBCT anatomy and removed from the
+repository, so no ShareAlike obligation reaches any part of this project. Full
+detail, including what that inheritance used to cover, is in
+[ATTRIBUTION.md](ATTRIBUTION.md).
 
 This repo contains one individual's medical imaging *derivatives*, with consent.
 It contains no DICOM, no raw volumes, and no third-party patient data — and it

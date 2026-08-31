@@ -258,6 +258,11 @@ measured set; the default is unchanged, so the two are a toggle rather than a
 migration — which also gives the atlas a generic-versus-patient comparison for
 free.
 
+> **Superseded 2026-08-31.** It did become a migration. The BodyParts3D tree was
+> removed once the measured set covered everything the build shipped, so there is
+> no toggle and no `TOOTH_SOURCE`: `npm run build:assets` builds the measured
+> model. The comparison above is kept as the record of what the swap changed.
+
 FMA ids remain the join key throughout: `FMA55682` resolves to *Left upper
 central incisor, Universal 9, FDI 21, Palmer UL1*, still derived from arch, side
 and position rather than typed.

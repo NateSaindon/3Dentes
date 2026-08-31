@@ -1,8 +1,14 @@
-// The BodyParts3D structures 3Dentes uses, and how they group into UI layers.
+// The structures 3Dentes ships, and how they group into UI layers.
 //
-// FMA ids are Foundational Model of Anatomy identifiers; they are the filenames
-// in the BodyParts3D distribution (FMA55697.stl) and the node names we bake into
-// the built .glb, so they are the join key across the whole pipeline.
+// Every mesh is segmented from the operator's own cone-beam CT and lives in
+// assets/cbct/stl. There is no second source: the BodyParts3D alpha was removed
+// once the CBCT build replaced the last of its geometry, so nothing here carries
+// a ShareAlike obligation and there is no build variant to keep in sync.
+//
+// FMA ids are Foundational Model of Anatomy identifiers -- an anatomy ontology,
+// independent of any mesh source. They name the source STL, the node baked into
+// the .glb and the teeth.json key, so they are the join key across the whole
+// pipeline.
 //
 // `side` is ANATOMICAL side (the patient's), not the viewer's. The build script
 // asserts it against mesh position — see checkLaterality in build-assets.mjs.
@@ -13,36 +19,17 @@
 // position by toothNotation() below, never typed by hand — 28 hand-entered
 // tooth numbers is 28 chances to mislabel a tooth.
 
-export const SOURCE_BASE =
-  'https://raw.githubusercontent.com/Kevin-Mattheus-Moerman/BodyParts3D/main/assets/BodyParts3D_data/stl';
-
-// Where a structure's mesh comes from. Two trees, kept physically separate
-// because their licences differ and ShareAlike is inherited by anything derived
-// from BodyParts3D meshes (invariant 3 in CLAUDE.md):
-//
-//   bodyparts3d  assets/source/stl  -- CC BY-SA 2.1 JP, external morphology of
-//                                      a different individual
-//   cbct         assets/cbct/stl    -- measured from the operator's own scan,
-//                                      unencumbered
-//
-// Teeth exist in both, under the SAME FMA ids, which is what makes the CBCT set
-// a drop-in replacement rather than a schema change. TOOTH_SOURCE selects which
-// one the build uses; everything else (jaws, gingiva, muscles) has no CBCT
-// equivalent and always comes from BodyParts3D.
-export const TOOTH_SOURCE =
-  process.env.TOOTH_SOURCE === 'cbct' ? 'cbct' : 'bodyparts3d';
-
-export const SOURCE_DIRS = {
-  bodyparts3d: ['assets', 'source', 'stl'],
-  cbct: ['assets', 'cbct', 'stl'],
-};
+// The one place meshes come from. Previously this selected between two trees
+// whose licences differed; there is only the measured one now.
+export const STL_DIR = ['assets', 'cbct', 'stl'];
 
 const tooth = (fma, arch, side, position, type) => ({
-  fma, arch, side, position, type, layer: 'teeth', source: TOOTH_SOURCE,
+  fma, arch, side, position, type, layer: 'teeth',
 });
 
-const BODYPARTS3D_STRUCTURES = [
-  // --- Permanent teeth: 28. Third molars (position 8) are absent from BodyParts3D. ---
+const MEASURED_STRUCTURES = [
+  // --- Permanent teeth: 28. Third molars (position 8) are extracted in this
+  // patient, so the scan contains 28 teeth and so does the atlas. ---
   // Maxillary right
   tooth('FMA55681', 'maxillary', 'right', 1, 'central incisor'),
   tooth('FMA55680', 'maxillary', 'right', 2, 'lateral incisor'),
@@ -78,10 +65,11 @@ const BODYPARTS3D_STRUCTURES = [
 
   // --- Bone ---
   { fma: 'FMA52748', name: 'Mandible',            layer: 'mandible', side: 'midline' },
+  // DentalSegmentator's "Upper Skull" is cropped here to the alveolar process
+  // and palate, and comes out as ONE mesh rather than four named bones. The left
+  // maxilla and both palatine bones therefore have no measured geometry and are
+  // not listed. See the note on the name in CLAUDE.md's open items.
   { fma: 'FMA53649', name: 'Right maxilla',       layer: 'maxilla',  side: 'right'   },
-  { fma: 'FMA53650', name: 'Left maxilla',        layer: 'maxilla',  side: 'left'    },
-  { fma: 'FMA53655', name: 'Right palatine bone', layer: 'maxilla',  side: 'right'   },
-  { fma: 'FMA53656', name: 'Left palatine bone',  layer: 'maxilla',  side: 'left'    },
 
   // --- Soft tissue ---
   // --- Nerves: CBCT build only. See tools/cbct/nerve.py and nerve_maxilla.py.
@@ -91,17 +79,10 @@ const BODYPARTS3D_STRUCTURES = [
   { fma: 'FMA59763', name: 'Gingiva of upper jaw', layer: 'gingiva', side: 'midline' },
   { fma: 'FMA59764', name: 'Gingiva of lower jaw', layer: 'gingiva', side: 'midline' },
 
-  // --- Muscles of mastication ---
-  { fma: 'FMA49001', name: 'Right masseter, superficial part',    layer: 'muscles', side: 'right' },
-  { fma: 'FMA49002', name: 'Left masseter, superficial part',     layer: 'muscles', side: 'left'  },
-  { fma: 'FMA49004', name: 'Right masseter, deep part',           layer: 'muscles', side: 'right' },
-  { fma: 'FMA49005', name: 'Left masseter, deep part',            layer: 'muscles', side: 'left'  },
-  { fma: 'FMA49012', name: 'Right medial pterygoid',              layer: 'muscles', side: 'right' },
-  { fma: 'FMA49013', name: 'Left medial pterygoid',               layer: 'muscles', side: 'left'  },
-  { fma: 'FMA49024', name: 'Right lateral pterygoid, upper head', layer: 'muscles', side: 'right' },
-  { fma: 'FMA49025', name: 'Left lateral pterygoid, upper head',  layer: 'muscles', side: 'left'  },
-  { fma: 'FMA49022', name: 'Right lateral pterygoid, lower head', layer: 'muscles', side: 'right' },
-  { fma: 'FMA49023', name: 'Left lateral pterygoid, lower head',  layer: 'muscles', side: 'left'  },
+  // Muscles of mastication were the last thing BodyParts3D supplied, and they
+  // left with it. CBCT has no soft-tissue contrast, so there is nothing to
+  // segment them from; Phase 3 step 5 fits authored bellies to this patient's
+  // measured attachments instead. See docs/phase-3-soft-tissue.md.
 ];
 
 const ALL_LAYERS = {
@@ -110,15 +91,12 @@ const ALL_LAYERS = {
   maxilla:  { label: 'Maxilla & palatine',     defaultOpacity: 1.0,  visible: true  },
   // Gingiva at full opacity hides every root and the app looks broken on load.
   gingiva:  { label: 'Gingiva',                defaultOpacity: 0.45, visible: true  },
-  // Muscles enclose the whole jaw; visible by default they hide everything else.
-  muscles:  { label: 'Muscles of mastication', defaultOpacity: 0.9,  visible: false },
-  // Pulp and PDL exist only in the CBCT build -- BodyParts3D has no equivalent,
-  // being external morphology. Both are off by default: they sit INSIDE the
-  // teeth, so showing them on load reveals nothing and costs draw calls. The
-  // teeth layer's opacity is what makes them visible.
+  // Pulp and PDL are off by default: they sit INSIDE the teeth, so showing them
+  // on load reveals nothing and costs draw calls. The teeth layer's opacity is
+  // what makes them visible.
   pulp:     { label: 'Pulp',                   defaultOpacity: 1.0,  visible: false },
   pdl:      { label: 'Periodontal ligament',   defaultOpacity: 0.85, visible: false },
-  // Nerves are CBCT-only and OFF by default. Two sets of geometry with very
+  // Nerves are OFF by default. Two sets of geometry with very
   // different standing share this layer -- the mandibular trunk follows a canal
   // the scan actually resolves, while every maxillary course is textbook -- so
   // the structure names carry the distinction and the caveat states it. Do not
@@ -142,31 +120,15 @@ const UNIVERSAL = {
 
 const PALMER_PREFIX = { 1: 'UR', 2: 'UL', 3: 'LL', 4: 'LR' };
 
-/** Derive clinical notation for a tooth. Returns null for non-tooth structures. */
-// Structures that exist as measured CBCT meshes. Everything else in the
-// BodyParts3D set -- the muscles, and three of the four maxilla parts -- has no
-// equivalent, because this scan has no soft-tissue contrast at all and because
-// DentalSegmentator's "Upper Skull" is cropped here to the alveolar process.
-//
-// A CBCT build therefore contains FEWER structures rather than a mix. That is
-// deliberate: BodyParts3D is a whole-body frame with the head about 1470 mm off
-// the floor, while CBCT is scanner-centred, so combining them naively produced a
-// model 1582 mm tall. They are also different people -- one individual's teeth
-// do not sit in another's jaws. Borrowed soft tissue has to be registered INTO
-// the patient's frame before it can be mixed in, and that is not done yet.
-const CBCT_AVAILABLE = new Set([
-  ...BODYPARTS3D_STRUCTURES.filter((s) => s.layer === 'teeth').map((s) => s.fma),
-  'FMA52748',   // mandible
-  'FMA53649',   // maxilla -- alveolar process and palate
-  'FMA59763', 'FMA59764',   // gingiva, upper and lower
-]);
+// The atlas contains only what the scan resolved, and it is SMALLER than the
+// BodyParts3D alpha it replaced rather than a mix of the two. That was always
+// deliberate, and it is now structural: BodyParts3D is a whole-body frame with
+// the head about 1470 mm off the floor while CBCT is scanner-centred, so naively
+// combining them produced a model 1582 mm tall -- and they are different people
+// besides, so one individual's teeth do not sit in another's jaws. Any borrowed
+// geometry added later has to be registered INTO the patient's frame first.
 
-// Nerves exist ONLY in the CBCT build. BodyParts3D has no neural anatomy at all,
-// so listing them alongside it made the default build ask for source STLs that
-// cannot exist and broke the Pages deploy with ENOENT on FMA53381. They are
-// CBCT-only for the same reason pulp and PDL are, and belong on this side of the
-// split rather than behind a filter.
-const CBCT_ONLY_STRUCTURES = [
+const NERVE_STRUCTURES = [
   { fma: 'FMA53381', name: 'Inferior alveolar nerve (canal measured)',
     layer: 'nerves', side: 'midline' },
   { fma: 'FMA53381B', name: 'Inferior alveolar dental branches',
@@ -186,26 +148,19 @@ const CBCT_ONLY_STRUCTURES = [
 // tooth and keeps the notation derived rather than retyped. Their ids suffix the
 // tooth's FMA id, so FMA55682-pulp belongs unambiguously to FMA55682.
 const perTooth = (layer) =>
-  BODYPARTS3D_STRUCTURES
+  MEASURED_STRUCTURES
     .filter((s) => s.layer === 'teeth')
-    .map((s) => ({ ...s, fma: `${s.fma}-${layer}`, layer, source: 'cbct',
-                   tooth: s.fma }));
+    .map((s) => ({ ...s, fma: `${s.fma}-${layer}`, layer, tooth: s.fma }));
 
-export const STRUCTURES =
-  TOOTH_SOURCE === 'cbct'
-    ? [
-        ...BODYPARTS3D_STRUCTURES
-          .filter((s) => CBCT_AVAILABLE.has(s.fma))
-          .map((s) => ({ ...s, source: 'cbct' })),
-        ...CBCT_ONLY_STRUCTURES.map((s) => ({ ...s, source: 'cbct' })),
-        ...perTooth('pulp'),
-        ...perTooth('pdl'),
-      ]
-    : BODYPARTS3D_STRUCTURES;
+export const STRUCTURES = [
+  ...MEASURED_STRUCTURES,
+  ...NERVE_STRUCTURES,
+  ...perTooth('pulp'),
+  ...perTooth('pdl'),
+];
 
-// Only expose layers that actually have geometry in this build. The CBCT set has
-// no muscles -- there is no soft-tissue contrast in the scan to segment them
-// from -- and a toggle that controls nothing reads as a broken feature.
+// Only expose layers that actually have geometry. A toggle that controls nothing
+// reads as a broken feature.
 export const LAYERS = Object.fromEntries(
   Object.entries(ALL_LAYERS).filter(([k]) => STRUCTURES.some((s) => s.layer === k)),
 );

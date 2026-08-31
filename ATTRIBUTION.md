@@ -2,57 +2,30 @@
 
 ## 3D anatomical models
 
-There are **two** sets of geometry in this repository, and they do not share a
-provenance or a licence.
-
-### `assets/cbct/` — what the live site serves
-
-Segmented from a single cone-beam CT (Sirona XG3D, 0.16 mm isotropic) of the
-project's author, Nate Saindon, published with his explicit consent. Teeth,
-mandible, maxilla, pulp, periodontal ligament, gingiva and nerves. Not derived
-from BodyParts3D in any part, so the ShareAlike obligation below does not extend
-to them; no reuse licence has been granted for them.
+All geometry in this repository is segmented from a single cone-beam CT (Sirona
+XG3D, 0.16 mm isotropic) of the project's author, Nate Saindon, published with
+his explicit consent. Teeth, mandible, maxilla, pulp, periodontal ligament,
+gingiva and nerves — one person, one dataset.
 
 The imaging data itself is not in this repository, and no third-party patient
 data appears in it.
 
-### `assets/source/` — BodyParts3D
-
-The original alpha's geometry, still vendored and still buildable
-(`npm run build:assets` without `TOOTH_SOURCE=cbct`). It is also the only source
-of the muscles of mastication, which the CBCT cannot resolve.
-
-Produced by the Database Center for Life Science (DBCLS), Japan.
-
-> BodyParts3D, © The Database Center for Life Science
-> licensed under CC Attribution-Share Alike 2.1 Japan
-
-- Official project / downloads: https://dbarchive.biosciencedbc.jp/en/bodyparts3d/download.html
-- GitHub mirror used by this project (STL conversion by Kevin Mattheus Moerman):
-  https://github.com/Kevin-Mattheus-Moerman/BodyParts3D
-- Data release: version 3.0 (2011-09-15)
-
-The mirror's README notes that release 3.0 was chosen over 4.0 because it has
-fewer self-intersecting surfaces. This project inherits that choice.
-
-Models are indexed by **Foundational Model of Anatomy (FMA)** identifiers, so a
-filename like `FMA55697.stl` is the right upper second permanent molar. The FMA
-ontology is maintained by the Structural Informatics Group at the University of
-Washington.
+**No reuse licence has been granted for the anatomical meshes.** They are a
+named living person's medical imaging, published for this project. The code is
+MIT (see [LICENSE](LICENSE)); the anatomy is not covered by it.
 
 ## What this project adds
 
-The 3Dentes source code, the clinical notation mapping in `data/teeth.json`, the
-asset build pipeline in `tools/`, and all documentation are original work by
+The 3Dentes source code, the clinical notation derivation in `tools/manifest.mjs`,
+the asset build pipeline in `tools/`, and all documentation are original work by
 Nate Saindon, MIT licensed.
 
-## Provenance of the model data
+## Foundational Model of Anatomy
 
-BodyParts3D is derived from imaging of **a single adult individual**. The
-morphology is genuine human anatomy, not an idealized textbook composite. Root
-counts, root curvature, and crown morphology reflect that one person's dentition
-and will differ from textbook norms in places. See README.md for the full list of
-what the source data does and does not contain.
+Structures are indexed by **FMA identifiers**, so a filename like `FMA55697.stl`
+is the right upper second permanent molar. The FMA is an anatomy ontology
+maintained by the Structural Informatics Group at the University of Washington.
+It supplies identifiers and nomenclature only — no geometry.
 
 ## DentalSegmentator (pretrained nnU-Net model)
 
@@ -67,7 +40,18 @@ model, Dataset112_DentalSegmentator_v100.
 - nnU-Net: Isensee, F. et al. *nnU-Net: a self-configuring method for deep
   learning-based biomedical image segmentation.* Nature Methods 18, 203-211 (2021).
 
-CC BY 4.0 requires attribution but, unlike the BodyParts3D licence, carries no
-ShareAlike obligation -- so meshes derived through this model do not inherit a
-copyleft term. The model is used for inference only; no weights are redistributed
-in this repository.
+CC BY 4.0 requires attribution but carries no ShareAlike obligation, so meshes
+derived through this model inherit no copyleft term. The model is used for
+inference only; no weights are redistributed in this repository.
+
+## Previously: BodyParts3D
+
+The alpha built its geometry from **BodyParts3D** (© The Database Center for Life
+Science, CC BY-SA 2.1 Japan). Every one of those meshes has since been replaced
+by measured CBCT anatomy, and the vendored STLs were removed from the repository
+on 2026-08-31. Nothing in the current build, and nothing distributed here, is
+derived from BodyParts3D — so the ShareAlike obligation no longer reaches any
+part of this project.
+
+Recorded because it was true of releases up to and including the alpha, and
+because anyone reading the git history will find those meshes there.
