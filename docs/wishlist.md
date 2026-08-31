@@ -4,6 +4,18 @@ Ideas captured for later. Nothing here is scheduled, and nothing here should be
 built before the Phase 3 anatomy it depends on exists. Recorded so they are not
 lost, with a note on what each actually needs.
 
+**Two ordering constraints, though, added 2026-08-31 — these are not free to
+reshuffle:**
+
+- **Enamel, dentin and cementum come before the radiograph simulator.** Tissue
+  identity plus density is what a DRR integrates; building the DRR first means
+  building it twice.
+- **Provenance labels come before anything simulated.** Anaesthetic diffusion and
+  the pathology sliders both generate geometry that is neither measured nor a
+  literature mean, and the atlas has no per-structure way to say so yet.
+
+Both are buildable now and need no new anatomy.
+
 ---
 
 ## The unifying idea: a digitally reconstructed radiograph
@@ -31,6 +43,11 @@ That has two consequences worth designing around:
 Feasible in the existing stack (WebGL ray-marching in three.js), but the volume
 is ~185 MB per arch and would need aggressive downsampling or a cropped region of
 interest to ship to a browser. That is the main engineering question.
+
+**Prerequisite, added 2026-08-31: split the hard tissue into enamel, dentin and
+cementum first** — see that section below. Tissue-labelled geometry carrying its
+own density is a second, much lighter substrate for the ray-cast, and it may
+remove the shipping problem entirely rather than mitigating it.
 
 ---
 
@@ -193,6 +210,296 @@ sphenopalatine vessels have no nerve twin in this model). Provenance is the
 usual problem — the canal is MEASURED, its division between artery, vein and
 nerve is SCHEMATIC, and the atlas must not draw three tubes in a canal it only
 ever saw as one lumen and imply otherwise.
+
+---
+
+## Enamel, dentin and cementum — before the DRR, not after
+
+Split the hard tissue into its actual constituents, each carrying a density. The
+model currently treats a tooth as one homogeneous solid with a lumen cut out of
+it, which is why the README's "what it is not" still says *no enamel/dentin
+split*.
+
+**This is sequenced deliberately ahead of the radiograph simulator.** A DRR is an
+integral of attenuation along a ray. If every structure already carries a tissue
+identity and a density, the ray can be integrated against *labelled geometry*
+instead of against the 185 MB voxel volume — which is the one engineering problem
+the DRR section flags as unsolved. Doing this first may turn the radiograph
+simulator from a volume-shipping problem into a shading problem. Doing it
+afterwards means building the DRR twice.
+
+It also pays off immediately in the atlas itself, independent of any radiograph:
+the enamel cap, the dentin bulk and the DEJ between them are what a tooth
+cross-section is actually *about*, and caries depth (in the sliders above) is
+meaningless without them.
+
+### What separates and what does not
+
+| Tissue | How it comes out | Standing |
+| --- | --- | --- |
+| **Enamel** | Thresholds. Densest tissue in the body, and well clear of dentin at 0.16 mm — the CBCT plan lists enamel/dentin separation as one of the reasons for this data. | **Measured** |
+| **Dentin** | The remainder of the tooth solid once enamel, pulp and any prosthetic are removed. | **Measured** |
+| **DEJ** | Falls out as the shared boundary. Not drawn separately, but it is the surface caries spreads along. | **Measured** |
+| **Cementum** | **Will not threshold.** 20–50 µm at the CEJ, thickening to perhaps 150–200 µm apically — every part of it is sub-voxel at 0.16 mm, and it is barely denser than dentin besides. Build it as a thin shell on the root surface, CEJ to apex, thickening apically. | **Derived / exaggerated**, exactly like PDL thickness |
+| **Zirconia on 19 and 30** | Thresholds far above enamel; already flagged in the artifact map as a separate `prosthetic` label. | **Measured, but lab work — not anatomy** |
+
+The CEJ is already measured per tooth (Phase 3, step 3), so the cementum shell
+has a real upper boundary to start from. The **cementodentinal junction has no
+measured position at all** — it is wherever the authored shell thickness puts it.
+Same failure mode as the PDL: measured in position, drawn thicker than the truth.
+
+### Density, and how to store it
+
+Store **composition and physical density per tissue**, not a single attenuation
+coefficient. µ is energy-dependent, so a bitewing at 60 kVp and a pan at 70 kVp
+attenuate the same enamel differently; baking one µ in now makes kVp
+unsimulatable later, and kVp is itself a thing worth teaching.
+
+Rough physical densities to start from — to be sourced properly, not left as
+these numbers: enamel ~2.9–3.0 g/cm³, dentin ~2.1–2.2, cementum ~2.0, cortical
+bone ~1.9, trabecular bone much lower and heterogeneous, pulp ~1.0, zirconia
+~6.0. Whatever is used, cite it, and let the provenance labels below carry the
+citation.
+
+**What it needs:** nothing new from the scan. Enamel is a threshold within the
+existing per-tooth masks, which already exist for all 28. Cementum is a script,
+like the gingival collar. This is the most immediately buildable large item here.
+
+---
+
+## Provenance label on every structure, in the UI
+
+Every structure should state **how it was generated**, in the app, at the point
+of selection — not only in the README and the docs.
+
+The distinction already exists and is already carefully maintained in prose: the
+README's measured / derived / schematic table, the Phase 3 provenance summary,
+and Invariant 4's caveat block. What is missing is that **the model itself does
+not carry it**. In `tools/manifest.mjs` provenance survives only as a
+`(schematic)` suffix inside a display name, which cannot be filtered, cannot be
+styled, cannot be cited, and quietly disappears the moment someone tidies the
+names.
+
+### The shape of it
+
+A `provenance` field on every manifest entry — manifest is already the single
+source of truth for layer, side and notation, and this belongs beside them:
+
+- **`tier`** — measured / derived / schematic / simulated. (The fourth tier the
+  pathology sliders will need is the same field; add it once.)
+- **`method`** — one line, specific. Not "measured" but *how*: "hand-traced on
+  axial slices, 0.16 mm CBCT"; "thresholded, then watershed out of its socket";
+  "lofted from the measured CEJ, refitted to published cervical-line curvature";
+  "centreline through the mandibular canal — the canal is measured, its contents
+  are not".
+- **`sources`** — citations, required for anything approximated. The maxillary
+  nerve courses are textbook, and the atlas should say *which* textbook.
+
+Worked examples of what each would say:
+
+| Structure | Tier | Method |
+| --- | --- | --- |
+| Teeth, mandible, maxillae | Measured | Segmented from 0.16 mm CBCT |
+| Pulp | Measured | Hand-traced per slice — no threshold separates it from dentin at this resolution |
+| Apical foramina | Measured | Intensity-deficit integration across the canal cross-section |
+| Inferior alveolar nerve | Measured *course*, schematic *content* | The canal void was traced foramen to foramen; the nerve inside it is drawn, not seen |
+| Mental / incisive branches | Schematic | Foramen measured, course inferred |
+| PSA, MSA, ASA, infraorbital | Schematic | Textbook course; superior alveolar canals not resolved at 0.16 mm. Cite the source |
+| Gingiva | Derived | Collar lofted from measured CEJ |
+| PDL | Measured position, exaggerated thickness | Both walls measured; drawn far thicker than ~0.2 mm, which is one voxel |
+| Cementum *(once built)* | Derived | Authored shell on the measured root surface |
+
+### Why it matters more than it looks
+
+This is the machine-readable form of Invariant 4. A caveat paragraph describes
+the *build*; a per-structure field describes the *object the user just clicked*,
+which is where the question actually arises. It also unlocks small things that
+are otherwise impossible: filtering the view to measured anatomy only, or tinting
+schematic structures so the eye is told the same thing the text says.
+
+**What it needs:** nothing. No new anatomy, no new segmentation — the facts all
+exist in the docs already and only need moving into the manifest and out to the
+selection panel. **Buildable today**, and it gets cheaper the sooner it is done,
+since every structure added afterwards is one more to backfill.
+
+---
+
+## Local anaesthetic delivery, from needle to numb tooth
+
+Show the injection techniques as *three-dimensional geometry*: the needle in the
+soft tissue, the solution leaving the bevel, its spread through tissue, and which
+nerves — and therefore which teeth — that spread actually reaches.
+
+### Techniques worth covering
+
+| | Target | Why it is worth drawing |
+| --- | --- | --- |
+| **Maxillary infiltration** (supraperiosteal) | Apex of the target tooth | The whole technique depends on the maxillary plate being thin and porous — the one place diffusion through bone works |
+| **PSA, MSA, ASA / infraorbital** | Regional maxillary blocks | Their target nerves are already in the model, schematically |
+| **Greater palatine, nasopalatine** | Palatal soft tissue | Both foramina are potentially measurable in the volume |
+| **IANB** (Halstead) | Mandibular foramen, above the lingula | The classic, and the classic failure |
+| **Gow-Gates** | Neck of the condyle | Higher target, larger bony landmark, catches branches the IANB misses |
+| **Vazirani-Akinosi** | Closed-mouth, pterygomandibular space | The technique for a patient who cannot open — ties directly to the mouth-opening item below |
+| **Long buccal, mental / incisive** | Terminal and soft-tissue supply | Explains why an IANB alone does not get you a mandibular extraction |
+| **Intraligamentary, intraosseous** | PDL space, cancellous bone | Both target structures already exist in the model |
+
+### Why this model is unusually well placed to do it
+
+**The bony targets are measured.** The mandibular foramen and lingula, the
+condylar neck, the mental foramen, the apices of every maxillary tooth, and the
+mandibular canal itself are all real geometry from this patient's scan — so
+"where the needle goes" is not an illustration, it is a position relative to
+measured bone. Very little teaching material can say that.
+
+**The failures are geometric, and therefore showable.** An IANB deposited too low
+or too anterior misses because of where the foramen actually is. Contacting bone
+too early means the wrong angle of approach. A buccal infiltration failing in the
+adult mandible is a cortical-plate thickness fact, and the plate thickness is
+*in the scan*. These are the things that are hard to teach from a diagram and
+easy to show from a model.
+
+### What it needs
+
+- **Soft tissue that does not exist yet** — oral mucosa, the pterygomandibular
+  space and raphe, buccinator, medial pterygoid. This is Phase 3 tier-3 work and
+  gates the whole item. The maxillary infiltrations need much less of it than the
+  mandibular blocks do.
+- **A needle** as a positioned rigid body: insertion point, angulation, depth,
+  bevel orientation. Gauge and length matter (25 mm long vs 20 mm short changes
+  which techniques are even possible).
+- **A diffusion field** from the deposition point — a scalar spreading through
+  tissue, blocked by cortical bone, permeable where the plate is thin. This is
+  the actual mechanism of the lesson and the reason the item is not just a video.
+- **A nerve-territory map**, so a nerve inside the anaesthetised field marks its
+  teeth numb. Partly present already: there is a measured branch to all 14 lower
+  apices.
+- **Aspiration** would want vessels — see the vascular item below. The inferior
+  alveolar artery and vein share the canal, which is exactly why aspiration is
+  taught.
+
+**Provenance warning, and it is a serious one:** the needle path is authored, the
+soft tissue it passes through is authored, and the diffusion is a *simulation* —
+not measured, not a literature mean. This is the same fourth-tier problem the
+pathology sliders raise, and here it is sharper, because a plausible-looking
+depth-and-angle animation reads as clinical instruction. It needs the provenance
+labelling above to exist first, and it needs to be loud.
+
+---
+
+## Open and close the mouth
+
+Once there is enough soft tissue for it to mean anything, let the mandible move.
+
+**It is not a hinge.** Mandibular opening is rotation in the lower joint
+compartment for roughly the first 20–25 mm, and then translation as the condyle
+runs forward and down the articular eminence. Animating a pure hinge through a
+full opening puts the condyle through the eminence and is wrong in exactly the
+way the TMJ is interesting.
+
+### What it needs
+
+- **A mandibular group in the scene graph.** Everything mandibular has to move
+  together: the mandible, the 14 lower teeth, their pulp and PDL, the lower
+  gingiva, the inferior alveolar nerve with its dental, mental and incisive
+  branches. Today these are flat siblings in one glTF, so this is a real
+  restructuring of the scene, not a transform on one node. Worth designing before
+  the tree gets larger.
+- **A condylar path.** Generic is acceptable; **patient-specific would be better,
+  and may be free** — if the glenoid fossa and articular eminence are inside the
+  `centered` volume's FOV, the eminence slope can be measured off this patient
+  and the opening path derived from it. Check the FOV before assuming a generic
+  curve is the only option.
+- **Muscles that deform rather than translate.** This is the real reason to wait:
+  masseter, medial pterygoid and lateral pterygoid all change shape through the
+  opening, and rigidly transforming a static belly with the mandible will look
+  broken. Phase 3 step 5 fits the muscles to measured attachments; do that first.
+  The lateral pterygoid is the one that *produces* translation, so it is the one
+  that has to be right.
+
+### What it buys
+
+- **The mandibular anaesthesia techniques above.** IANB and Gow-Gates are given
+  with the mouth wide open; Vazirani-Akinosi is defined by being closed. The
+  techniques cannot be shown honestly in a fixed-occlusion model.
+- **Occlusion**, eventually — contacts, excursions, and the difference between
+  centric relation and maximum intercuspation.
+- **The scan itself is a single frame**, so all of this is authored motion over
+  measured geometry. Note also that the three CBCT exposures caught the mandible
+  in different positions, which is a caution about the source data rather than a
+  source of motion data.
+
+---
+
+## The rest of the skull — generating what the FOV never saw
+
+Everything in the atlas stops at the edge of an **8 cm cube**. All three volumes
+are 81.9 × 81.9 × 81.76 mm at 0.16 mm isotropic (see
+[cbct-survey.md](cbct-survey.md) §2), aimed at three different places. Their
+union is a dentition and its immediate surroundings — it is nowhere close to a
+skull.
+
+So the maxillary nerves currently run through empty space, the mandible ends
+where the box ends, and there is no cranial context to orient any of it against.
+For an atlas whose whole argument is *this is measured*, the boundary of what was
+measured is presently invisible.
+
+### What is missing, and why each matters
+
+| Structure | Why it is wanted |
+| --- | --- |
+| **Glenoid fossa and articular eminence** | The mouth cannot open correctly without the eminence — see [Open and close the mouth](#open-and-close-the-mouth). **Check the FOV first: this may be partly present**, in which case it is measured and the opening path is patient-specific. |
+| **Condyle and upper ramus** | The Gow-Gates target is the condylar neck. An 8 cm box centred on the occlusal plane very likely clips it. |
+| **Pterygopalatine fossa, foramen rotundum, pterygoid plates** | V2's course. The maxillary nerves are drawn schematically already; without this bone they are schematic *and* floating. |
+| **Infraorbital canal and rim, orbital floor** | The ASA and infraorbital nerve terminate here. Also the roof of the maxillary sinus, which *is* well resolved. |
+| **Zygomatic arch and zygomaticomaxillary complex** | Masseter origin — needed the moment muscles are fitted to attachments. |
+| **Cranial vault, base, nasal bones, hyoid, cervical spine** | Orientation and context only. Cheapest to fake, least at stake. |
+
+**Do the FOV audit before anything else here.** The three boxes and the saved
+mandibular transform are known, so the exact extent of measured coverage is
+computable, not a guess. Some of the above may already be in hand.
+
+### How to generate it, in order of preference
+
+1. **Template morphed to the measured boundary.** Take a skull mesh and fit it so
+   that where it overlaps measured bone it *matches* — then extrapolate outward
+   from that fit. The generated skull is then this patient's size, proportion and
+   asymmetry rather than a generic one, and it joins the measured mandible and
+   maxillae without a seam. This is the only option that is genuinely
+   "generative" rather than "borrowed", and it is the one worth the effort.
+2. **A permissively licensed skull, registered and scaled.** Faster, and honest
+   if labelled. **Licence trap:** BodyParts3D is CC BY-SA, and Invariant 3 means
+   anything derived from it inherits ShareAlike. Pulling a skull from there would
+   re-infect a tree the CBCT work deliberately freed. Source something
+   public-domain or permissive instead, and keep it in the atlas-derived tree.
+3. **Authored from scratch.** Most work, least benefit — a hand-modelled cranial
+   vault teaches nothing the other two do not.
+
+### The provenance problem is worse here than anywhere else
+
+Every other structure in the atlas is measured, derived or schematic *as a
+whole*. A generated skull is **measured and invented in the same mesh**, with the
+join running through the middle of the mandible. Per-structure provenance is not
+enough; this needs provenance **per region**, or the mandible starts asserting a
+ramus height nobody ever measured.
+
+Two things follow, and they are the interesting part of this item:
+
+- **Draw the FOV boundary.** The extent of each 8 cm box is a real, knowable
+  surface. Showing it — as a clip plane, a fade, or an outright change of
+  material — turns "where the data stops" from a caveat into something visible.
+  That is a better answer than a footnote, and it is the honest version of a
+  feature that is otherwise pure decoration.
+- **Never feed a generated skull into an extraoral DRR unlabelled.** A simulated
+  panoramic or cephalometric radiograph needs far more skull than 8 cm, so it
+  would be computed largely from invented bone — a fabricated radiograph of a
+  real, identifiable person. Intraoral projections stay inside measured data and
+  are fine; extraoral ones are not, and the difference must be enforced in code,
+  not left to a label.
+
+**What it needs:** the FOV audit (cheap, and possible today); then a skull source
+with a licence that does not contaminate; then a fitting script. No new imaging —
+the missing anatomy is missing permanently, since re-scanning to fill it would
+mean irradiating a healthy person for an atlas.
 
 ---
 
