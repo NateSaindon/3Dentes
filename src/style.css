@@ -349,6 +349,7 @@ html, body {
   font-size: 0.7rem;
   line-height: 1.55;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 .prov-sources {
   margin: 0.45rem 0 0;
@@ -356,5 +357,8 @@ html, body {
   font-size: 0.65rem;
   line-height: 1.45;
   color: var(--muted);
+  /* Citations include bare URLs with no spaces in them, and a long one pushed
+     the whole selection panel into horizontal scroll. Break inside the word. */
+  overflow-wrap: anywhere;
 }
 .prov-sources li { margin-top: 0.2rem; }
