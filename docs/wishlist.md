@@ -404,11 +404,15 @@ way the TMJ is interesting.
   branches. Today these are flat siblings in one glTF, so this is a real
   restructuring of the scene, not a transform on one node. Worth designing before
   the tree gets larger.
-- **A condylar path.** Generic is acceptable; **patient-specific would be better,
-  and may be free** — if the glenoid fossa and articular eminence are inside the
-  `centered` volume's FOV, the eminence slope can be measured off this patient
-  and the opening path derived from it. Check the FOV before assuming a generic
-  curve is the only option.
+- **A condylar path — and it will have to be generic.** *Answered 2026-08-31 by
+  `tools/fov-audit.mjs`:* the mandible is **cut through both rami**, with a
+  172 mm² planar cap on the right FOV wall, 191 mm² on the left, and 156 mm²
+  where the posterior wall slices the ramus coronally. Its full width is 82.0 mm,
+  which is the 81.9 mm FOV exactly. A bicondylar breadth is around 120 mm, so the
+  condyles were never in the box — and neither were the glenoid fossa or the
+  articular eminence. There is no measured eminence slope to derive an opening
+  path from, and the Gow-Gates target in the anaesthesia item above sits in bone
+  this scan never saw. Use a published condylar path and label it schematic.
 - **Muscles that deform rather than translate.** This is the real reason to wait:
   masseter, medial pterygoid and lateral pterygoid all change shape through the
   opening, and rigidly transforming a static belly with the mandible will look
@@ -447,16 +451,43 @@ measured is presently invisible.
 
 | Structure | Why it is wanted |
 | --- | --- |
-| **Glenoid fossa and articular eminence** | The mouth cannot open correctly without the eminence — see [Open and close the mouth](#open-and-close-the-mouth). **Check the FOV first: this may be partly present**, in which case it is measured and the opening path is patient-specific. |
-| **Condyle and upper ramus** | The Gow-Gates target is the condylar neck. An 8 cm box centred on the occlusal plane very likely clips it. |
+| **Glenoid fossa and articular eminence** | The mouth cannot open correctly without the eminence — see [Open and close the mouth](#open-and-close-the-mouth). **Confirmed outside every FOV** by the audit below, so this must be generated or the opening stays generic. |
+| **Condyle and upper ramus** | The Gow-Gates target is the condylar neck. The audit below shows both rami sliced by the FOV walls, so the condyle is absent outright. |
 | **Pterygopalatine fossa, foramen rotundum, pterygoid plates** | V2's course. The maxillary nerves are drawn schematically already; without this bone they are schematic *and* floating. |
 | **Infraorbital canal and rim, orbital floor** | The ASA and infraorbital nerve terminate here. Also the roof of the maxillary sinus, which *is* well resolved. |
 | **Zygomatic arch and zygomaticomaxillary complex** | Masseter origin — needed the moment muscles are fitted to attachments. |
 | **Cranial vault, base, nasal bones, hyoid, cervical spine** | Orientation and context only. Cheapest to fake, least at stake. |
 
-**Do the FOV audit before anything else here.** The three boxes and the saved
-mandibular transform are known, so the exact extent of measured coverage is
-computable, not a guess. Some of the above may already be in hand.
+### The FOV audit — done 2026-08-31
+
+`tools/fov-audit.mjs` measures every shipped mesh and detects where the FOV cut
+it, by finding planar caps sitting on a bounding-box face: truncated anatomy ends
+in a flat wall, intact anatomy closes over smoothly. Results:
+
+| | |
+|---|---|
+| **Measured anatomy spans** | 85.6 × 73.5 × 80.1 mm — against an 81.9 mm box per volume. It exceeds one FOV in x only because the mandibular volume is registered in alongside `centered`. |
+| **Mandible: cut through both rami** | 172 mm² cap on the right wall, 191 mm² on the left, 156 mm² posteriorly. Width 82.0 mm = the FOV exactly. |
+| **Condyle, fossa, eminence** | **Not measured, and never could have been.** Bicondylar breadth is ~120 mm against an 81.9 mm box. |
+| **Upper skull: NOT cut** | Caps of 4–18 mm² only, i.e. it closes smoothly. Its extent is a *segmentation* crop by DentalSegmentator, not an FOV limit. |
+
+That last row is the useful one, and it changes the shape of this item.
+
+**Some of the missing bone is not missing — it is unexported.** The upper skull
+mesh stops where the label stops, not where the data stops, so there is measured
+bone in the volumes above and lateral to it that has never been meshed. The
+`maxillary` volume is the clearest case: [cbct-survey.md](cbct-survey.md) §3
+found it to be a **sinus / root-apex / nasal-anatomy volume** whose upper crowns
+fall below the FOV floor, which is why it was set aside as an arch source — and
+it is currently used for nothing at all. It covers a good part of the mid-face
+wanted in the table above: orbital floor, infraorbital canal and rim, sinus
+walls, nasal bones.
+
+**So the order is: export what was already measured, then generate only the
+remainder.** Re-segmenting the upper skull to the full FOV and bringing the
+`maxillary` volume into the build is Fedora work on data already in hand, and
+every millimetre it recovers is one that does not have to be invented. Do it
+before fitting any template.
 
 ### How to generate it, in order of preference
 
