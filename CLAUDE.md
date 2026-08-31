@@ -46,6 +46,20 @@ Run `build:assets` after cloning or nothing loads.
    `index.html`. The user is a dental professional; a tool that looks like a
    clinical reference while omitting pulp and the inferior alveolar nerve must say so.
 
+## Deployment
+
+`.github/workflows/deploy.yml` sets **`TOOTH_SOURCE=cbct`** on `build:assets`.
+Without it the deploy published the BodyParts3D alpha while every local review
+ran against the CBCT build — the site was a different model from the one being
+approved, and nothing said so. If the live site ever looks a generation behind,
+check that env var first.
+
+Nerves are **CBCT-only** (`CBCT_ONLY_STRUCTURES` in `tools/manifest.mjs`), like
+pulp and PDL. BodyParts3D has no neural anatomy, so listing them alongside it
+makes the default build ask for source meshes that cannot exist — the deploy
+fails with ENOENT on `assets/source/stl/FMA53381.stl`. Anything CBCT-only goes
+on that side of the split, never behind a membership filter.
+
 ## Architecture
 
 FMA ids are the join key everywhere — source filename, glTF node name, and
