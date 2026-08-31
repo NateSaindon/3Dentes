@@ -84,6 +84,22 @@ const BODYPARTS3D_STRUCTURES = [
   { fma: 'FMA53656', name: 'Left palatine bone',  layer: 'maxilla',  side: 'left'    },
 
   // --- Soft tissue ---
+  // --- Nerves: CBCT build only. See tools/cbct/nerve.py and nerve_maxilla.py.
+  // The mandibular canal is MEASURED; its contents are not. Everything
+  // maxillary is SCHEMATIC -- the superior alveolar canals are not reliably
+  // visible at 0.16 mm and nothing here was seen in the scan but the foramina.
+  { fma: 'FMA53381', name: 'Inferior alveolar nerve (canal measured)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53381B', name: 'Inferior alveolar dental branches',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53381T', name: 'Mental and incisive branches (schematic)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53088', name: 'Superior dental plexus (schematic)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53088B', name: 'Superior alveolar dental branches (schematic)',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA53088T', name: 'Infraorbital, PSA, MSA and ASA nerves (schematic)',
+    layer: 'nerves', side: 'midline' },
   { fma: 'FMA59763', name: 'Gingiva of upper jaw', layer: 'gingiva', side: 'midline' },
   { fma: 'FMA59764', name: 'Gingiva of lower jaw', layer: 'gingiva', side: 'midline' },
 
@@ -114,6 +130,12 @@ const ALL_LAYERS = {
   // teeth layer's opacity is what makes them visible.
   pulp:     { label: 'Pulp',                   defaultOpacity: 1.0,  visible: false },
   pdl:      { label: 'Periodontal ligament',   defaultOpacity: 0.85, visible: false },
+  // Nerves are CBCT-only and OFF by default. Two sets of geometry with very
+  // different standing share this layer -- the mandibular trunk follows a canal
+  // the scan actually resolves, while every maxillary course is textbook -- so
+  // the structure names carry the distinction and the caveat states it. Do not
+  // let a later tidy-up imply the maxillary nerves were measured.
+  nerves:   { label: 'Nerves',                 defaultOpacity: 1.0,  visible: false },
 };
 
 
@@ -149,6 +171,8 @@ const CBCT_AVAILABLE = new Set([
   'FMA52748',   // mandible
   'FMA53649',   // maxilla -- alveolar process and palate
   'FMA59763', 'FMA59764',   // gingiva, upper and lower
+  'FMA53381', 'FMA53381B', 'FMA53381T',    // IAN, dental branches, mental+incisive
+  'FMA53088', 'FMA53088B', 'FMA53088T',    // superior alveolar, all schematic
 ]);
 
 // Pulp and PDL are per-tooth and derived, so they inherit each tooth's arch,

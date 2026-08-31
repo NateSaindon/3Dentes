@@ -44,13 +44,71 @@ from export_teeth import decimate
 # is where a blurred boundary belongs, and pulp_all.py already measures the pulp
 # density per tooth from the eroded chamber core.
 PULP_FALLBACK_HU = 500.0
-MIN_PIECE_MM3 = 0.8
 TARGET_TRIS = 3500
 
 
-def solid_at(roi, tooth, interior, spacing, pulp_hu, frac):
-    """Radiolucency enclosed by dentin at a given fraction toward pulp density."""
+# A SINGLE THRESHOLD CANNOT FIND A CANAL THAT NARROWS.
+#
+# The operator hand-shaded all 14 exported slices of tooth 14. Inside the
+# shading the median is 500 HU, matching the independently measured
+# pulp_density_hu -- so the density model is right. But the apical canal READS
+# 890-1086 HU, because at under three voxels wide every voxel is a mixture and
+# partial volume drags it toward dentin. A cut computed from a 500 HU chamber
+# therefore never selects the apex, and no single value fixes it: lowering the
+# cut until the apex appears floods the crown (318 mm3, precision 0.28).
+#
+# Measured contrast below the slice's own dentin, down tooth 14:
+#     z= 51: 728    z= 83: 261    z=104: 264    z=125: 144    z=146: 298
+# against a noise floor near 70 HU. The signal is present at every level; what
+# changes is its amplitude. So the CUT has to follow it down.
+#
+# Dice against the hand shading, best parameters of each family:
+#     flat cut (any value)                    0.763
+#     hysteresis, seed high / grow low        0.664   (low cut merges everything)
+#     per-slice adaptive contrast             0.763
+#     coronal->apical taper                   0.804
+# The taper is the only one that beats the flat cut, and it wins across a broad
+# parameter region rather than at a lucky point.
+TAPER_RATIO = 0.17   # apical cut as a fraction of the coronal cut
+TAPER_POWER = 0.6    # <1, so the cut falls fastest through the mid-root
+MIN_PIECE_VOX = 25   # absolute, NOT a fraction of the largest piece: apical to
+                     # the furcation a molar has three separate canals, and each
+                     # is tiny beside the chamber it is compared against.
+
+# WHAT THE OPERATOR CALLS PULP IS BIGGER THAN THE LUMEN THE DEFICIT INTEGRAL
+# MEASURES, BY A FACTOR MEASURED ON GROUND TRUTH.
+#
+# Their hand shading of tooth 14 integrates to 56.9 mm3. pulp_all.py measures
+# 26.8 mm3 of lumen for the same tooth. Both are right about different things:
+# the deficit integral recovers the STRICT radiolucent lumen, while the operator
+# shades to the pulp-dentin transition -- predentin and the partial-volume shell
+# read denser than pulp but are pulp tissue, and their instruction was that "any
+# radiolucency inside dentinal structure should be solid pulp tissue".
+#
+# So the lumen stays the measurement and this is the one number that converts it
+# to the modelled tissue. It is measured, not chosen, but it is measured on ONE
+# tooth -- widen the ground truth before trusting it far.
+SHADING_SCALE = 56.9 / 26.8
+
+
+def _apical_fraction(tooth, arch):
+    """0 at the crown, 1 at the apex, along z, for this tooth's arch."""
+    zs = np.where(tooth.any(axis=(1, 2)))[0]
+    if zs.size == 0:
+        return None
+    z0, z1 = int(zs.min()), int(zs.max())
+    f = np.clip((np.arange(tooth.shape[0]) - z0) / max(z1 - z0, 1), 0.0, 1.0)
+    # Mandibular roots point DOWN: the apex is at LOW z, so the ramp reverses.
+    # Getting this backwards once already put "apices" on occlusal surfaces.
+    return f if arch == "upper" else 1.0 - f
+
+
+def solid_at(roi, tooth, interior, spacing, pulp_hu, frac, arch="upper"):
+    """Radiolucency enclosed by dentin, with the cut tapering toward the apex."""
     out = np.zeros_like(tooth)
+    af = _apical_fraction(tooth, arch)
+    if af is None:
+        return out
     for k in range(tooth.shape[0]):
         m = tooth[k]
         if m.sum() < 40:
@@ -59,7 +117,11 @@ def solid_at(roi, tooth, interior, spacing, pulp_hu, frac):
         dentin = float(np.percentile(vals, 45))
         if dentin - pulp_hu < 200:
             continue
-        cut = dentin - frac * (dentin - pulp_hu)
+        # frac sets the coronal cut exactly as before; the taper scales the
+        # DEPTH of that cut below dentin as the canal narrows apically.
+        depth = frac * (dentin - pulp_hu)
+        ramp = 1.0 - (1.0 - TAPER_RATIO) * af[k] ** TAPER_POWER
+        cut = dentin - depth * ramp
         dark = interior[k] & (roi[k] < cut)
         if dark.sum() < 3:
             continue
@@ -67,7 +129,8 @@ def solid_at(roi, tooth, interior, spacing, pulp_hu, frac):
     return out
 
 
-def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None):
+def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None, arch="upper",
+               frac=None):
     """Radiolucency enclosed by dentin, calibrated to the measured lumen volume.
 
     The shape comes from the radiolucency and the SIZE comes from the deficit
@@ -95,7 +158,14 @@ def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None):
     for k in range(tooth.shape[0]):
         if tooth[k].any():
             solid_tooth[k] = ndi.binary_fill_holes(tooth[k])
+    # An occlusal fissure is an enclosed hole IN PLANE -- an axial cut through
+    # the fissure pattern looks exactly like a chamber -- so per-slice filling
+    # counts fissures as pulp. They sit AT the surface and the chamber is deep,
+    # so requiring depth separates them. It was 30% of tooth 12's void and put
+    # "pulp" on the occlusal surface of a premolar.
     enclosed_void = solid_tooth & ~tooth
+    surf_depth = ndi.distance_transform_edt(solid_tooth, sampling=spacing)
+    enclosed_void &= surf_depth >= 0.5
     tooth = solid_tooth
     dist = ndi.distance_transform_edt(tooth, sampling=spacing)
     interior = tooth & (dist > 0.30)
@@ -105,34 +175,47 @@ def solid_pulp(roi, tooth, spacing, pulp_hu, target_mm3=None):
     # radiolucent enough to threshold; adding it on top of an already-calibrated
     # solid double-counts, which is what took the total to 1329 mm3 against a
     # measured 704.
-    if target_mm3:
-        lo, hi = 0.25, 0.99
-        for _ in range(12):
-            mid = 0.5 * (lo + hi)
-            got = ((solid_at(roi, tooth, interior, spacing, pulp_hu, mid)
-                    | enclosed_void).sum() * vox)
-            # frac is the fraction of the way from dentin DOWN to pulp density,
-            # so a larger frac is a lower cut and includes LESS. The bounds move
-            # the opposite way to the intuition.
-            if got > target_mm3:
-                lo = mid
-            else:
-                hi = mid
-        frac = 0.5 * (lo + hi)
-    else:
-        frac = 0.5
-    out = solid_at(roi, tooth, interior, spacing, pulp_hu, frac) | enclosed_void
-    # keep pieces that are actually enclosed, and close them into a solid
-    out = ndi.binary_closing(out, np.ones((3, 3, 3)))
-    for k in range(out.shape[0]):
-        if out[k].any():
-            out[k] = ndi.binary_fill_holes(out[k])
+    def finish(frac):
+        out = (solid_at(roi, tooth, interior, spacing, pulp_hu, frac, arch)
+               | enclosed_void)
+        out = ndi.binary_closing(out, np.ones((3, 3, 3)))
+        for k in range(out.shape[0]):
+            if out[k].any():
+                out[k] = ndi.binary_fill_holes(out[k])
+        return out
+
+    # CALIBRATE WHAT IS SHIPPED, not an intermediate. The search used to match
+    # the raw threshold and the closing plus per-slice fill AFTERWARDS inflated
+    # it; the delivered volume then missed the target it had just been fitted to.
+    #
+    # The upper bound has to exceed 1.0. frac scales the cut depth against
+    # (dentin - pulp_hu), and the taper's fitted coronal cut on tooth 14 is about
+    # 700 HU against a gap near 650 -- frac 1.08. With hi pinned at 0.99 the
+    # search saturated, the apical ramp then admitted everything, and 28 teeth
+    # came to 1784 mm3 against a measured 704.
+    if frac is None:
+        if target_mm3:
+            lo, hi = 0.25, 1.80
+            for _ in range(14):
+                mid = 0.5 * (lo + hi)
+                if finish(mid).sum() * vox > target_mm3:
+                    lo = mid
+                else:
+                    hi = mid
+            frac = 0.5 * (lo + hi)
+        else:
+            frac = 0.5
+    out = finish(frac)
     lab, n = ndi.label(out, structure=np.ones((3, 3, 3)))
     if n == 0:
         return out
-    vox = float(np.prod(spacing))
-    sz = ndi.sum(out, lab, range(1, n + 1)) * vox
-    keep = [i + 1 for i in range(n) if sz[i] >= MIN_PIECE_MM3]
+    # An ABSOLUTE floor, not a fraction of the largest piece. Apical to the
+    # furcation a molar's canals are separate components, each a few hundred
+    # voxels against a chamber of thousands; a relative filter deletes exactly
+    # the canals this whole exercise is about. On tooth 14 that alone moved
+    # Dice 0.790 -> 0.802.
+    sz = ndi.sum(out, lab, range(1, n + 1))
+    keep = [i + 1 for i in range(n) if sz[i] >= MIN_PIECE_VOX]
     return np.isin(lab, keep)
 
 
@@ -201,33 +284,50 @@ def main():
             rec = pulp.get(str(num), {})
             pulp_hu = float(rec.get("pulp_density_hu", PULP_FALLBACK_HU))
             target = rec.get("total_lumen_mm3")
-            tub = tube_voxels(rec, v, m.shape, origin_idx) & m
-            sol = solid_pulp(sub, m, sp, pulp_hu, target)
-            # Keep only the part of the modelled tube that reaches BEYOND the
-            # radiolucent solid -- the apical continuation, where the canal is
-            # narrower than the point-spread function and nothing is dark enough
-            # to threshold. Running the tube alongside the solid over its whole
-            # length just re-adds volume the solid already has, which is what put
-            # the total at 1329 mm3 against a measured 704.
-            tub = tub & ~ndi.binary_dilation(sol, np.ones((3, 3, 3)), 2)
+            tub_all = tube_voxels(rec, v, m.shape, origin_idx) & m
             m_solid = m.copy()
             for k in range(m.shape[0]):
                 if m[k].any():
                     m_solid[k] = ndi.binary_fill_holes(m[k])
-            both = (sol | tub) & m_solid
+
+            # CALIBRATE THE COMPLETE CHAIN. Fitting solid_pulp alone and then
+            # unioning the tube and closing again put tooth 14 at 87.7 mm3
+            # against the 56.9 mm3 it had just been fitted to -- the steps after
+            # the fit added 56%. Whatever is measured has to be the thing that
+            # gets meshed, so the search runs over the whole assembly.
+            # NO SECOND CLOSING, AND NO TUBE. Both were measured against the
+            # operator's shading of tooth 14, over four cut depths and every
+            # combination; the ranking never changed:
+            #     closing iterations=2   -0.05 to -0.12 Dice
+            #     union with the tube    -0.03 to -0.06 Dice
+            #     per-slice fill          neutral
+            # The tube existed to carry the canal apically past the point where
+            # nothing is radiolucent enough to threshold. With the taper the
+            # threshold now reaches FURTHER apically than the tube does, so the
+            # tube only contributes volume in the wrong place. It stays measured
+            # in pulp.json -- it is just no longer part of the shipped geometry.
+            def assemble(frac, _m=m, _sub=sub, _ms=m_solid):
+                sol = solid_pulp(_sub, _m, sp, pulp_hu, None, arch, frac=frac)
+                return (sol & _ms), sol, np.zeros_like(sol)
+
+            if target:
+                want = target * SHADING_SCALE
+                lo, hi = 0.25, 1.80
+                for _ in range(12):
+                    mid = 0.5 * (lo + hi)
+                    if assemble(mid)[0].sum() * vox > want:
+                        lo = mid
+                    else:
+                        hi = mid
+                frac_fit = 0.5 * (lo + hi)
+            else:
+                frac_fit = 0.5
+            both, sol, tub = assemble(frac_fit)
             # Close hard enough to join the chamber to its canals, then keep
             # only what belongs to the main pulp body. Radiolucency thresholding
             # scatters small dark specks through the coronal dentin of the
             # molars, and shipping them renders the chamber as a cloud of
             # fragments rather than one cavity.
-            both = ndi.binary_closing(both, np.ones((3, 3, 3)), iterations=2)
-            lab, n = ndi.label(both, structure=np.ones((3, 3, 3)))
-            if n > 1:
-                szs = ndi.sum(both, lab, range(1, n + 1))
-                biggest = float(szs.max())
-                keep = [i + 1 for i in range(n)
-                        if szs[i] >= max(MIN_PIECE_MM3 / vox, 0.15 * biggest)]
-                both = np.isin(lab, keep)
             if both.sum() < 40:
                 print(f"{num:4d}   too little pulp found")
                 continue

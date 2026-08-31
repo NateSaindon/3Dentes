@@ -9,12 +9,55 @@ const SELECT_TINT = 0x3d9bd1;
 
 const $ = (sel) => document.querySelector(sel);
 
+// Collapse every panel behind one button. Default to collapsed on a narrow
+// screen: the panels are useful, but on a phone they cover the anatomy, and an
+// atlas that opens with its subject hidden has failed before it starts.
+// matchMedia is read ONCE, so a rotation or resize never yanks the panels out
+// from under someone who has deliberately opened them.
+//
+// Wired at module scope, BEFORE the model is fetched. Inside main() it sat
+// behind an await on a 9.9 MB glb, so on a slow phone connection -- precisely
+// when someone wants the anatomy unobscured -- the button would not respond.
+function initChrome() {
+  const btn = document.querySelector('#chrome');
+  if (!btn) return;
+  const setChrome = (shown) => {
+    document.body.classList.toggle('chrome-hidden', !shown);
+    btn.setAttribute('aria-expanded', String(shown));
+    btn.classList.toggle('is-active', !shown);
+  };
+  setChrome(!window.matchMedia('(max-width: 900px)').matches);
+  btn.addEventListener('click', () => {
+    setChrome(document.body.classList.contains('chrome-hidden'));
+  });
+}
+initChrome();
+
 async function main() {
   const canvas = $('#view');
   const status = $('#status');
 
   const meta = await fetch(`${import.meta.env.BASE_URL}teeth.json`).then((r) => r.json());
   const { layers, structures } = meta;
+
+  // Invariant 4: the caveat must describe THIS build. The CBCT build measures
+  // pulp and PDL from the operator's own scan, so it must not keep claiming it
+  // has neither -- but it gains its own limits, and understating those on a
+  // page that reads as clinical is the same failure in the other direction.
+  if (meta.source === 'cbct') {
+    $('#caveat').innerHTML =
+      '<strong>Source data limits.</strong> Hard tissue, pulp and periodontal ' +
+      'ligament are segmented from one CBCT of a single individual at 0.16 mm. ' +
+      'The mandibular canal is measured; its nerve content and every ' +
+      'maxillary nerve are schematic — the superior alveolar canals are ' +
+      'not resolved at this voxel size. ' +
+      'No third molars. Pulp is traced by hand from the slices, because no ' +
+      'threshold separates it from dentin at this resolution; apical deltas ' +
+      'and canals under about 0.5 mm are below the voxel size, and each ' +
+      'apical foramen is the apical end of a tracing. The mental and incisive ' +
+      'branches and the whole maxillary nerve supply are schematic. Gingiva ' +
+      'is derived from the measured CEJ, not seen. Not a clinical reference.';
+  }
 
   const view = createScene(canvas);
 

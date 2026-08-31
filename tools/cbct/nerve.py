@@ -35,8 +35,129 @@ from segment_tooth import write_binary_stl
 ORIGIN = np.array([-40.96, -58.074258, -44.520221])
 SPACING = 0.16
 NERVE_FRACTION = 0.55     # trunk diameter as a share of the canal's
-BRANCH_RADIUS_MM = 0.35
+BRANCH_ROOT_R_MM = 0.32   # branch radius where it leaves its parent
+BRANCH_TIP_R_MM = 0.12    # ...and at the apical foramen, where it enters pulp
+INCISIVE_R_MM = (0.45, 0.18)   # mental foramen -> midline
+MENTAL_R_MM = (0.55, 0.22)
+MENTAL_RUN_MM = 7.0       # how far the mental nerve is drawn beyond the foramen
+INCISIVE_BELOW_MM = 2.6   # the incisive canal runs apical to the anterior apices
 LOWER = set(range(18, 32))
+
+# The IAN terminates by dividing into the MENTAL nerve, which leaves the mental
+# foramen near the second premolar for the chin and lower lip, and the INCISIVE
+# branch, which continues forward inside the mandible to the first premolar,
+# canine and incisors. Teeth anterior to the mental foramen therefore hang off
+# the incisive nerve, not off the canal: a straight chord from the canal to a
+# central incisor is 22-26 mm and runs through bone, which is why the old 25 mm
+# cutoff dropped teeth 24 and 25 rather than draw one.
+#   -- en.wikipedia.org/wiki/Inferior_alveolar_nerve, /wiki/Mental_nerve
+
+
+def bone_test(pred_path, origin, spacing):
+    """Inside-mandible test plus a nearest-inside snap, in world coordinates.
+
+    Needed because the fused canal sits on a PADDED grid that extends below
+    centered.nrrd, so the most anterior centreline point is a spur outside the
+    mandible altogether -- it came out at z = -44.7 where the mandible's own
+    floor is -43.7. Anything picked off the raw centreline has to be tested
+    against bone before it is called a landmark.
+    """
+    from read_nifti import read_nifti
+    lab, _, _ = read_nifti(pred_path)
+    # DentalSegmentator is per-class, and the CANAL and the LOWER TEETH are
+    # classes of their own -- so they are holes in the mandible label, and a
+    # bare `lab == 2` test reports every point of a nerve running inside the
+    # canal as OUTSIDE the bone. It read 0 of 209 trunk points inside before
+    # this. Fill the mandible and union the classes that sit within it.
+    mand = ndi.binary_fill_holes((lab == 2) | (lab == 4) | (lab == 5))
+    box = ndi.find_objects(mand.astype(np.uint8))[0]
+    sub = mand[box]
+    _, idx = ndi.distance_transform_edt(~sub, return_indices=True)
+    base = np.array([b.start for b in box])
+
+    def to_idx(w):
+        return np.array([(w[2] - origin[2]) / spacing,
+                         (w[1] - origin[1]) / spacing,
+                         (w[0] - origin[0]) / spacing])
+
+    def inside(w):
+        i = np.round(to_idx(w)).astype(int) - base
+        if np.any(i < 0) or np.any(i >= np.array(sub.shape)):
+            return False
+        return bool(sub[tuple(i)])
+
+    def in_vol(w):
+        i = np.round(to_idx(w)).astype(int)
+        return bool(np.all(i >= 0) and np.all(i < np.array(lab.shape)))
+
+    def snap(w):
+        if inside(w):
+            return np.asarray(w, float)
+        i = np.clip(np.round(to_idx(w)).astype(int) - base, 0,
+                    np.array(sub.shape) - 1)
+        j = idx[(slice(None),) + tuple(i)] + base
+        return np.array([origin[0] + j[2] * spacing,
+                         origin[1] + j[1] * spacing,
+                         origin[2] + j[0] * spacing])
+    return inside, snap, in_vol
+
+
+def taper(n, r0, r1):
+    """Radius along a branch. A nerve entering a 0.2 mm foramen cannot be
+    0.35 mm wide at its tip; without this the branches read as pegs pushed into
+    the root rather than as something continuous with the pulp."""
+    return np.linspace(r0, r1, n)
+
+
+def resample(pts, n):
+    pts = np.asarray(pts, float)
+    d = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(pts, axis=0),
+                                                        axis=1))])
+    if d[-1] < 1e-6:
+        return np.repeat(pts[:1], n, axis=0)
+    t = np.linspace(0, d[-1], n)
+    return np.stack([np.interp(t, d, pts[:, i]) for i in range(3)], axis=1)
+
+
+def smooth_path(pts, passes=6):
+    pts = np.asarray(pts, float).copy()
+    for _ in range(passes):
+        pts[1:-1] = 0.25 * pts[:-2] + 0.5 * pts[1:-1] + 0.25 * pts[2:]
+    return pts
+
+
+def incisive_path(mental, apices, snap=None):
+    """From the mental foramen forward to the midline, apical to the anteriors.
+
+    Built THROUGH the anterior apices rather than as a free curve: the incisive
+    canal runs just below them, so they are the only measured evidence of where
+    it goes on this patient.
+    """
+    if not len(apices):
+        return None
+    a = np.array(sorted(apices, key=lambda p: abs(p[0]), reverse=True), float)
+    a = a.copy()
+    a[:, 2] -= INCISIVE_BELOW_MM          # apical is -z in the mandible
+    end = a[-1].copy()
+    end[0] *= 0.15                         # run on to just short of the midline
+    path = resample(np.vstack([mental, a, end]), 40)
+    if snap is not None:
+        # An offset straight down from the apices leaves the bone where the
+        # symphysis narrows; pull the strays back in, before AND after
+        # smoothing, the same discipline canal_tree.py needs (rule 58).
+        path = np.array([snap(w) for w in path])
+        path = smooth_path(path)
+        return np.array([snap(w) for w in path])
+    return smooth_path(path)
+
+
+def mental_path(mental, side):
+    """Out of the mental foramen: buccally, then up and forward to the lip."""
+    lat = -1.0 if side == "right" else 1.0     # anatomical right is -x
+    d = np.array([lat * 0.72, -0.52, 0.46])
+    d /= np.linalg.norm(d)
+    t = np.linspace(0, MENTAL_RUN_MM, 20)[:, None]
+    return smooth_path(np.asarray(mental, float)[None, :] + d[None, :] * t)
 
 
 def canal_centrelines(canal, offset):
@@ -127,6 +248,7 @@ def branch_curve(start, end, bulge=0.35, n=24):
 
 def main():
     canal_path, pulp_path, outdir = sys.argv[1:4]
+    pred_path = sys.argv[4] if len(sys.argv) > 4 else None
     os.makedirs(outdir, exist_ok=True)
     canal = np.load(canal_path)
     pulp = json.load(open(pulp_path))
@@ -138,6 +260,9 @@ def main():
         offset = np.array(j.get("grid_offset", [0, 0, 0]))
     lines = canal_centrelines(canal, offset)
     print(f"canal centrelines: {len(lines)}")
+    inside = snap = in_vol = None
+    if pred_path:
+        inside, snap, in_vol = bone_test(pred_path, ORIGIN, SPACING)
     report = dict(provenance=dict(
         canal="MEASURED (CBCT)", apical_foramina="MEASURED (CBCT)",
         nerve_trunk="SCHEMATIC (canal contents are not resolved by CBCT)",
@@ -157,37 +282,138 @@ def main():
                                                                 * NERVE_FRACTION), 3)))
         print(f"  trunk {ln['side']:5s}: {length:5.1f} mm, "
               f"mean radius {ln['radius'].mean()*NERVE_FRACTION:.2f} mm")
-    if allv:
-        write_binary_stl(os.path.join(outdir, "nerve-ian-trunk.stl"),
-                         np.vstack(allv), np.vstack(allf))
-
     # branches: trunk -> each lower tooth's apical foramen
-    bv, bf, boff = [], [], 0
-    for key, rec in pulp.items():
-        num = int(key)
+    #
+    # Anchor on pulp-connect.json's `foramina` when present. Those are the
+    # MODELLED FORAMEN EXITS -- where the canal actually leaves the root, placed
+    # by extrapolating the measured canal trajectory and checked against the
+    # literature (mean 0.58 mm from the anatomical apex, against 0.52 reported).
+    # pulp.json's `apical_position_lps` is the end of the deficit-integration
+    # tube instead, which is a different and worse point to hang a nerve on.
+    teeth = pulp.get("teeth", pulp)
+
+    # The mental foramen is the ANTERIOR end of the measured canal. LPS y grows
+    # posteriorly, so it is the minimum-y point of each centreline.
+    # The mental foramen is placed at the PREMOLARS, not at the anterior end of
+    # the skeleton. That endpoint is not a landmark: the fused canal carries
+    # spurs and on the right it dives below centered.nrrd's floor, which put the
+    # foramen at z = -44.7 (the mandible's own floor is -43.7) and, once bad
+    # points were excluded, at y = -3.0 against the left's -23.9. Wikipedia puts
+    # the foramen "near the second lower premolar", and those apices are
+    # measured -- so project them onto the canal and take the nearest point.
+    PREMOLARS = {"right": (28, 29), "left": (20, 21)}
+    apex_of = {}
+    for key, rec in teeth.items():
+        if rec.get("foramina"):
+            apex_of[int(rec["universal"])] = np.mean(
+                [f["world_lps"] for f in rec["foramina"]], axis=0)
+    mental = {}
+    for ln in lines:
+        want = [apex_of[u] for u in PREMOLARS[ln["side"]] if u in apex_of]
+        pts = ln["points"]
+        # Drop only points outside the VOLUME, not outside the bone. The fused
+        # canal spans both exposures, so roughly half of it legitimately lies
+        # beyond centered.nrrd's FOV; excluding all of that biased the right
+        # foramen 21 mm posteriorly, to y = -3.0 against the left's -23.9.
+        # What must go is the spur below the mandible's floor (z = -46.9).
+        if in_vol is not None:
+            keep = np.array([in_vol(w) for w in pts])
+            if keep.sum() >= 5:
+                pts = pts[keep]
+        if want:
+            ref = np.mean(want, axis=0)
+            mental[ln["side"]] = pts[int(np.argmin(
+                np.linalg.norm(pts - ref[None, :], axis=1)))]
+        else:
+            mental[ln["side"]] = pts[int(np.argmin(pts[:, 1]))]
+    for side, w in mental.items():
+        print(f"  mental foramen {side:5s}: "
+              f"[{w[0]:.1f}, {w[1]:.1f}, {w[2]:.1f}]")
+
+    # Collect every lower apical foramen and decide which parent supplies it.
+    targets = []
+    for key, rec in teeth.items():
+        num = int(rec.get("universal", key if str(key).isdigit() else 0))
         if num not in LOWER:
             continue
-        for c in rec["canals"]:
-            apex = np.array(c["apical_position_lps"], dtype=float)
+        if rec.get("foramina"):
+            pts = [(i, np.array(f["world_lps"], float))
+                   for i, f in enumerate(rec["foramina"])]
+        else:
+            pts = [(c["index"], np.array(c["apical_position_lps"], float))
+                   for c in rec.get("canals", [])]
+        for cidx, apex in pts:
             side = "right" if apex[0] < 0 else "left"
+            targets.append(dict(num=num, cidx=cidx, apex=apex, side=side,
+                                fma=rec.get("fma", key)))
+
+    # Anterior to the mental foramen -> incisive nerve; posterior -> the canal.
+    incisive = {}
+    tmv, tmf, tmoff = [], [], 0
+    for side, m in mental.items():
+        ant = [t["apex"] for t in targets if t["side"] == side
+               and t["apex"][1] < m[1]]
+        path = incisive_path(m, ant, snap=snap)
+        if path is None:
+            continue
+        incisive[side] = path
+        v, f = tube(path, taper(len(path), *INCISIVE_R_MM))
+        tmv.append(v); tmf.append(f + tmoff); tmoff += len(v)
+        report.setdefault("terminal", []).append(dict(
+            name="incisive branch", side=side,
+            length_mm=round(float(np.linalg.norm(np.diff(path, axis=0),
+                                                 axis=1).sum()), 1),
+            supplies=sorted({t["num"] for t in targets if t["side"] == side
+                             and t["apex"][1] < m[1]}),
+            provenance="SCHEMATIC (course inferred from the anterior apices; "
+                       "the incisive canal is not resolved at 0.16 mm)"))
+        mp = mental_path(m, side)
+        v, f = tube(mp, taper(len(mp), *MENTAL_R_MM))
+        tmv.append(v); tmf.append(f + tmoff); tmoff += len(v)
+        report["terminal"].append(dict(
+            name="mental nerve", side=side, length_mm=MENTAL_RUN_MM,
+            supplies="chin and lower lip (soft tissue, not modelled)",
+            provenance="SCHEMATIC (exits the measured mental foramen; its "
+                       "extraosseous course is convention)"))
+    if tmv:
+        # A SEPARATE mesh from the trunk. The trunk follows a canal this scan
+        # resolves; the incisive and mental branches do not, and merging them
+        # would let the UI colour a schematic course like a measured one --
+        # exactly what this module's docstring forbids.
+        write_binary_stl(os.path.join(outdir, "nerve-terminal.stl"),
+                         np.vstack(tmv), np.vstack(tmf))
+        print(f"  terminal: incisive + mental, {len(incisive)} sides")
+
+    bv, bf, boff = [], [], 0
+    for t in targets:
+        apex, side = t["apex"], t["side"]
+        # parent: the incisive nerve if this tooth lies anterior to the mental
+        # foramen, otherwise the inferior dental plexus in the canal
+        m = mental.get(side)
+        if m is not None and apex[1] < m[1] and side in incisive:
+            pts, parent = incisive[side], "incisive"
+        else:
             cand = [l for l in lines if l["side"] == side] or lines
             if not cand:
                 continue
-            pts = cand[0]["points"]
-            k = int(np.argmin(np.linalg.norm(pts - apex[None, :], axis=1)))
-            d = float(np.linalg.norm(pts[k] - apex))
-            if d > 25.0:
-                continue
-            curve = branch_curve(pts[k], apex)
-            out = tube(curve, np.full(len(curve), BRANCH_RADIUS_MM))
-            if out is None:
-                continue
-            v, f = out
-            bv.append(v); bf.append(f + boff); boff += len(v)
-            report["branches"].append(dict(universal=num, fma=rec["fma"],
-                                           canal=c["index"],
-                                           trunk_to_apex_mm=round(d, 2),
-                                           apex_lps=[round(float(x), 2) for x in apex]))
+            pts, parent = cand[0]["points"], "inferior dental plexus"
+        k = int(np.argmin(np.linalg.norm(pts - apex[None, :], axis=1)))
+        d = float(np.linalg.norm(pts[k] - apex))
+        if d > 25.0:
+            continue
+        curve = branch_curve(pts[k], apex)
+        out = tube(curve, taper(len(curve), BRANCH_ROOT_R_MM, BRANCH_TIP_R_MM))
+        if out is None:
+            continue
+        v, f = out
+        bv.append(v); bf.append(f + boff); boff += len(v)
+        report["branches"].append(dict(universal=t["num"], fma=t["fma"],
+                                       canal=t["cidx"], parent=parent,
+                                       trunk_to_apex_mm=round(d, 2),
+                                       apex_lps=[round(float(x), 2) for x in apex]))
+    if allv:
+        write_binary_stl(os.path.join(outdir, "nerve-ian-trunk.stl"),
+                         np.vstack(allv), np.vstack(allf))
     if bv:
         write_binary_stl(os.path.join(outdir, "nerve-branches.stl"),
                          np.vstack(bv), np.vstack(bf))

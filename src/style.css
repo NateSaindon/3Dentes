@@ -236,9 +236,61 @@ html, body {
   letter-spacing: 0.03em;
 }
 
+/* --- collapsing the chrome ---------------------------------------------- */
+
+/* One control hides every panel at once. On a phone the layer panel, the
+   selection panel and the odontogram together cover most of the viewport, so
+   the anatomy -- the entire point of the page -- is barely visible. The button
+   stays put when the panels go, so there is always a way back. */
+.btn-chrome { display: inline-flex; align-items: center; gap: 0.4rem; }
+.chrome-bars {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 0.85rem;
+  height: 0.62rem;
+}
+.chrome-bars i {
+  display: block;
+  height: 1.5px;
+  background: currentColor;
+  border-radius: 1px;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+.chrome-hidden .chrome-bars i:nth-child(1) { transform: translateY(4.5px) rotate(45deg); }
+.chrome-hidden .chrome-bars i:nth-child(2) { opacity: 0; }
+.chrome-hidden .chrome-bars i:nth-child(3) { transform: translateY(-4.5px) rotate(-45deg); }
+
+.chrome-hidden .panel,
+.chrome-hidden .chartbar,
+.chrome-hidden .credits { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .chrome-bars i { transition: none; }
+}
+
+/* --- credits ------------------------------------------------------------ */
+
+/* Bottom LEFT, not bottom centre: the odontogram is centred there. Sits at the
+   corner so it never overlaps the chart at any width. */
+.credits {
+  position: fixed;
+  left: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.75;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* --- narrow screens ----------------------------------------------------- */
 
 @media (max-width: 900px) {
+  /* The panel stack and the odontogram both claim the bottom on a phone;
+     a credit line is the one thing here that can yield. */
+  .credits { display: none; }
   .panel {
     top: auto;
     bottom: 9.5rem;
@@ -250,4 +302,16 @@ html, body {
   .panel-right { left: 0.6rem; right: 0.6rem; bottom: auto; top: 3.4rem; max-height: 30vh; }
   .chart-tooth { width: 1.4rem; height: 1.4rem; font-size: 0.6rem; }
   .chartbar { padding: 0.55rem 0.6rem; }
+  /* The label is redundant next to the icon once space is tight, and dropping
+     it keeps the three top-bar buttons on one line on a narrow phone. */
+  .chrome-label { display: none; }
+  .btn-chrome { padding: 0.35rem 0.5rem; }
+}
+
+/* Touch targets: the WCAG 2.2 target-size minimum is 24px, and a tooth cell at
+   1.4rem is 22.4. Give every control at least that on a touch device without
+   changing the pointer layout. */
+@media (hover: none) and (pointer: coarse) {
+  .btn { min-height: 2rem; }
+  .chart-tooth { width: 1.6rem; height: 1.6rem; }
 }

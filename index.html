@@ -21,6 +21,12 @@
       <div class="topbar-actions">
         <button id="isolate" class="btn" disabled title="Show only the selected structure">Isolate</button>
         <button id="reset" class="btn" title="Reset camera and selection">Reset</button>
+        <button id="chrome" class="btn btn-chrome" aria-expanded="true"
+                aria-controls="layers chart detail"
+                title="Show or hide the panels">
+          <span class="chrome-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="chrome-label">Panels</span>
+        </button>
       </div>
     </header>
 
@@ -33,7 +39,7 @@
         <h2 class="panel-title">Notation</h2>
         <div id="notation" class="segmented"></div>
       </section>
-      <p class="caveat">
+      <p class="caveat" id="caveat">
         <strong>Source data limits.</strong> Built from BodyParts3D, a single individual.
         No third molars, no enamel/dentin/pulp, no nerves, periodontal ligament, tongue,
         TMJ disc, or salivary glands. External morphology only — not a complete clinical
@@ -49,6 +55,8 @@
     <footer class="chartbar">
       <div id="chart"></div>
     </footer>
+
+    <small class="credits">Nate Saindon · 2026</small>
 
     <script type="module" src="/src/main.js"></script>
   </body>

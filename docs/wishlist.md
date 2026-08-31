@@ -117,6 +117,85 @@ foramina are measured.
 
 ---
 
+## Time-varying sliders — one mechanism, three diseases
+
+All three below are the same interaction: a scrub bar the operator drags, with
+the model and (once the DRR exists) the simulated radiograph both updating. They
+are grouped because building the scrubber once buys all of them, and because
+each is a process a patient actually walks through over years rather than a
+static finding.
+
+### Calcification with age
+
+Secondary dentin deposits throughout life, so the chamber and canals narrow and
+the pulp horns recede. This is the single most useful one for teaching, because
+it is what makes an endodontic access on a 70-year-old different from the same
+tooth at 20, and it is measurable rather than invented: pulp chamber volume has a
+well-documented linear inverse association with age, which is the basis of the
+CBCT age-estimation literature. It also runs *backwards* from the model we have
+— the operator's own dentition is a real point on the curve, so the slider
+interpolates from measured geometry rather than from an average.
+
+**What it needs:** an erosion of the pulp surface parameterised by age, with the
+apical foramen narrowing faster than the chamber; ideally calibrated against
+published pulp-volume-versus-age regressions rather than chosen by eye.
+
+### Dentinal decay
+
+A caries lesion advancing from the enamel surface through dentin toward the
+pulp, with the slider being lesion depth. The teaching value is the relationship
+between radiographic depth and pulpal status — the point at which a restorable
+lesion becomes a pulpotomy becomes a root canal.
+
+**What it needs:** a lesion volume seeded on a tooth surface and grown along
+dentinal tubule direction (toward the pulp), subtracted from the dentin. Should
+respect the enamel-dentin junction, where real lesions spread laterally.
+
+### Fracture progression
+
+From a small coronal crack extending apically to a full root-length fracture,
+with the **J-shaped radiolucency** appearing on the simulated radiograph as it
+progresses — the halo that wraps the apex and runs up one side of the root,
+which is the classic sign and the reason this belongs with the DRR work.
+
+**What it needs:** a fracture plane through the tooth with a controllable apical
+extent, plus the associated bone loss pattern. The J-shape is a *consequence* of
+modelling the periradicular bone loss correctly, not a shape to be drawn — if it
+emerges from the DRR on its own, the simulation is right.
+
+**Note on all three:** these are the first features that would show *disease*
+rather than anatomy. Everything shipped so far is measured or modelled from one
+healthy dentition, and the provenance tiers say so. A pathology slider produces
+geometry that is neither measured nor a literature mean but a *simulation*, and
+it needs a fourth tier or a very loud label, or the atlas quietly starts
+asserting things about a real person's mouth that are not true of it.
+
+---
+
+## Vascular structures — arteries and veins
+
+**Arteries red, veins blue**, matching the yellow now used for nerve tissue, so
+the neurovascular bundle reads at a glance.
+
+The bundle in the mandibular canal is not a nerve alone: the inferior alveolar
+**artery** (from the maxillary artery) and **vein** run with the IAN and share
+its course, so the geometry already built for the trunk carries all three — the
+canal lumen is the measured part and the split between its contents is not
+resolved at 0.16 mm. The same is true of the incisive and mental branches. In
+the maxilla the posterior, middle and anterior superior alveolar arteries
+accompany their nerves, and the infraorbital artery runs with the infraorbital
+nerve in its canal.
+
+**What it needs:** a `vessels` layer with two materials; arterial and venous
+courses derived from the nerve centrelines where they are genuinely companion
+vessels, and separate geometry where they are not (the greater palatine and
+sphenopalatine vessels have no nerve twin in this model). Provenance is the
+usual problem — the canal is MEASURED, its division between artery, vein and
+nerve is SCHEMATIC, and the atlas must not draw three tubes in a canal it only
+ever saw as one lumen and imply otherwise.
+
+---
+
 ## Smaller things
 
 - Retopologise the apical spikes on the tooth surfaces — an imaging limit, not a

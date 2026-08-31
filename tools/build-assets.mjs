@@ -34,6 +34,9 @@ const MATERIALS = {
   muscles:  { baseColorFactor: [0.647, 0.271, 0.259, 1], roughnessFactor: 0.65, metallicFactor: 0 },
   pulp:     { baseColorFactor: [0.804, 0.286, 0.271, 1], roughnessFactor: 0.55, metallicFactor: 0 },
   pdl:      { baseColorFactor: [0.612, 0.784, 0.878, 1], roughnessFactor: 0.80, metallicFactor: 0 },
+  // Nerve tissue is yellow by the convention every anatomy atlas and every
+  // dental text uses, so it reads at a glance against bone and pulp.
+  nerves:   { baseColorFactor: [0.965, 0.827, 0.176, 1], roughnessFactor: 0.45, metallicFactor: 0 },
 };
 
 /** Parse a binary STL into a flat, non-indexed Float32Array of positions. */
@@ -227,7 +230,13 @@ async function main() {
 
   // Center on the dentition and its supporting bone, not on the muscles — the
   // masseters reach the zygomatic arch and would pull the framing off the teeth.
-  const dental = meshes.filter((m) => m.s.layer !== 'muscles');
+  // Nerves are excluded for a sharper reason: the maxillary trunks are
+  // SCHEMATIC and run an arbitrary distance (TRUNK_RUN_MM) out of the plexus,
+  // so including them would let a drawing choice move the whole model. It did:
+  // adding them shifted the centre ~1 mm and tripped the laterality assertion
+  // on the right maxilla, whose centroid sits close to the midline anyway.
+  const dental = meshes.filter(
+    (m) => m.s.layer !== 'muscles' && m.s.layer !== 'nerves');
   const all = new Float32Array(dental.reduce((n, m) => n + m.positions.length, 0));
   let at = 0;
   for (const m of dental) { all.set(m.positions, at); at += m.positions.length; }
@@ -288,7 +297,12 @@ async function main() {
   await new NodeIO().write(join(OUT_DIR, 'dentition.glb'), doc);
   await writeFile(
     join(OUT_DIR, 'teeth.json'),
-    JSON.stringify({ layers: LAYERS, structures: teethJson }, null, 2) + '\n',
+    // The UI caveat (CLAUDE.md invariant 4) has to say what THIS build is made
+    // of. The CBCT build ships pulp and PDL measured from the operator's own
+    // scan, so the BodyParts3D wording -- "no pulp, no periodontal ligament" --
+    // is not merely stale there, it is false on a page that reads as clinical.
+    JSON.stringify({ source: TOOTH_SOURCE, layers: LAYERS, structures: teethJson },
+                   null, 2) + '\n',
   );
 
   const rawVerts = report.reduce((n, r) => n + r.rawVerts, 0);
