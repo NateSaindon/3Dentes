@@ -68,8 +68,16 @@ const MEASURED_STRUCTURES = [
   // DentalSegmentator's "Upper Skull" is cropped here to the alveolar process
   // and palate, and comes out as ONE mesh rather than four named bones. The left
   // maxilla and both palatine bones therefore have no measured geometry and are
-  // not listed. See the note on the name in CLAUDE.md's open items.
-  { fma: 'FMA53649', name: 'Right maxilla',       layer: 'maxilla',  side: 'right'   },
+  // not listed.
+  //
+  // It is MIDLINE, and was labelled "Right maxilla" until 2026-08-31: the mesh
+  // spans x -41.1 to +40.9, i.e. both sides in full. It passed the laterality
+  // assertion only because its area-weighted centroid happens to fall just right
+  // of the dental midline -- a near miss, not a check that held. The FMA id is
+  // kept because it is the join key everywhere and renaming it would break the
+  // .glb, teeth.json and every reference at once; the id is now inexact and the
+  // name and side are correct, which is the right way round.
+  { fma: 'FMA53649', name: 'Maxilla and palate',  layer: 'maxilla',  side: 'midline' },
 
   // --- Soft tissue ---
   // --- Nerves: CBCT build only. See tools/cbct/nerve.py and nerve_maxilla.py.
@@ -88,7 +96,7 @@ const MEASURED_STRUCTURES = [
 const ALL_LAYERS = {
   teeth:    { label: 'Teeth',                  defaultOpacity: 1.0,  visible: true  },
   mandible: { label: 'Mandible',               defaultOpacity: 1.0,  visible: true  },
-  maxilla:  { label: 'Maxilla & palatine',     defaultOpacity: 1.0,  visible: true  },
+  maxilla:  { label: 'Maxilla & palate',       defaultOpacity: 1.0,  visible: true  },
   // Gingiva at full opacity hides every root and the app looks broken on load.
   gingiva:  { label: 'Gingiva',                defaultOpacity: 0.45, visible: true  },
   // Pulp and PDL are off by default: they sit INSIDE the teeth, so showing them
@@ -98,9 +106,12 @@ const ALL_LAYERS = {
   pdl:      { label: 'Periodontal ligament',   defaultOpacity: 0.85, visible: false },
   // Nerves are OFF by default. Two sets of geometry with very
   // different standing share this layer -- the mandibular trunk follows a canal
-  // the scan actually resolves, while every maxillary course is textbook -- so
-  // the structure names carry the distinction and the caveat states it. Do not
-  // let a later tidy-up imply the maxillary nerves were measured.
+  // the scan actually resolves, while every maxillary course is textbook. That
+  // distinction used to be carried by a "(schematic)" suffix on the display
+  // name, which was the only place it lived; it is now a real `provenance` tier
+  // (below), enforced on every build, so the names are clean. Do not let a later
+  // tidy-up imply the maxillary nerves were measured -- the tier, not the name,
+  // is what protects that now.
   nerves:   { label: 'Nerves',                 defaultOpacity: 1.0,  visible: false },
 };
 
@@ -129,17 +140,17 @@ const PALMER_PREFIX = { 1: 'UR', 2: 'UL', 3: 'LL', 4: 'LR' };
 // geometry added later has to be registered INTO the patient's frame first.
 
 const NERVE_STRUCTURES = [
-  { fma: 'FMA53381', name: 'Inferior alveolar nerve (canal measured)',
+  { fma: 'FMA53381', name: 'Inferior alveolar nerve',
     layer: 'nerves', side: 'midline' },
   { fma: 'FMA53381B', name: 'Inferior alveolar dental branches',
     layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53381T', name: 'Mental and incisive branches (schematic)',
+  { fma: 'FMA53381T', name: 'Mental and incisive branches',
     layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088', name: 'Superior dental plexus (schematic)',
+  { fma: 'FMA53088', name: 'Superior dental plexus',
     layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088B', name: 'Superior alveolar dental branches (schematic)',
+  { fma: 'FMA53088B', name: 'Superior alveolar dental branches',
     layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088T', name: 'Infraorbital, PSA, MSA and ASA nerves (schematic)',
+  { fma: 'FMA53088T', name: 'Infraorbital, PSA, MSA and ASA nerves',
     layer: 'nerves', side: 'midline' },
 ];
 
@@ -191,4 +202,127 @@ export function structureName(s) {
   if (s.layer !== 'teeth') return s.name;
   const arch = s.arch === 'maxillary' ? 'upper' : 'lower';
   return `${s.side === 'right' ? 'Right' : 'Left'} ${arch} ${s.type}`;
+}
+
+
+// --- Provenance -------------------------------------------------------------
+//
+// How each structure was actually obtained. The atlas has always been careful
+// about this in prose -- the README's table, docs/phase-3-soft-tissue.md's
+// provenance summary, and the caveat that invariant 4 protects -- but the MODEL
+// did not carry it. Provenance survived only as a "(schematic)" suffix inside a
+// display name, which cannot be filtered, cannot be styled, cannot be cited, and
+// disappears the first time someone tidies the names.
+//
+// It belongs here, beside layer and side, for the same reason the notation
+// derivation does: this file is where a structure's facts live.
+//
+// The tiers are the ones docs/phase-3-soft-tissue.md already defines:
+//
+//   measured   Directly from the CBCT. The geometry is this patient's.
+//   derived    Generated FROM measured anatomy. Anchored to real landmarks, but
+//              its shape involves a choice we made.
+//   schematic  Not in the data at any resolution. Drawn from the literature.
+//
+// A fourth tier, `simulated`, is reserved for the pathology sliders and the
+// anaesthetic diffusion on the wishlist. Nothing uses it yet; it exists so those
+// features cannot ship without a tier, because geometry that is neither measured
+// nor a literature mean is exactly what needs saying out loud.
+//
+// RULE: `tier` describes the geometry AS DRAWN, not the best evidence behind it.
+// The inferior alveolar nerve follows a measured canal, but what is rendered is a
+// tube of chosen calibre on that canal's centreline, so it is `derived` and the
+// method says which part was measured. Overclaiming a tier because some input was
+// measured is the failure this field exists to prevent.
+
+export const TIERS = {
+  measured:  { label: 'Measured',  blurb: 'Segmented directly from the cone-beam CT.' },
+  derived:   { label: 'Derived',   blurb: 'Generated from measured anatomy.' },
+  schematic: { label: 'Schematic', blurb: 'Not resolved by the scan. Drawn from the literature.' },
+  simulated: { label: 'Simulated', blurb: 'Neither measured nor a literature mean.' },
+};
+
+const SRC = {
+  dentalSegmentator:
+    "Dot G. et al., 'DentalSegmentator: robust open source deep learning-based CT and CBCT image segmentation', J Dent (2024)",
+  wheeler:
+    "Wheeler's Dental Anatomy, Physiology and Occlusion — crown-height and cervical-line tables",
+  wikiIAN:
+    'en.wikipedia.org/wiki/Inferior_alveolar_nerve, /wiki/Mental_nerve',
+  wikiSA:
+    'en.wikipedia.org/wiki/Posterior_superior_alveolar_nerve, /wiki/Anterior_superior_alveolar_nerve',
+};
+
+// Keyed by layer where every member shares a provenance, and by FMA id where they
+// do not. Per-tooth pulp and PDL resolve by layer, so all 28 inherit one entry.
+const BY_LAYER = {
+  teeth: {
+    tier: 'measured',
+    method: 'Marker-based watershed on the 0.16 mm volume, with bone seeded as its own basin so the segmentation cannot leak up the socket, then cut apart at the interproximal contacts. Meshed from grey levels rather than from the binary mask, which would terrace at the voxel size.',
+  },
+  pulp: {
+    tier: 'measured',
+    method: 'Traced by hand, slice by slice, over three rounds. No threshold separates pulp from dentin at 0.16 mm — below about three voxels wide, partial-volume averaging means no voxel ever reaches pulp density — so the lumen was calibrated by integrating the intensity deficit across each cross-section instead. Canals under about 0.5 mm and apical deltas are below the voxel size and are not drawn.',
+  },
+  pdl: {
+    tier: 'derived',
+    method: 'Both walls are measured — the root surface and the lamina dura — so the ligament space is in its true position and is continuous. It is drawn far THICKER than its real ~0.2 mm, which is barely one voxel and would be invisible.',
+  },
+  gingiva: {
+    tier: 'derived',
+    method: 'A collar lofted from the measured cementoenamel junction, one ring per tooth, with the papillae emerging where adjacent collars meet. The CEJ ring is refitted rather than trusted: thin enamel drops below threshold over contiguous runs of the ring, so measured aspects within 1 mm are kept and the rest is voted back to the published cervical-line curvature, anchored on crown height. The gingiva itself was never imaged.',
+    sources: [SRC.wheeler],
+  },
+};
+
+const BY_FMA = {
+  FMA52748: {
+    tier: 'measured',
+    method: 'nnU-Net mandible label on the 0.16 mm volume, from the mandible-focused exposure registered into the centred frame. Cut by the field of view through both rami — see tools/fov-audit.mjs.',
+    sources: [SRC.dentalSegmentator],
+  },
+  FMA53649: {
+    tier: 'measured',
+    method: "nnU-Net 'upper skull' label, cropped to the alveolar process and palate. The crop is the segmentation's, not the field of view's: this mesh is not truncated, so more measured bone exists in the volumes than is meshed here.",
+    sources: [SRC.dentalSegmentator],
+  },
+
+  // Nerves. The canal is measured; nothing inside it is. Keep the mandibular and
+  // maxillary sides distinct — the whole point of the split is that one follows
+  // anatomy this scan resolved and the other does not.
+  FMA53381: {
+    tier: 'derived',
+    method: 'The mandibular canal was traced from the mandibular foramen to the mental foramen and is MEASURED. What is drawn is a tube of chosen calibre along that centreline: CBCT resolves the canal, not its contents, and the canal carries the inferior alveolar artery and vein alongside the nerve.',
+  },
+  FMA53381B: {
+    tier: 'derived',
+    method: 'One branch to each of the 14 lower apices. The apical foramina are measured and the trunk is on the measured canal, so both ends of every branch are real; the path between them is not. Nine arise from the trunk, ten from the incisive branch.',
+  },
+  FMA53381T: {
+    tier: 'schematic',
+    method: 'The mental foramen is placed by projecting the measured premolar apices onto the canal centreline, rather than taken from the centreline itself, whose anterior end carries reconstruction spurs. The mental and incisive courses beyond it are inferred.',
+    sources: [SRC.wikiIAN],
+  },
+  FMA53088: {
+    tier: 'schematic',
+    method: 'The superior alveolar canals are thin, often dehiscent, and not reliably visible at 0.16 mm. Nothing of this plexus was seen in the scan.',
+    sources: [SRC.wikiSA],
+  },
+  FMA53088B: {
+    tier: 'schematic',
+    method: 'Drawn to the measured maxillary apices, so the endpoints are real and the courses are not.',
+    sources: [SRC.wikiSA],
+  },
+  FMA53088T: {
+    tier: 'schematic',
+    method: 'Textbook branching order: PSA leaves V2 directly in the pterygopalatine fossa, while MSA and ASA descend from the infraorbital nerve inside its canal. None of it is resolved by this scan.',
+    sources: [SRC.wikiSA],
+  },
+};
+
+/** Provenance for a structure: which tier, by what method, on whose authority. */
+export function provenance(s) {
+  const p = BY_FMA[s.fma] ?? BY_LAYER[s.layer];
+  if (!p) return null;
+  return { ...p, ...TIERS[p.tier], tier: p.tier };
 }

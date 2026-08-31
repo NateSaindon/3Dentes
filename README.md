@@ -46,6 +46,13 @@ built to keep them apart rather than render them alike:
 | **Derived** | Gingiva, lofted from the measured cementoenamel junction and refitted to the published cervical-line curvature. The periodontal ligament, measured in position but drawn thicker than its true ~0.2 mm, which is barely one voxel. |
 | **Schematic** | The nerve *inside* the mandibular canal — CBCT resolves the canal, not its contents. The mental and incisive branches. Every maxillary nerve: the superior alveolar canals are thin, often dehiscent, and not reliably visible at 0.16 mm. |
 
+**The app says this per structure, not just here.** Select anything and the detail
+panel states its tier — measured, derived or schematic — the method that produced
+it, and a source where the shape came from the literature rather than the scan.
+That is a build-enforced field on every structure rather than a note in a README,
+because the question "how do you know?" gets asked about the thing you just
+clicked, not about the project.
+
 ## What it is not
 
 - **No third molars** — 28 teeth, not 32.

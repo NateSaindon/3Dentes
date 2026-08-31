@@ -18,7 +18,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Document, NodeIO } from '@gltf-transform/core';
-import { STRUCTURES, LAYERS, toothNotation, structureName, STL_DIR as STL_SUBDIR } from './manifest.mjs';
+import { STRUCTURES, LAYERS, toothNotation, structureName, provenance, STL_DIR as STL_SUBDIR } from './manifest.mjs';
 import { measureTooth, checkToothIdentity } from './tooth-morphology.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -244,6 +244,17 @@ async function main() {
   const center = [0, 1, 2].map((a) => (b.min[a] + b.max[a]) / 2);
   const extent = [0, 1, 2].map((a) => b.max[a] - b.min[a]);
 
+  // Invariant 6: every structure states how it was made. Cheapest to enforce
+  // now -- each structure added without it is one more to backfill later, and a
+  // structure whose provenance is unstated defaults to looking as trustworthy as
+  // the measured anatomy beside it.
+  const unlabelled = STRUCTURES.filter((s) => !provenance(s));
+  if (unlabelled.length) {
+    console.error('PROVENANCE CHECK FAILED — these structures do not say how they were made:');
+    for (const s of unlabelled) console.error(`  ${s.fma} (${s.layer}) — add an entry in tools/manifest.mjs`);
+    process.exit(1);
+  }
+
   // Pass 2: center, compute normals, emit glTF nodes.
   const report = [];
   const teethJson = {};
@@ -282,6 +293,7 @@ async function main() {
       name,
       layer: s.layer,
       side: s.side,
+      provenance: provenance(s),
       ...(notation ? { ...notation, arch: s.arch, position: s.position, type: s.type } : {}),
     };
   }
@@ -325,6 +337,8 @@ async function main() {
   console.log(`extent (mm)     ${extent.map((v) => v.toFixed(1)).join(' x ')}  (dental content, centered)`);
   console.log(`laterality      OK — all ${report.filter((r) => r.side !== 'midline').length} sided structures on the expected side`);
   console.log(`tooth identity  OK — arch order and molar/canine morphology match all ${measured.length} tooth numbers`);
+  const tiers = STRUCTURES.reduce((n, s) => { const t = provenance(s).tier; n[t] = (n[t] || 0) + 1; return n; }, {});
+  console.log(`provenance      OK — ${Object.entries(tiers).map(([t, n]) => `${n} ${t}`).join(', ')}`);
   console.log(`teeth           ${Object.values(teethJson).filter((t) => t.layer === 'teeth').length} (third molars extracted, not scanned)`);
   console.log(`output          public/dentition.glb  ${(size / 1e6).toFixed(2)} MB`);
 }

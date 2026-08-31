@@ -64,6 +64,17 @@ Run `build:assets` after cloning or nothing loads.
    dentition and a build asserting their molar exceeds 800 mm³ would be asserting
    something about *them* rather than about the labelling. If it ever fires,
    suspect the manifest, not the check; `npm test` proves the check still bites.
+6. **Every structure states how it was made.** `provenance()` in
+   `tools/manifest.mjs` must return a tier, a method and (where anything is
+   approximated) a source, for every structure; the build fails otherwise. This
+   is the machine-readable form of invariant 4 — a caveat describes the *build*,
+   a provenance field describes the *object the user just clicked*, which is
+   where the question actually gets asked. `tier` describes the geometry AS
+   DRAWN, never the best evidence behind it: the inferior alveolar nerve follows
+   a measured canal but what is rendered is a tube of chosen calibre on that
+   centreline, so it is `derived`, and the method says which part was measured.
+   Overclaiming a tier because some input was measured is the exact failure this
+   field exists to prevent.
 
 ## Deployment
 

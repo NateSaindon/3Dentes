@@ -315,3 +315,46 @@ html, body {
   .btn { min-height: 2rem; }
   .chart-tooth { width: 1.6rem; height: 1.6rem; }
 }
+
+/* Provenance — how the selected structure was obtained.
+   The tier colours are deliberately NOT a traffic light: schematic anatomy is
+   not an error, it is a different kind of claim, and colouring it red would say
+   the atlas is wrong where it is merely honest. Measured is the accent already
+   used for selection; derived and schematic step away from it in hue and
+   saturation, so the three read as distinct without ranking one as a fault. */
+.prov {
+  margin-top: 0.9rem;
+  padding: 0.6rem 0.65rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--prov-hue);
+  background: var(--prov-wash);
+}
+.prov-measured  { --prov-hue: #4bb98a; --prov-wash: rgba(75, 185, 138, 0.08); }
+.prov-derived   { --prov-hue: #d9a441; --prov-wash: rgba(217, 164, 65, 0.08); }
+.prov-schematic { --prov-hue: #a684d4; --prov-wash: rgba(166, 132, 212, 0.08); }
+.prov-simulated { --prov-hue: #d97ba4; --prov-wash: rgba(217, 123, 164, 0.09); }
+
+.prov-head { display: flex; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
+.prov-badge {
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--prov-hue);
+}
+.prov-blurb { font-size: 0.68rem; color: var(--muted); }
+.prov-method {
+  margin: 0.4rem 0 0;
+  font-size: 0.7rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+.prov-sources {
+  margin: 0.45rem 0 0;
+  padding-left: 0.9rem;
+  font-size: 0.65rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.prov-sources li { margin-top: 0.2rem; }

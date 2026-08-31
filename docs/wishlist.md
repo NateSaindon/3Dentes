@@ -10,9 +10,10 @@ reshuffle:**
 - **Enamel, dentin and cementum come before the radiograph simulator.** Tissue
   identity plus density is what a DRR integrates; building the DRR first means
   building it twice.
-- **Provenance labels come before anything simulated.** Anaesthetic diffusion and
-  the pathology sliders both generate geometry that is neither measured nor a
-  literature mean, and the atlas has no per-structure way to say so yet.
+- ~~**Provenance labels come before anything simulated.**~~ **Done 2026-08-31.**
+  Anaesthetic diffusion and the pathology sliders generate geometry that is
+  neither measured nor a literature mean; there is now a per-structure tier to
+  say so, and a `simulated` tier waiting for them.
 
 Both are buildable now and need no new anatomy.
 
@@ -267,7 +268,7 @@ like the gingival collar. This is the most immediately buildable large item here
 
 ---
 
-## Provenance label on every structure, in the UI
+## ~~Provenance label on every structure, in the UI~~ — DONE 2026-08-31
 
 Every structure should state **how it was generated**, in the app, at the point
 of selection — not only in the README and the docs.
@@ -317,10 +318,27 @@ which is where the question actually arises. It also unlocks small things that
 are otherwise impossible: filtering the view to measured anatomy only, or tinting
 schematic structures so the eye is told the same thing the text says.
 
-**What it needs:** nothing. No new anatomy, no new segmentation — the facts all
-exist in the docs already and only need moving into the manifest and out to the
-selection panel. **Buildable today**, and it gets cheaper the sooner it is done,
-since every structure added afterwards is one more to backfill.
+**Built 2026-08-31**, as described: `provenance()` in `tools/manifest.mjs`
+returns a `tier`, a `method` and `sources`, the detail panel renders it as a
+coloured block under the selected structure, and invariant 6 fails the build if
+any structure lacks one. 58 measured, 32 derived, 4 schematic.
+
+Two things worth knowing that only appeared in the building:
+
+- **The tier had to describe the geometry AS DRAWN**, not the best evidence
+  behind it. The inferior alveolar nerve was the test case: its course is the
+  measured canal, but what is rendered is a tube of chosen calibre on that
+  centreline, so it is `derived` rather than `measured`, with the method saying
+  which half was seen. Tiering by the strongest input would have quietly promoted
+  half the atlas.
+- **The `(schematic)` name suffixes are gone.** They were the only carrier of
+  provenance before, and keeping them alongside a real tier meant saying it
+  twice. The nerve layer's comment used to warn against removing them; the tier
+  is what protects that distinction now, and it protects it better, because the
+  build enforces it.
+
+The `simulated` tier is defined and unused, so the anaesthetic diffusion and the
+pathology sliders cannot ship without choosing a tier.
 
 ---
 

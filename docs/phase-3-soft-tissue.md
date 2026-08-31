@@ -402,6 +402,12 @@ use** — the same retopology job the gingival collars need.
 
 ### Provenance summary for Phase 3
 
+> **Since 2026-08-31 this table is no longer the record.** `provenance()` in
+> `tools/manifest.mjs` carries a tier, a method and sources for every structure,
+> the app shows it on selection, and invariant 6 fails the build if one is
+> missing. The table below is kept as the Phase 3 summary; the manifest is what
+> to update.
+
 | Structure | Provenance |
 | --- | --- |
 | Pulp lumen, canal, apical foramina | **Measured** |

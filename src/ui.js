@@ -6,6 +6,11 @@ const NOTATIONS = [
 
 const TITLE_CASE = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// Provenance text is authored prose, not markup, and it contains apostrophes and
+// quotation marks. Escape it rather than trusting it into innerHTML.
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 /** Layer visibility + opacity controls. */
 export function createLayerPanel(root, layers, { onVisibility, onOpacity }) {
   for (const [key, layer] of Object.entries(layers)) {
@@ -67,6 +72,26 @@ export function createDetailPanel(root) {
 
   empty();
 
+  // Provenance is the answer to "how do you know?", and it belongs on the thing
+  // the user just clicked rather than only in a caveat about the build. The
+  // whole atlas is one person's anatomy at three very different standings, and
+  // measured bone and a textbook nerve course render alike.
+  function provenanceBlock(p) {
+    if (!p) return '';
+    const sources = (p.sources ?? [])
+      .map((src) => `<li>${escapeHtml(src)}</li>`)
+      .join('');
+    return `
+      <section class="prov prov-${p.tier}">
+        <div class="prov-head">
+          <span class="prov-badge">${p.label}</span>
+          <span class="prov-blurb">${p.blurb}</span>
+        </div>
+        <p class="prov-method">${escapeHtml(p.method)}</p>
+        ${sources ? `<ul class="prov-sources">${sources}</ul>` : ''}
+      </section>`;
+  }
+
   return {
     clear: empty,
     show(s) {
@@ -86,6 +111,7 @@ export function createDetailPanel(root) {
       root.innerHTML = `
         <h2 class="detail-name">${s.name}</h2>
         <dl class="detail-fields">${rows.join('')}</dl>
+        ${provenanceBlock(s.provenance)}
       `;
     },
   };
