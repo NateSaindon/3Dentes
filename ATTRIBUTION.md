@@ -2,8 +2,27 @@
 
 ## 3D anatomical models
 
-All anatomical geometry in this project comes from **BodyParts3D**, produced by
-the Database Center for Life Science (DBCLS), Japan.
+There are **two** sets of geometry in this repository, and they do not share a
+provenance or a licence.
+
+### `assets/cbct/` — what the live site serves
+
+Segmented from a single cone-beam CT (Sirona XG3D, 0.16 mm isotropic) of the
+project's author, Nate Saindon, published with his explicit consent. Teeth,
+mandible, maxilla, pulp, periodontal ligament, gingiva and nerves. Not derived
+from BodyParts3D in any part, so the ShareAlike obligation below does not extend
+to them; no reuse licence has been granted for them.
+
+The imaging data itself is not in this repository, and no third-party patient
+data appears in it.
+
+### `assets/source/` — BodyParts3D
+
+The original alpha's geometry, still vendored and still buildable
+(`npm run build:assets` without `TOOTH_SOURCE=cbct`). It is also the only source
+of the muscles of mastication, which the CBCT cannot resolve.
+
+Produced by the Database Center for Life Science (DBCLS), Japan.
 
 > BodyParts3D, © The Database Center for Life Science
 > licensed under CC Attribution-Share Alike 2.1 Japan

@@ -6,13 +6,21 @@ offline.
 
 **Live: https://natesaindon.github.io/3Dentes/**
 
-![3Dentes](docs/screenshot.png)
+![Pulp, periodontal ligament and the inferior alveolar nerve, seen through the teeth](docs/screenshot.png)
+
+The anatomy is segmented from one **cone-beam CT at 0.16 mm isotropic** — hard
+tissue, pulp, periodontal ligament, gingiva and the nerve supply, all of one
+person. Fading the teeth back is what the layer opacity is for.
 
 ## What it does
 
-- **28 individually selectable permanent teeth**, plus mandible, maxillae,
-  palatine bones, upper and lower gingiva, and the muscles of mastication
-  (masseter superficial and deep, medial and lateral pterygoid).
+- **28 individually selectable permanent teeth**, plus mandible, maxillae and
+  palatine bones, and upper and lower gingiva.
+- **Internal anatomy**: the **pulp** chamber and canal system of every tooth,
+  the **periodontal ligament** space, and the **nerve supply** — the inferior
+  alveolar nerve in its measured canal, a branch to all 14 lower apices, the
+  mental and incisive terminal branches, and the superior dental plexus with
+  PSA, MSA, ASA and the infraorbital nerve above.
 - **Clinical notation** — every tooth labelled in Universal, FDI and Palmer, all
   derived from arch/side/position rather than hand-entered.
 - **Odontogram** in the standard clinical layout (upper arch on top, patient's
@@ -22,36 +30,61 @@ offline.
   buccal for a molar. This is how you reach the posterior teeth, since from a
   frontal view a molar really is hidden behind the premolars in front of it.
 - **Layer visibility and opacity**, so you can fade the gingiva and alveolar bone
-  back to expose the roots in situ, or isolate a single structure.
+  back to expose the roots in situ, cut the teeth to 15% to see the pulp inside
+  them, or isolate a single structure.
+
+![The interface: layer opacity, clinical notation, selection detail and the odontogram](docs/interface.png)
+
+## Where the geometry comes from, and how far to trust it
+
+Different parts of this model stand on very different evidence, and the atlas is
+built to keep them apart rather than render them alike:
+
+| | |
+|---|---|
+| **Measured** | Teeth, mandible, maxilla, the mandibular canal, and the pulp — the pulp traced by hand on the slices, because no threshold separates it from dentin at this resolution. |
+| **Derived** | Gingiva, lofted from the measured cementoenamel junction and refitted to the published cervical-line curvature. The periodontal ligament, measured in position but drawn thicker than its true ~0.2 mm, which is barely one voxel. |
+| **Schematic** | The nerve *inside* the mandibular canal — CBCT resolves the canal, not its contents. The mental and incisive branches. Every maxillary nerve: the superior alveolar canals are thin, often dehiscent, and not reliably visible at 0.16 mm. |
 
 ## What it is not
 
-The geometry comes from BodyParts3D, which is external morphology of a single
-individual. It does **not** contain:
+- **No third molars** — 28 teeth, not 32.
+- **One person's anatomy.** Root count, canal configuration and curvature are
+  this individual's, not a textbook composite.
+- **Resolution limits are real.** Canals under about 0.5 mm and apical deltas
+  fall below the voxel size and are not drawn. Apical deltas occur in roughly
+  10% of teeth; drawing one at this scale would render it several times its
+  true calibre.
+- **Two teeth carry metal restorations** whose beam-hardening haloes threshold
+  exactly like a pulp lumen. Their pulp is partly inference and is flagged.
+- No enamel/dentin split, tongue, TMJ disc, or salivary glands.
 
-- third molars (28 teeth, not 32)
-- enamel, dentin or pulp — no internal tooth structure
-- nerves (inferior alveolar, lingual, mental)
-- periodontal ligament, tongue, TMJ disc, or salivary glands
+This is a study and visualisation aid, **not a complete clinical reference**.
+The app states this on screen; please keep it that way in any fork.
 
-Root count and curvature are that one person's, not a textbook composite. This
-is a study and visualisation aid, **not a complete clinical reference**. The app
-states this on screen; please keep it that way in any fork.
-
-Closing those gaps is the Phase 2 work — see [docs/phase-2-options.md](docs/phase-2-options.md).
+Still on the list — including a caries slider, an age-calcification slider, and
+arteries and veins — is in [docs/wishlist.md](docs/wishlist.md).
 
 ## Running it
 
 ```bash
 npm install
-npm run build:assets   # STL -> public/dentition.glb + public/teeth.json
-npm run dev            # http://localhost:5173/3Dentes/
+TOOTH_SOURCE=cbct npm run build:assets   # -> public/dentition.glb + teeth.json
+npm run dev                              # http://localhost:5173/3Dentes/
 ```
 
-The source STLs are vendored in `assets/source/stl/`, so `build:assets` works
-offline. `npm run fetch:assets` re-downloads them from BodyParts3D and rewrites
+**`TOOTH_SOURCE=cbct` is what builds the model above**, and it is what the
+deploy workflow sets. Without it the build falls back to the original
+BodyParts3D alpha in `assets/source/stl/` — external morphology only, no pulp,
+no ligament, no nerves, but it does carry the muscles of mastication, which the
+CBCT has no soft-tissue contrast to segment. Both sets of STLs are vendored, so
+either build works offline.
+
+`npm run fetch:assets` re-downloads the BodyParts3D set and rewrites
 `assets/source/provenance.json`; re-running it against an unchanged upstream
-should leave `git diff` empty.
+should leave `git diff` empty. The CBCT pipeline is not part of `npm` — it is
+the Python in `tools/cbct/`, and it needs the imaging data, which is not in this
+repo.
 
 To reach the dev server from an iPad on the same network, `npm run dev -- --host`.
 
@@ -62,12 +95,18 @@ tools/manifest.mjs      which structures to use, their layer, anatomical side,
                         and the notation derivation (single source of truth)
 tools/fetch-assets.mjs  reproducible download + provenance/checksums
 tools/build-assets.mjs  STL -> welded, smooth-shaded, y-up, centred .glb
+tools/cbct/             the Python that produced assets/cbct/ from the scan:
+                        segmentation, arch split, pulp tracing, gingiva, nerves
 src/scene.js            renderer, lighting, camera, camera flights
 src/picking.js          raycast selection, drag-vs-click, see-through handling
 src/odontogram.js       the tooth chart
 src/ui.js               layer, notation and detail panels
 src/main.js             wiring and selection state
 ```
+
+`CLAUDE.md` carries the long-form record of this pipeline — every rule that cost
+something to learn, and the things already ruled out. Read it before changing
+anything under `tools/cbct/`.
 
 FMA identifiers are the join key throughout: a structure is `FMA55697`
 everywhere — the source filename, the glTF node name, and the key in
@@ -99,15 +138,26 @@ A few things that were not obvious and are easy to regress:
 
 ## Licensing
 
-Two licenses, kept deliberately separate:
+Three things with three different standings, kept deliberately separate:
 
 - **Code** (`src/`, `tools/`, `data/`) — MIT. See [LICENSE](LICENSE).
-- **3D models** (`assets/`, and `public/dentition.glb` built from them) —
-  CC BY-SA 2.1 Japan. See [LICENSE-ASSETS](LICENSE-ASSETS).
+- **BodyParts3D models** (`assets/source/`) — CC BY-SA 2.1 Japan. See
+  [LICENSE-ASSETS](LICENSE-ASSETS).
 
-> BodyParts3D, © The Database Center for Life Science
-> licensed under CC Attribution-Share Alike 2.1 Japan
+  > BodyParts3D, © The Database Center for Life Science
+  > licensed under CC Attribution-Share Alike 2.1 Japan
 
-ShareAlike is inherited by anything derived from those meshes, including models
-edited in Blender. Anatomy authored from scratch is a separate work. Full detail
-in [ATTRIBUTION.md](ATTRIBUTION.md).
+  ShareAlike is inherited by anything derived from those meshes, including
+  models edited in Blender.
+- **CBCT-derived models** (`assets/cbct/`, and the `dentition.glb` the live site
+  now serves) — Nate Saindon's own anatomy, published with his explicit consent.
+  These are segmented from his scan, not derived from BodyParts3D, so the
+  ShareAlike obligation does not reach them. **No reuse licence has been granted
+  for them**; ask before redistributing.
+
+That last point is the reason the two asset trees stay physically separate.
+Full detail in [ATTRIBUTION.md](ATTRIBUTION.md).
+
+This repo contains one individual's medical imaging *derivatives*, with consent.
+It contains no DICOM, no raw volumes, and no third-party patient data — and it
+never should.
