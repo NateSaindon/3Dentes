@@ -106,6 +106,17 @@ FMA identifiers are the join key throughout: a structure is `FMA55697`
 everywhere — the source filename, the glTF node name, and the key in
 `teeth.json`.
 
+**The build refuses to produce a mislabelled model.** Two assertions run on every
+build. The first is laterality: anatomical right is negative x, and a structure
+labelled left that sits on the right fails the build. The second checks the tooth
+numbering against the tooth *shapes* — Universal, FDI and Palmer are all derived
+from one arch/side/position triple, so they always agree with each other, and
+agreeing with each other is not the same as being right. So the teeth are ordered
+around each arch geometrically and that order must match the numbering, and
+molars and canines are identified from volume, root count and length and must
+land on the positions claiming them. `node tools/tooth-morphology.test.mjs`
+corrupts the mapping in six plausible ways and confirms each is caught.
+
 ### Notes from building it
 
 A few things that were not obvious and are easy to regress:

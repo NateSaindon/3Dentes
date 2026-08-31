@@ -6,6 +6,8 @@
   "license": "MIT",
   "scripts": {
     "build:assets": "node tools/build-assets.mjs",
+    "test": "node tools/tooth-morphology.test.mjs",
+    "audit:fov": "node tools/fov-audit.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

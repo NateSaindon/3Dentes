@@ -19,6 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Document, NodeIO } from '@gltf-transform/core';
 import { STRUCTURES, LAYERS, toothNotation, structureName, STL_DIR as STL_SUBDIR } from './manifest.mjs';
+import { measureTooth, checkToothIdentity } from './tooth-morphology.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const STL_DIR = join(ROOT, ...STL_SUBDIR);
@@ -293,6 +294,20 @@ async function main() {
     process.exit(1);
   }
 
+  // Invariant 5: the tooth numbering must agree with the tooth shapes. The
+  // laterality check above catches a structure on the wrong SIDE; this catches
+  // one at the wrong POSITION, which no amount of internal consistency in the
+  // notation derivation can reveal. See tools/tooth-morphology.mjs.
+  const measured = meshes
+    .filter((m) => m.s.layer === 'teeth')
+    .map((m) => ({ ...measureTooth(m), universal: +toothNotation(m.s).universal }));
+  const idFailures = checkToothIdentity(measured);
+  if (idFailures.length) {
+    console.error('TOOTH IDENTITY CHECK FAILED — a tooth is numbered as something it is not:');
+    for (const f of idFailures) console.error(`  ${f}`);
+    process.exit(1);
+  }
+
   await new NodeIO().write(join(OUT_DIR, 'dentition.glb'), doc);
   await writeFile(
     join(OUT_DIR, 'teeth.json'),
@@ -309,6 +324,7 @@ async function main() {
   console.log(`vertices        ${rawVerts.toLocaleString()} -> ${weldedVerts.toLocaleString()} welded (${(100 - (weldedVerts / rawVerts) * 100).toFixed(1)}% reduction)`);
   console.log(`extent (mm)     ${extent.map((v) => v.toFixed(1)).join(' x ')}  (dental content, centered)`);
   console.log(`laterality      OK — all ${report.filter((r) => r.side !== 'midline').length} sided structures on the expected side`);
+  console.log(`tooth identity  OK — arch order and molar/canine morphology match all ${measured.length} tooth numbers`);
   console.log(`teeth           ${Object.values(teethJson).filter((t) => t.layer === 'teeth').length} (third molars extracted, not scanned)`);
   console.log(`output          public/dentition.glb  ${(size / 1e6).toFixed(2)} MB`);
 }

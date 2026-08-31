@@ -54,6 +54,16 @@ Run `build:assets` after cloning or nothing loads.
 4. **The source-data caveat stays visible in the UI.** The `.caveat` block in
    `index.html`. The user is a dental professional; a tool that looks like a
    clinical reference while omitting pulp and the inferior alveolar nerve must say so.
+5. **The tooth identity check in `tools/tooth-morphology.mjs`.** Tooth numbering
+   must agree with tooth morphology, or the build fails. Laterality (1) catches a
+   structure on the wrong SIDE; this catches one at the wrong POSITION, which the
+   notation derivation cannot reveal because it derives all three notations from
+   the same triple and so is self-consistent whatever that triple says. Every
+   test is ORDINAL — largest two teeth in the quadrant, longest non-molar, most
+   roots — never a threshold in millimetres, because this is one person's
+   dentition and a build asserting their molar exceeds 800 mm³ would be asserting
+   something about *them* rather than about the labelling. If it ever fires,
+   suspect the manifest, not the check; `npm test` proves the check still bites.
 
 ## Deployment
 
@@ -86,12 +96,31 @@ Gotchas worth not rediscovering are in the README's "Notes from building it"
 muscles of mastication; click selection, odontogram with camera flight, layer
 opacity, isolate, PWA offline install.
 
-### Open item
+### Closed: the Universal → FMA mapping (2026-08-31)
 
-The **Universal → FMA mapping** in `tools/manifest.mjs` is derived and
-self-consistent, and was cross-checked against an independently written table —
-but consistency is not correctness. The user intends to review it. If they raise
-a mislabelled tooth, that's the likely source.
+This was the standing open item — the mapping was derived and self-consistent and
+had been cross-checked against an independently written table, but consistency is
+not correctness, and nothing tested it against anatomy.
+
+`docs/cbct-plan.md` predicted the test: per-tooth CBCT geometry is independent
+evidence, because tooth-type morphology is unmistakable. It is now run on every
+build (invariant 5) and **the mapping is correct** — all 28 teeth, both checks.
+
+What the geometry says, for the record:
+
+- **Arch order.** Ordering each arch by polar angle about its own centroid gives
+  a strictly monotonic Universal sequence: maxillary 2→15, mandibular 31→18, no
+  inversions, gaps even at 22-25° and the single wide gap falling across the open
+  posterior of the horseshoe where the third molars are missing.
+- **Molars separate cleanly.** The two largest teeth in every quadrant are its
+  molars, with a gap of 673 → 1076 mm³ between the largest non-molar and the
+  smallest molar across the whole dentition. Root count agrees independently:
+  read at 70% of the way from cusp tip to apex, every molar divides and no other
+  tooth does. Read at 55% it is unreliable — some furcations have not opened and
+  canines read two loops through the cervical constriction — so the depth matters.
+- **Canines are the longest non-molar** in all four quadrants (22.7, 21.7, 25.9,
+  26.6 mm), which anchors position 3 and separates the incisors in front from the
+  premolars behind.
 
 ### Next on the docket — CBCT
 
