@@ -247,6 +247,10 @@ const SRC = {
     "Dot G. et al., 'DentalSegmentator: robust open source deep learning-based CT and CBCT image segmentation', J Dent (2024)",
   wheeler:
     "Wheeler's Dental Anatomy, Physiology and Occlusion — crown-height and cervical-line tables",
+  // These cite what was actually used. Upgrading to a primary anatomical source
+  // is on the wishlist -- and is NOT a citation edit: the geometry has to be
+  // re-derived against the new reference first, or the citation credits a book
+  // for a course it did not produce.
   wikiIAN:
     'en.wikipedia.org/wiki/Inferior_alveolar_nerve, /wiki/Mental_nerve',
   wikiSA:

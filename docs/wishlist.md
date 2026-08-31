@@ -552,6 +552,95 @@ mean irradiating a healthy person for an atlas.
 
 ---
 
+## Re-derive the nerve courses from a primary anatomical source
+
+The maxillary and terminal mandibular nerve courses were built against the
+Wikipedia anatomy articles, and `provenance()` cites exactly that, because
+citing what was actually used is the whole point of the field.
+
+Upgrading the source is worth doing. **The trap is that it is not a citation
+change.** Swapping `SRC.wikiSA` for a better reference without re-deriving the
+geometry would be false attribution — it would credit a book for a course it did
+not produce, which is worse than an honest citation of a weaker source. The work
+is: re-check each course against the reference, adjust the geometry where they
+disagree, *then* change the citation.
+
+Candidates, and they are not equivalent:
+
+| Source | Why |
+| --- | --- |
+| **Gray's Anatomy** | The obvious upgrade, and the 1918 edition is public domain — but it is a general anatomy, thin on the dental branches, and its plates predate the imaging that settled several of these courses. |
+| **Netter's Head and Neck Anatomy for Dentistry** (Norton) | Written for this exact purpose. Almost certainly the better reference for the superior alveolar plexus and the infraorbital canal. |
+| **Malamed, Handbook of Local Anesthesia** | The one to use if the [anaesthetic delivery](#local-anaesthetic-delivery-from-needle-to-numb-tooth) item is built, because it describes these nerves in terms of where a needle goes — which is what that feature needs and what a general anatomy does not give. |
+
+Doing this *with* the anaesthesia item rather than before it would mean deriving
+each course once, against the source that item needs anyway.
+
+---
+
+## Photograph or scan the gingiva, and stop deriving it
+
+The gingiva is currently a collar lofted from the measured CEJ, and its
+provenance says plainly that the gingiva itself was never imaged. It does not
+have to stay that way: unlike the condyles, this tissue is *available* — it is in
+the operator's mouth, and CBCT's inability to see it is a contrast limitation,
+not a geometric one.
+
+### An intraoral scan beats photographs, by a lot
+
+If a chairside scanner is reachable — Trios, iTero, Primescan — **that is the
+answer**. It captures teeth and gingiva together as one surface at 20–50 µm,
+which is better than the CBCT's own 160 µm, and it exports STL directly into the
+existing pipeline. Crucially it captures the **gingival margin**, which is the
+clinically loaded part and the thing the lofted collar can only approximate.
+
+Registration is already solved by the data: the tooth crowns appear in both the
+scan and the CBCT, and the crowns are measured in both. Fit crown to crown by ICP
+and the gingiva arrives in the atlas frame for free, correctly scaled. That is a
+far better-posed problem than the volume-to-volume registrations already done.
+
+### Photographs are the fallback, and still worth it
+
+Multi-view photogrammetry would work, with caveats worth knowing before shooting:
+
+- **Cross-polarise if possible.** Wet gingiva is specular, and specular
+  highlights move with the camera, which is exactly what breaks feature matching.
+  A polarising filter plus a polarised light source removes them.
+- **Many overlapping views**, 30–60 around the arch, rather than a few good ones.
+- **Scale comes from the teeth**, not from a ruler — photogrammetry is
+  scale-free, and the crowns are already measured.
+- **Retraction changes the answer.** Pulling the lip to see the gingiva moves the
+  vestibule and can blanch and displace the marginal tissue. The attached gingiva
+  is fairly safe; alveolar mucosa photographed under retraction is not the shape
+  it has at rest.
+- **Only the visible surface.** Neither photographs nor an intraoral scan see
+  below the margin — the sulcus, the attachment and the biologic width stay
+  underived. The CEJ is measured and the margin would be measured; what is
+  between them remains an inference.
+
+### What it would change
+
+- **Gingiva moves from `derived` to `measured`**, with a method naming the
+  modality and the crown-based registration — the first structure in the atlas
+  measured by something other than the CBCT, which the provenance field is
+  already shaped to express.
+- **Real colour.** The gingiva is a flat pink material today. Photographs carry
+  actual tissue colour, and in a dental atlas that is anatomy, not decoration:
+  biotype, pigmentation and the difference between attached gingiva and alveolar
+  mucosa are all visible and all teaching material.
+- **Recession and papilla fill become observed** rather than lofted, which is the
+  difference between an atlas that shows a gingival margin and one that shows
+  *this* gingival margin.
+
+**What it needs:** the imagery, then a photogrammetry or mesh-registration step
+and an ICP fit to the measured crowns. No new radiation, which is the other
+reason this is a good trade — [the skull item](#the-rest-of-the-skull--generating-what-the-fov-never-saw)
+notes that the missing hard tissue is missing permanently, because re-scanning to
+fill it would mean irradiating a healthy person for an atlas. Soft tissue has no
+such constraint.
+
+---
+
 ## Smaller things
 
 - Retopologise the apical spikes on the tooth surfaces — an imaging limit, not a
