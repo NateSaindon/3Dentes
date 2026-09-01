@@ -597,17 +597,16 @@ not a geometric one.
 
 ### Planned, not hypothetical
 
-**Agreed 2026-08-31: an intraoral scan is happening.** The operator shadows at a
-general-practice office one day a week and has a prophy booked there for roughly
-**late September 2026**, so a chairside scan of both arches is arranged rather
-than wished for. The photogrammetry section below stays as the fallback if the
+**Agreed 2026-08-31: an intraoral scan is happening.** Chairside access to a
+scanner is arranged for roughly **late September 2026**, so this is planned work
+rather than a wish. The photogrammetry section below stays as the fallback if the
 scanner is unavailable on the day.
 
-Worth having ready before the appointment, because a second visit is a month
-away: export **STL or PLY, not a proprietary case file**, capture both arches
-fully including the vestibular depth rather than stopping at the gingival margin,
-and get the scan **before the prophy**, not after — scaling and polishing
-inflames marginal tissue, and the atlas wants the gingiva at rest.
+Worth settling before then, because a second attempt is a month behind the first:
+export **STL or PLY, not a proprietary case file**, capture both arches fully
+including the vestibular depth rather than stopping at the gingival margin, and
+take the scan **before any scaling or polishing** — both inflame marginal tissue,
+and the atlas wants the gingiva at rest.
 
 ### An intraoral scan beats photographs, by a lot
 
