@@ -17,6 +17,10 @@ reshuffle:**
 
 Both are buildable now and need no new anatomy.
 
+And one item is genuinely **scheduled**: an intraoral scan of the operator's own
+arches, around late September 2026, which would move the gingiva from derived to
+measured. See [Scan the gingiva](#scan-the-gingiva-and-stop-deriving-it--scheduled-late-sept-2026).
+
 ---
 
 ## The unifying idea: a digitally reconstructed radiograph
@@ -576,15 +580,34 @@ Candidates, and they are not equivalent:
 Doing this *with* the anaesthesia item rather than before it would mean deriving
 each course once, against the source that item needs anyway.
 
+**Decided 2026-08-31: that is the plan.** The operator wants the courses
+re-derived *before* the anaesthesia modelling rather than after, so the
+derivation happens once against Malamed — the reference that feature needs — and
+the citation follows the work instead of preceding it.
+
 ---
 
-## Photograph or scan the gingiva, and stop deriving it
+## Scan the gingiva, and stop deriving it — SCHEDULED, ~late Sept 2026
 
 The gingiva is currently a collar lofted from the measured CEJ, and its
 provenance says plainly that the gingiva itself was never imaged. It does not
 have to stay that way: unlike the condyles, this tissue is *available* — it is in
 the operator's mouth, and CBCT's inability to see it is a contrast limitation,
 not a geometric one.
+
+### Planned, not hypothetical
+
+**Agreed 2026-08-31: an intraoral scan is happening.** The operator shadows at a
+general-practice office one day a week and has a prophy booked there for roughly
+**late September 2026**, so a chairside scan of both arches is arranged rather
+than wished for. The photogrammetry section below stays as the fallback if the
+scanner is unavailable on the day.
+
+Worth having ready before the appointment, because a second visit is a month
+away: export **STL or PLY, not a proprietary case file**, capture both arches
+fully including the vestibular depth rather than stopping at the gingival margin,
+and get the scan **before the prophy**, not after — scaling and polishing
+inflames marginal tissue, and the atlas wants the gingiva at rest.
 
 ### An intraoral scan beats photographs, by a lot
 
