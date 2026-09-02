@@ -79,6 +79,19 @@ const MEASURED_STRUCTURES = [
   // name and side are correct, which is the right way round.
   { fma: 'FMA53649', name: 'Maxilla and palate',  layer: 'maxilla',  side: 'midline' },
 
+  // The rest of the upper skull label. FMA53649 keeps meaning the alveolar
+  // process and palate -- what a dental atlas names -- and this is everything
+  // else that was measured and then thrown away at export. The two abut and do
+  // not overlap, the same arrangement as mandible-minus-teeth.
+  // Only the maxillary exposure saw this. Registered in on the upper skull, with
+  // the upper teeth held out of the fit as the check.
+  { fma: 'FMA53649M', name: 'Mid-face',            layer: 'midface',  side: 'midline' },
+
+  // ...and only the mandibular exposure saw this. The centred volume's mandible
+  // is cut through both rami by its field of view (tools/fov-audit.mjs).
+  { fma: 'FMA52748M', name: 'Mandibular ramus and inferior border',
+    layer: 'ramus', side: 'midline' },
+
   // --- Soft tissue ---
   // --- Nerves: CBCT build only. See tools/cbct/nerve.py and nerve_maxilla.py.
   // The mandibular canal is MEASURED; its contents are not. Everything
@@ -97,6 +110,18 @@ const ALL_LAYERS = {
   teeth:    { label: 'Teeth',                  defaultOpacity: 1.0,  visible: true  },
   mandible: { label: 'Mandible',               defaultOpacity: 1.0,  visible: true  },
   maxilla:  { label: 'Maxilla & palate',       defaultOpacity: 1.0,  visible: true  },
+  // The two FOCUSED exposures each see bone the centred volume's field of view
+  // cut off, and each gets its own toggleable layer. They are separate from
+  // `maxilla` and `mandible` because they are a different ACQUISITION, not a
+  // different structure — everything the centred volume measured sits in those
+  // two layers regardless of how far from the teeth it reaches.
+  //
+  // Both are EXCLUDED FROM CENTRING in build-assets.mjs. The mid-face reaches
+  // 75 mm above the occlusal plane and the ramus 61 mm below it; leaving either
+  // in the framing pulls the model's centre off the teeth, which is the same
+  // failure the masseters would cause and the reason muscles are excluded.
+  midface:  { label: 'Mid-face',               defaultOpacity: 1.0,  visible: true  },
+  ramus:    { label: 'Ramus & inferior border', defaultOpacity: 1.0, visible: true  },
   // Gingiva at full opacity hides every root and the app looks broken on load.
   gingiva:  { label: 'Gingiva',                defaultOpacity: 0.45, visible: true  },
   // Pulp and PDL are off by default: they sit INSIDE the teeth, so showing them
@@ -255,6 +280,11 @@ const SRC = {
     'en.wikipedia.org/wiki/Inferior_alveolar_nerve, /wiki/Mental_nerve',
   wikiSA:
     'en.wikipedia.org/wiki/Posterior_superior_alveolar_nerve, /wiki/Anterior_superior_alveolar_nerve',
+  // Cited only where the geometry was actually re-derived against it. The
+  // maxillary trunks were; the rest still say Wikipedia because that is still
+  // what produced them.
+  malamed:
+    'Malamed, Handbook of Local Anesthesia — branching order and the bony relations a block is aimed at',
 };
 
 // Keyed by layer where every member shares a provenance, and by FMA id where they
@@ -287,7 +317,17 @@ const BY_FMA = {
   },
   FMA53649: {
     tier: 'measured',
-    method: "nnU-Net 'upper skull' label, cropped to the alveolar process and palate. The crop is the segmentation's, not the field of view's: this mesh is not truncated, so more measured bone exists in the volumes than is meshed here.",
+    method: "The whole nnU-Net 'upper skull' label on the centred volume, minus the teeth: alveolar process, palate, and the upper facial skeleton around them. It was previously cropped to within 22 mm of the upper teeth, which discarded 3.6 cm3 of measured bone. The boundary here is where the SEGMENTATION stops, not where the field of view does — this mesh is not truncated. What the maxillary exposure adds beyond it is FMA53649M.",
+    sources: [SRC.dentalSegmentator],
+  },
+  FMA52748M: {
+    tier: 'measured',
+    method: "nnU-Net mandible label on the MANDIBULE-FOCUSED exposure, which sees 32.1 cm3 of mandible against the centred volume's 21.6, rigidly registered into the centred frame on that label and clipped to the 12.0 cm3 the centred volume never covered. It is the bone the centred field of view cut off: 172 mm2 and 191 mm2 of flat cap on its side walls, through both rami. Meshed in its own grid and only then transformed, because resampling onto the centred grid would have discarded exactly this anatomy.",
+    sources: [SRC.dentalSegmentator],
+  },
+  FMA53649M: {
+    tier: 'measured',
+    method: "nnU-Net 'upper skull' label on the MAXILLARY exposure — a separate acquisition that sees 54.0 cm3 of upper skull against the centred volume's 31.3 — rigidly registered into the centred frame on that label and clipped to the 23.0 cm3 the centred volume never covered. Meshed in its own grid and only then transformed, because the two exposures sit about 35 mm apart and resampling onto the centred grid would have discarded exactly this anatomy. Registration Dice 0.902 on the fitted label; the UPPER TEETH, held out of the fit, land at 0.708 against a ceiling of 0.728.",
     sources: [SRC.dentalSegmentator],
   },
 
@@ -319,8 +359,8 @@ const BY_FMA = {
   },
   FMA53088T: {
     tier: 'schematic',
-    method: 'Textbook branching order: PSA leaves V2 directly in the pterygopalatine fossa, while MSA and ASA descend from the infraorbital nerve inside its canal. None of it is resolved by this scan.',
-    sources: [SRC.wikiSA],
+    method: "Textbook branching order: PSA leaves V2 directly in the pterygopalatine fossa, while MSA and ASA descend from the infraorbital nerve inside its canal. Re-derived against Malamed 2026-09-01 and now CONFINED TO MEASURED BONE — the centred volume's hard tissue union the maxillary exposure registered in. Before that these courses were never tested against bone and 72% of this mesh lay outside it, a median of 3.5 mm and up to 10.1 mm out, floating in the sinus; it is now 0.5 mm and 1.2 mm, which is the tube's own radius. Still SCHEMATIC: the infraorbital canal does not resolve at 0.16 mm, so the course is bounded by measured bone but was never observed in it.",
+    sources: [SRC.malamed, SRC.wikiSA],
   },
 };
 

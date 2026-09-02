@@ -1,6 +1,6 @@
 {
   "name": "3dentes",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Interactive 3D atlas of human oral anatomy, in the browser.",
   "type": "module",
   "license": "MIT",
@@ -10,7 +10,8 @@
     "audit:fov": "node tools/fov-audit.mjs",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:enamel": "node -e \"const{STRUCTURES,toothNotation}=require('./tools/manifest.mjs');const o={};for(const s of STRUCTURES){const n=toothNotation(s);if(n)o[n.universal]=s.type;}require('fs').writeFileSync('/tmp/3dentes-tooth-types.json',JSON.stringify(o));\" && python3 tools/cbct/enamel_test.py /tmp/3dentes-tooth-types.json"
   },
   "dependencies": {
     "three": "^0.180.0"

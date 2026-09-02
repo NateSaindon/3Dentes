@@ -235,8 +235,14 @@ async function main() {
   // so including them would let a drawing choice move the whole model. It did:
   // adding them shifted the centre ~1 mm and tripped the laterality assertion
   // on the right maxilla, whose centroid sits close to the midline anyway.
-  const dental = meshes.filter(
-    (m) => m.s.layer !== 'muscles' && m.s.layer !== 'nerves');
+  // The two focused-exposure layers are excluded for the masseter reason in a
+  // new costume: the mid-face reaches 75 mm above the occlusal plane and the
+  // ramus 61 mm below it, and including either moved the centre off the teeth
+  // (19 mm for the mid-face alone). Both are measured anatomy rather than a
+  // drawing choice, so "exclude it because it is invented" does not apply and
+  // "exclude it because framing is not its job" does.
+  const NOT_FRAMING = new Set(['muscles', 'nerves', 'midface', 'ramus']);
+  const dental = meshes.filter((m) => !NOT_FRAMING.has(m.s.layer));
   const all = new Float32Array(dental.reduce((n, m) => n + m.positions.length, 0));
   let at = 0;
   for (const m of dental) { all.set(m.positions, at); at += m.positions.length; }

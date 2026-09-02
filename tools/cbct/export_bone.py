@@ -37,7 +37,11 @@ from meshsmooth import taubin, weld
 
 MANDIBLE_FMA = "FMA52748"
 MAXILLA_FMA = "FMA53649"
+# pieces smaller than this are segmentation speckle, not anatomy
+BONE_MIN_PIECE_MM3 = 30.0
 GINGIVA = {"upper": "FMA59763", "lower": "FMA59764"}
+# Kept for the record: the crop that used to discard 3.6 cm3 of measured bone.
+# Unused now — see the maxilla block below before reintroducing it.
 MAXILLA_NEAR_TEETH_MM = 22.0
 TARGET = {"bone": 24000, "gingiva": 12000}
 
@@ -76,18 +80,28 @@ def main():
                                  volume_mm3=round(float(mand.sum()) * sp ** 3, 1))
         print(f"  mandible  {MANDIBLE_FMA}  {len(got[1]):,} tris")
 
-    # maxilla: Upper Skull cropped to the alveolar process and palate
-    near = ndi.distance_transform_edt(~upper, sampling=(sp,) * 3) < MAXILLA_NEAR_TEETH_MM
-    maxi = (lab == 1) & near & ~upper
+    # maxilla: the WHOLE Upper Skull label from this volume, minus the teeth.
+    #
+    # It used to be cropped to within MAXILLA_NEAR_TEETH_MM of the upper teeth,
+    # on the reasoning that "maxilla" should not mean "cranium". That crop threw
+    # 3.6 cm3 of measured, labelled bone on the floor -- the posterior mid-face
+    # and pterygoid region, and the infraorbital rim and zygomatic process on
+    # both sides, which is bone the maxillary nerves were being drawn beside
+    # with nothing there. It briefly shipped as a second structure and is now
+    # simply part of this one: it comes from the same exposure and there is no
+    # reason for a user to click them apart. What the FOCUSED exposures add is
+    # separate, because that is a different acquisition (see export_extra_bone).
+    maxi = (lab == 1) & ~upper
     maxi = ndi.binary_closing(maxi, np.ones((3, 3, 3)))
-    l, n = ndi.label(maxi)
+    l, n = ndi.label(maxi, structure=np.ones((3, 3, 3)))
     if n:
-        szs = ndi.sum(maxi, l, range(1, n + 1))
-        maxi = l == (int(np.argmax(szs)) + 1)
+        szs = ndi.sum(maxi, l, range(1, n + 1)) * sp ** 3
+        maxi = np.isin(l, [i + 1 for i, z in enumerate(szs)
+                           if z >= BONE_MIN_PIECE_MM3])
     got = mesh_mask(maxi, v, TARGET["bone"])
     if got:
         write_binary_stl(os.path.join(outdir, f"{MAXILLA_FMA}.stl"), *got)
-        rep[MAXILLA_FMA] = dict(name="maxilla (alveolar process and palate)",
+        rep[MAXILLA_FMA] = dict(name="maxilla, palate and upper facial skeleton",
                                 triangles=int(len(got[1])),
                                 volume_mm3=round(float(maxi.sum()) * sp ** 3, 1))
         print(f"  maxilla   {MAXILLA_FMA}  {len(got[1]):,} tris")

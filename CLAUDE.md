@@ -76,6 +76,118 @@ Run `build:assets` after cloning or nothing loads.
    Overclaiming a tier because some input was measured is the exact failure this
    field exists to prevent.
 
+### Enamel: four automatic hole-detectors, all blind (2026-09-01)
+
+The operator repeatedly reported blocks cut out of the enamel cap. Four metrics
+were written to find them automatically and ALL FOUR were wrong, each in a
+different way. None is worth retrying; the overlay sheets from `tissue_tune.py`
+are the check, which is rule 74 and the `verify_overlay.py` precedent again.
+
+  a. Bright tissue adjacent to the crown but unclaimed by any tooth. Scored 0.9%
+     of the dentition and 0.5% on the tooth being complained about. Blind
+     because the tissue beyond an arch-split contact face carries the
+     NEIGHBOUR's label, so it is neither orphaned nor unlabelled.
+  b. Fraction of the envelope BAND the cap fills, per sector. The envelope is a
+     ceiling, not a target, so legitimately thin enamel scores like absent
+     enamel: 19 of 28 flagged, including a canine at its own cusp tip.
+  c. Fraction of crown SURFACE carrying any enamel. A TAUTOLOGY -- `SURFACE_MM`
+     is painted unconditionally, so it is 100% by construction wherever a cap
+     exists. Duly reported 26 of 28 perfect while holes were visible.
+  d. Median enamel thickness at the crown surface, per sector, as
+     distance-to-nearest-dentin. That distance collapses to one voxel near ANY
+     lateral edge of the cap -- the CEJ, a contact face -- so it measures
+     proximity to the cap's boundary, not its thickness. Flagged 28 of 28 on a
+     cap whose voxels are 41-59% deeper than 0.5 mm.
+
+WHAT THE REAL DEFECT WAS: the arch split ends each tooth at its contacts, and
+that boundary is ARTIFICIAL -- two touching crowns share one contiguous mass of
+enamel. Treating it as free tooth surface let `depth` read small there, which
+opened the envelope and painted the surface shell across the cut, and where the
+cut fell inside real enamel the cap ended in a clean straight edge. `outer_depth`
+measures against the tooth UNION its neighbours so a contact face is interior.
+The signature to look for is a STRAIGHT, axis-aligned edge in the cap: anatomy
+does not produce those.
+
+### All three exposures now supply geometry (2026-09-01)
+
+Only the centred volume did until now. The two focused scans each see much more
+of what they are aimed at — upper skull 54.0 cm3 against 31.3, mandible 32.1
+against 21.6 — and `tools/cbct/export_extra_bone.py` contributes the difference
+per exposure, so each scan supplies exactly the bone it alone measured.
+
+Transforms are in `docs/transform-{maxillary,mandibular}-to-centered.json`. The
+MAXILLARY one is fitted on the UPPER SKULL, not the mandible, which is not rigid
+with respect to the maxilla across separate exposures. Held out of that fit, the
+upper teeth land at Dice 0.708 against a ceiling of 0.728 — the evidence it is
+right for reasons other than overfitting.
+
+Layer layout follows the ACQUISITION, not the anatomy: everything the centred
+volume measured is in `maxilla` or `mandible` however far from the teeth it
+reaches, and each focused exposure's addition gets its own toggleable layer
+(`midface`, `ramus`).
+
+113. **Mesh in the MOVING grid, then transform the vertices.** The exposures sit
+    about 35 mm apart in x, so resampling the maxillary label onto the centred
+    grid discards every voxel that lands outside it — which is precisely the new
+    anatomy. The centred volume's own bone is pulled INTO the maxillary grid to
+    subtract, the remainder is meshed there, and only the finished vertices are
+    mapped out. This is the plan's "register in voxel space, fuse in mesh space"
+    for the same reason it gave.
+114. **New bone must not decide where the camera looks.** The mid-face reaches
+    75 mm above the occlusal plane, and letting it into `bounds()` moved the
+    model's centre ~19 mm off the teeth — rule 48 again, except this time the
+    geometry is measured rather than schematic, so "exclude it because it is
+    invented" does not apply and "exclude it because framing is not its job"
+    does. The `skull` layer is excluded from centring alongside muscles and
+    nerves.
+115. **Bone can be lost at EXPORT, not just at segmentation.** `export_bone.py`
+    cropped the upper skull to within 22 mm of the upper teeth and dropped
+    3.6 cm3 of labelled bone on the floor. Before generating anything to fill a
+    gap, check what the pipeline already measured and threw away: unlabelled
+    tissue at or above 400 HU in `centered` comes to 3.7 cm3 in 1,979 specks,
+    so the segmentation had found essentially all of it.
+116. **A transform's own description must name the label it was fitted to.**
+    `register.py` hardcoded "rigid, mandible only" into every transform it
+    wrote, so the maxillary run — fitted on the upper skull — described itself
+    as a mandible fit. Nothing downstream reads that string, which is exactly
+    why it would have survived indefinitely and misled whoever read it next.
+
+### Enamel tooling is present but NOT wired into the build (2026-09-01)
+
+`tools/cbct/{enamel,enamel_audit,tissue_tune,enamel_test}.py` ship with 0.4.0 as
+inert tooling so the work is not lost, but nothing in `build:assets` calls them
+and no enamel structure is in the manifest. That is deliberate — the enamel work
+lands with the DRR, and the contact-boundary fix in `docs/wishlist.md` is a
+prerequisite for both. `npm run test:enamel` checks the one part that can go
+wrong silently: the Universal-number-to-tooth-type mapping, against the
+manifest's own derivation.
+
+### Nerve courses re-derived against Malamed (2026-09-01)
+
+`docs/wishlist.md`'s rule was followed: the geometry was re-derived first and
+`SRC.malamed` added only to the structure that changed. The rest still cite
+Wikipedia because Wikipedia is still what produced them — a citation is a claim
+about provenance, not a compliment to a book.
+
+117. **A nerve nobody tested against bone will float, and no metric complained
+    for two weeks.** `nerve_maxilla.py` had no bone test at all, while
+    `nerve.py` had had one since rule 108. 72% of the maxillary trunk mesh lay
+    outside bone, a median of 3.5 mm and up to 10.1 mm out. Confining the
+    courses brought that to 0.5 mm and 1.2 mm — the tube's own radius, i.e. the
+    centrelines are now inside. The test only became meaningful once the
+    maxillary exposure supplied enough mid-face to test against.
+118. **Confining is not observing.** The trunks stay `schematic`. Bounded by
+    measured bone is a real constraint and a real improvement, and it is still
+    not the same claim as "seen in the scan". Do not let the improvement
+    promote the tier.
+119. **Two of Malamed's constructions need bone this scan does not have**, both
+    checked so they are not retried: the infraorbital canal does not resolve
+    (interior voids are all sinus and nasal cavity, aspect 1.1-1.7, no thin
+    tube), and the mandibular foramen's landmarks need the ramus's posterior
+    border and the coronoid notch — the ramus is still FOV-cut at y 23.7 against
+    a box edge of 23.85 even with the mandibular exposure in, and no FOV ever
+    contained a condyle.
+
 ## Deployment
 
 `.github/workflows/deploy.yml` runs `build:assets` with no environment. It used
@@ -87,6 +199,26 @@ of bug went away with the second build; there is one model now.
 Every structure in `tools/manifest.mjs` must have a mesh in `assets/cbct/stl/`.
 Listing one that does not fails the deploy with ENOENT, which is how the nerves
 broke the build once. Add the STL first.
+
+## The changelog is part of shipping
+
+`CHANGELOG.md` records what changed in the **published** app, and it is linked
+from the README so it is visible on the repo page. Every commit on `main`
+deploys, so the file groups commits into releases rather than listing each one.
+
+**Before any push that changes what a user sees, update it in the same commit**,
+and move `version` in `package.json` to match. Minor for anatomy or interface
+changes a user would notice, patch for fixes and corrections. Keep the
+`[Unreleased]` section current as work lands, and promote it to a numbered
+release when it is pushed.
+
+**A provenance change IS a user-visible change.** When a structure moves between
+`measured`, `derived` and `schematic`, or when what it is built from changes,
+that alters what the atlas claims about itself and belongs in the changelog even
+if nothing on screen moves. Invariant 6 exists for the same reason.
+
+Do not backdate or rewrite released entries; correct them in a new patch release
+with a note saying what was wrong.
 
 ## Architecture
 
@@ -1182,6 +1314,12 @@ these arise where two canals in one root run close enough that their capsules
 merge and a skeletoniser reads spurs off the merged blob. Teeth 18, 31 and 14
 account for most of them.
 
-Node is **not installed** on the Fedora box: `sudo dnf install -y nodejs24
-nodejs24-npm`. Python side is `python3-pydicom python3-numpy python3-gdcm
-python3-scipy python3-scikit-image dcm2niix dcmtk`.
+Node IS installed on the Fedora box (v24.18.0, npm 11) as of 2026-09-01 — the
+line that said otherwise was stale. Python side is `python3-pydicom
+python3-numpy python3-gdcm python3-scipy python3-scikit-image dcm2niix dcmtk`.
+
+**Run `tools/cbct/*.py` with `~/projects/3Dentes-cbct/nnunet-venv/bin/python`,
+not system python3.** The venv carries `fast_simplification`, nnU-Net and the
+rest; system python3 has scipy but NOT fast_simplification, so `decimate()` dies
+with a bare ModuleNotFoundError *after* the expensive segmentation and meshing
+work has already run.

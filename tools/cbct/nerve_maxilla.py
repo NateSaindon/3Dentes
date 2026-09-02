@@ -29,7 +29,33 @@ Anatomy modelled:
 All three anastomose in the superior dental plexus above the apices, which is
 why the plexus is drawn as a continuous arc rather than three separate trees.
 
+DERIVED AGAINST MALAMED (2026-09-01). docs/wishlist.md's rule for upgrading a
+source is that the geometry must be re-derived FIRST and the citation changed
+after, because swapping the citation alone credits a book for a course it did
+not produce. What changed here, and what did not:
+
+  RE-DERIVED   Every trunk is now CONFINED TO MEASURED BONE. Before this the
+      courses were never tested against bone at all, and 73% of this mesh's
+      vertices lay outside it -- a median of 3.6 mm and up to 10.6 mm out,
+      floating in the sinus. That is the wishlist's "schematic AND floating",
+      measured. The bone used is the centred volume's UNION the maxillary
+      exposure registered in, which is the first time enough mid-face existed to
+      make the test meaningful.
+  NOT DERIVED  The courses are still not OBSERVED. They stay `schematic`.
+
+WHAT WAS CHECKED AND CANNOT BE MEASURED, so nobody spends the time again:
+  - The infraorbital canal does not resolve. Filling the upper-skull label per
+    slice and taking the interior voids returns the sinuses and nasal cavity
+    (aspect 1.1-1.7) and no thin tube anywhere.
+  - Malamed's mandibular-foramen construction -- 19 mm below the coronoid notch,
+    2.75 mm behind the ramus midpoint -- cannot be anchored here. The ramus is
+    still cut by the field of view at its posterior border (y 23.7 against a box
+    edge of 23.85) even with the mandibular exposure registered in, and the
+    condyle was never inside any of the three FOVs. There is no second peak to
+    put a notch between.
+
 Usage: nerve_maxilla.py <pulp-connect.json> <split.json> <out-dir>
+                        [<centred-pred> <maxillary-pred> <max-transform> <vol>]
 """
 import json
 import os
@@ -66,6 +92,89 @@ MSA_TEETH = {4, 5, 12, 13}          # premolars (and, classically, 3/14's MB)
 ASA_TEETH = {6, 7, 8, 9, 10, 11}    # canine and incisors
 
 
+def maxilla_bone(pred_c, pred_m, transform, vol_path):
+    """Inside-bone test and nearest-inside snap, in world LPS.
+
+    The mask is the centred volume's hard tissue UNION the maxillary exposure's
+    upper skull mapped onto the same grid. Filled per slice first: like the
+    mandible (rule 108), the teeth are their own class and would otherwise read
+    as holes, and a nerve crossing one would be called outside the bone.
+
+    Resampling the maxillary label onto the centred grid loses bone that falls
+    outside it -- acceptable here and only here, because this mask is used to
+    TEST points that are themselves inside that grid. Do not reuse it to build
+    geometry; rule 113 exists for that.
+    """
+    from scipy import ndimage as ndi
+    from read_nifti import read_nifti
+    from vol import Volume
+    from register import euler
+
+    v = Volume.load(vol_path)
+    sp = np.array(v.spacing, float)
+    fl, _, _ = read_nifti(pred_c)
+    bone = np.isin(fl, (1, 2, 3, 4))
+    if pred_m and transform:
+        ml, _, _ = read_nifti(pred_m)
+        tr = json.load(open(transform))
+        R = euler(*np.radians(tr["rotation_deg"]))
+        t = np.asarray(tr["translation_mm"]) / sp
+        centre = np.array(ndi.center_of_mass(fl == tr["label"]))
+        zz, yy, xx = np.indices(bone.shape, dtype=np.float32)
+        pts = np.stack([zz - centre[0], yy - centre[1], xx - centre[2]], -1)
+        src = pts @ R + centre - t
+        extra = ndi.map_coordinates((ml == 1).astype(np.float32),
+                                    [src[..., 0], src[..., 1], src[..., 2]],
+                                    order=1, mode="constant", cval=0.0) > 0.5
+        bone |= extra
+    for k in range(bone.shape[0]):
+        if bone[k].any():
+            bone[k] = ndi.binary_fill_holes(bone[k])
+    _, idx = ndi.distance_transform_edt(~bone, return_indices=True)
+
+    def to_idx(w):
+        return np.array([(w[2] - v.origin[2]) / sp[2],
+                         (w[1] - v.origin[1]) / sp[1],
+                         (w[0] - v.origin[0]) / sp[0]])
+
+    def snap(w):
+        i = np.round(to_idx(w)).astype(int)
+        if np.any(i < 0) or np.any(i >= np.array(bone.shape)):
+            return np.asarray(w, float)
+        if bone[tuple(i)]:
+            return np.asarray(w, float)
+        j = idx[(slice(None),) + tuple(i)]
+        return np.array([v.origin[0] + j[2] * sp[0],
+                         v.origin[1] + j[1] * sp[1],
+                         v.origin[2] + j[0] * sp[2]])
+
+    def frac_inside(pts):
+        n = ok = 0
+        for w in np.atleast_2d(pts):
+            i = np.round(to_idx(w)).astype(int)
+            n += 1
+            if (np.all(i >= 0) and np.all(i < np.array(bone.shape))
+                    and bone[tuple(i)]):
+                ok += 1
+        return ok / max(n, 1)
+
+    return snap, frac_inside
+
+
+def confine(pts, snap, passes=2):
+    """Pull a course into bone, then re-smooth so snapping leaves no staircase.
+
+    Snapping moves only the points that were outside, so a course already in
+    bone is untouched and one that was floating is brought to the nearest bone
+    rather than redrawn -- the shape it was given from the anatomy survives.
+    """
+    out = np.array([snap(p) for p in pts])
+    for _ in range(passes):
+        out[1:-1] = 0.25 * out[:-2] + 0.5 * out[1:-1] + 0.25 * out[2:]
+        out = np.array([snap(p) for p in out])
+    return out
+
+
 def arch_order(points):
     """Sort plexus nodes along the arch, right posterior -> anterior -> left.
 
@@ -96,6 +205,9 @@ def smooth(points, passes=4):
 
 def main():
     pulp_path, split_path, outdir = sys.argv[1:4]
+    snap = frac_inside = None
+    if len(sys.argv) >= 8:
+        snap, frac_inside = maxilla_bone(*sys.argv[4:8])
     os.makedirs(outdir, exist_ok=True)
     teeth = json.load(open(pulp_path))["teeth"]
     split = json.load(open(split_path))
@@ -203,6 +315,8 @@ def main():
         t = np.linspace(0, 1, 30)[:, None]
         io = ((1 - t) ** 2 * io_post + 2 * (1 - t) * t * io_mid
               + t ** 2 * io_ant)
+        if snap is not None:
+            io = confine(io, snap)
         o = tube(io, np.linspace(*IO_RADIUS_MM, len(io)))
         if o:
             v, f = o
@@ -229,6 +343,8 @@ def main():
             pts = np.array([(1 - q) * head + q * foot
                             for q in np.linspace(0, 1, 20)])
             pts = pts + up * (np.sin(np.linspace(0, np.pi, 20))[:, None] * 0.9)
+            if snap is not None:
+                pts = confine(pts, snap)
             o = tube(pts, np.linspace(TRUNK_RADIUS_MM, PLEXUS_RADIUS_MM, len(pts)))
             if not o:
                 continue

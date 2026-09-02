@@ -18,6 +18,23 @@ const $ = (sel) => document.querySelector(sel);
 // Wired at module scope, BEFORE the model is fetched. Inside main() it sat
 // behind an await on a 9.9 MB glb, so on a slow phone connection -- precisely
 // when someone wants the anatomy unobscured -- the button would not respond.
+// Stamped at build time from package.json, so the corner label and the
+// changelog cannot drift apart -- both move in the same commit. Wired at module
+// scope like initChrome, so it does not wait on the 9.9 MB glb.
+function initVersion() {
+  const el = document.querySelector('#version');
+  if (!el) return;
+  // Guarded because this runs at MODULE SCOPE: if the build-time define ever
+  // fails to substitute, a bare __APP_VERSION__ is a ReferenceError that takes
+  // the whole module down with it, and the atlas would fail to load over a
+  // corner label. Never worth that.
+  let v = 'dev';
+  try { v = __APP_VERSION__; } catch { /* define not substituted */ }
+  el.textContent = v;
+}
+
+initVersion();
+
 function initChrome() {
   const btn = document.querySelector('#chrome');
   if (!btn) return;

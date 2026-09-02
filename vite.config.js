@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import pkg from './package.json' with { type: 'json' };
 import { VitePWA } from 'vite-plugin-pwa';
 
 // GitHub Pages serves this from https://natesaindon.github.io/3Dentes/, so every
@@ -6,6 +7,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 const BASE = '/3Dentes/';
 
 export default defineConfig({
+  // The version shown in the corner comes from package.json, so it cannot
+  // drift from the changelog: both move in the same commit.
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   base: BASE,
   build: { target: 'es2022', assetsDir: 'assets' },
   plugins: [

@@ -263,7 +263,8 @@ html, body {
 
 .chrome-hidden .panel,
 .chrome-hidden .chartbar,
-.chrome-hidden .credits { display: none; }
+.chrome-hidden .credits,
+.chrome-hidden .version { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .chrome-bars i { transition: none; }
@@ -285,12 +286,29 @@ html, body {
   user-select: none;
 }
 
+/* Bottom RIGHT, opposite the credits. Links to the changelog, so "what version
+   am I looking at" and "what changed" are one click apart. */
+.version {
+  position: fixed;
+  right: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.75;
+  text-decoration: none;
+  user-select: none;
+}
+
+.version:hover,
+.version:focus-visible { opacity: 1; text-decoration: underline; }
+
 /* --- narrow screens ----------------------------------------------------- */
 
 @media (max-width: 900px) {
   /* The panel stack and the odontogram both claim the bottom on a phone;
      a credit line is the one thing here that can yield. */
-  .credits { display: none; }
+  .credits, .version { display: none; }
   .panel {
     top: auto;
     bottom: 9.5rem;

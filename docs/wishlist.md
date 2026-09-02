@@ -49,6 +49,17 @@ Feasible in the existing stack (WebGL ray-marching in three.js), but the volume
 is ~185 MB per arch and would need aggressive downsampling or a cropped region of
 interest to ship to a browser. That is the main engineering question.
 
+**Prerequisite, added 2026-09-01: fix the inter-tooth contact boundaries first.**
+The arch split ends each tooth at its contacts, and at a true contact the two
+crowns' enamel is one contiguous mass with no separating feature, so the
+boundary currently lands as a near-planar chord through the crown. Nothing is
+lost from the mouth — the wedge cut off one tooth is labelled as its neighbour —
+so the assembled atlas renders correctly and this is invisible until something
+integrates density PER TOOTH. That is exactly what a DRR does, and the bitewing,
+its flagship view, is *about* the interproximal contact. Shipping a simulator
+whose contact geometry is arbitrary would fail at the one thing it exists to
+teach. See [Fix the inter-tooth contact boundaries](#fix-the-inter-tooth-contact-boundaries--prerequisite-for-the-drr).
+
 **Prerequisite, added 2026-08-31: split the hard tissue into enamel, dentin and
 cementum first** — see that section below. Tissue-labelled geometry carrying its
 own density is a second, much lighter substrate for the ray-cast, and it may
@@ -218,6 +229,41 @@ ever saw as one lumen and imply otherwise.
 
 ---
 
+## Fix the inter-tooth contact boundaries — prerequisite for the DRR
+
+`split_teeth.py` partitions the arch by arc position and then `refine_boundaries()`
+moves the cuts off the sector planes and onto the necks with a watershed. That
+function's own comment names where it still fails: *"Where two teeth are in true
+contact the distance transform has no minimum to cut at."* With no waist to
+settle into, the watershed boundary lands wherever the eroded seeds happen to
+meet — a near-planar chord, sometimes well inside the crown.
+
+**What it does and does not break.** It does not lose tissue: the wedge taken off
+one tooth is labelled as its neighbour, so the assembled model is right and the
+error exists only per tooth. It does distort anything measured PER TOOTH from the
+mask — the CEJ ring is the live example, and a chord through the crown is the
+most likely cause of the implausible 3.84 mm cervical scallop measured on tooth
+29, which matters because the gingival margin is lofted from that ring.
+
+**Why it gates the DRR** is in that section above. Enamel work is not blocked by
+it: `enamel.py`'s `outer_depth()` measures against the tooth *union its
+neighbours*, so a contact face is interior and no enamel is painted onto the cut.
+
+**What it needs.** A boundary criterion that does not depend on a distance
+minimum — the midsurface between the two teeth's own bodies, or the intensity
+dip where one resolves. Cost is compute, not hand work: the pulp tracings are
+stored against `crop_origin_zyx` in VOLUME space, not against the split labels,
+and the pulp is nowhere near the contacts, so a re-split does not invalidate
+them.
+
+**The honest caveat.** At a true contact the two enamel surfaces touch, and at
+0.16 mm the scan may not resolve a boundary at all. Some of "the correct split"
+there is a modelling choice rather than a measurement, which makes it a
+provenance question as much as a geometric one. Decide that deliberately instead
+of tuning until it looks right.
+
+---
+
 ## Enamel, dentin and cementum — before the DRR, not after
 
 Split the hard tissue into its actual constituents, each carrying a density. The
@@ -343,6 +389,58 @@ Two things worth knowing that only appeared in the building:
 
 The `simulated` tier is defined and unused, so the anaesthetic diffusion and the
 pathology sliders cannot ship without choosing a tier.
+
+---
+
+## Shade the landmark, do not invent the point — a rule for the whole atlas
+
+**Operator's idea, 2026-09-01, and it generalises well beyond anaesthesia.**
+Where a landmark is not resolved in this scan, do not place a point. Render the
+REGION the literature says it is most commonly found in, and let its size carry
+the uncertainty.
+
+This came up because the anaesthesia item needs targets the scan does not give.
+Tonight established that two of Malamed's constructions cannot be anchored here
+at all: the infraorbital canal does not resolve, and the mandibular foramen's
+landmarks need the ramus's posterior border and a coronoid notch that no field
+of view ever contained. The alternatives had been (a) place a point anyway from
+a published mean, which draws a confident dot on anatomy nobody measured, or
+(b) omit the landmark, which teaches nothing. A shaded region is the honest
+third option, and it is *more* useful for teaching than a point: the spread is
+the clinically important part. A needle aimed at a mean is aimed at a place the
+foramen is, in most people, not.
+
+**Why it fits the provenance system rather than fighting it.** Every structure
+already declares how it was made. A region says the same thing in geometry: its
+extent IS the claim. A 2 mm blob and a 12 mm blob are different assertions, and
+the reader does not have to open a panel to see which one they are looking at.
+
+**How to build it, in the order the honesty degrades:**
+
+1. **From a published dispersion.** Where a morphometric series gives a mean and
+   an SD relative to a landmark THIS scan measured, the region is that
+   distribution mapped onto measured bone. The infraorbital foramen is the clean
+   case: 5.8–7.3 mm below the inferior orbital margin across several series, and
+   the orbital rim is measured. That is a band, not a point, and drawing it as a
+   band is simply telling the truth.
+2. **From a landmark-relative construction with no dispersion quoted.** Malamed's
+   mandibular foramen is here — ~19 mm below the coronoid notch, ~2.75 mm behind
+   the ramus midpoint, with no spread given and, on this scan, without either
+   reference. The region has to be sized from a separate anatomical series, and
+   the structure must say that its *anchor* was unavailable, not just its
+   position uncertain.
+3. **From nothing but a textbook picture.** Do not draw it.
+
+**What it needs:** a `region` tier alongside `measured` / `derived` /
+`schematic` / `simulated`, rendered as a translucent volume rather than a
+surface, and a UI convention that reads as "somewhere in here" at a glance —
+probably a soft-edged isosurface rather than a hard shell, since a hard shell is
+itself a false precision. The `simulated` tier is already defined and unused;
+this is a sibling to it, not a special case of it.
+
+**Do this before the anaesthesia item, not during it.** That feature will want
+several of these, and inventing the convention while also modelling diffusion
+would mean deciding twice.
 
 ---
 
@@ -473,8 +571,8 @@ measured is presently invisible.
 
 | Structure | Why it is wanted |
 | --- | --- |
-| **Glenoid fossa and articular eminence** | The mouth cannot open correctly without the eminence — see [Open and close the mouth](#open-and-close-the-mouth). **Confirmed outside every FOV** by the audit below, so this must be generated or the opening stays generic. |
-| **Condyle and upper ramus** | The Gow-Gates target is the condylar neck. The audit below shows both rami sliced by the FOV walls, so the condyle is absent outright. |
+| **Glenoid fossa and articular eminence** | The mouth cannot open correctly without the eminence — see [Open and close the mouth](#open-and-close-the-mouth). **Confirmed outside every FOV** by the audit below. No longer necessarily generated: a small-FOV TMJ volume would measure it, though the fossa is the harder of the two to register — see below. |
+| **Condyle and upper ramus** | The Gow-Gates target is the condylar neck. The audit below shows both rami sliced by the FOV walls, so the condyle is absent outright. **A TMJ volume would measure this cleanly**, registering on the mandible via the shared ramus. |
 | **Pterygopalatine fossa, foramen rotundum, pterygoid plates** | V2's course. The maxillary nerves are drawn schematically already; without this bone they are schematic *and* floating. |
 | **Infraorbital canal and rim, orbital floor** | The ASA and infraorbital nerve terminate here. Also the roof of the maxillary sinus, which *is* well resolved. |
 | **Zygomatic arch and zygomaticomaxillary complex** | Masseter origin — needed the moment muscles are fitted to attachments. |
@@ -489,7 +587,7 @@ in a flat wall, intact anatomy closes over smoothly. Results:
 | | |
 |---|---|
 | **Measured anatomy spans** | 85.6 × 73.5 × 80.1 mm — against an 81.9 mm box per volume. It exceeds one FOV in x only because the mandibular volume is registered in alongside `centered`. |
-| **Mandible: cut through both rami** | 172 mm² cap on the right wall, 191 mm² on the left, 156 mm² posteriorly. Width 82.0 mm = the FOV exactly. |
+| ~~**Mandible: cut through both rami**~~ | 172 mm² cap on the right wall, 191 mm² on the left, 156 mm² posteriorly. Width 82.0 mm = the FOV exactly. **Fixed 2026-09-01** by registering the mandible-focused exposure in: `FMA52748M` adds 12.0 cm³ and the rami are no longer truncated. |
 | **Condyle, fossa, eminence** | **Not measured, and never could have been.** Bicondylar breadth is ~120 mm against an 81.9 mm box. |
 | **Upper skull: NOT cut** | Caps of 4–18 mm² only, i.e. it closes smoothly. Its extent is a *segmentation* crop by DentalSegmentator, not an FOV limit. |
 
@@ -505,13 +603,103 @@ it is currently used for nothing at all. It covers a good part of the mid-face
 wanted in the table above: orbital floor, infraorbital canal and rim, sinus
 walls, nasal bones.
 
+**Partly done, 2026-09-01.** The `centered` volume's share of this is recovered:
+`FMA53649U` ships the 3.6 cm3 the maxilla's 22 mm crop was discarding — posterior
+mid-face and pterygoid region, plus the infraorbital rim and zygomatic process
+bilaterally. Two things were measured while doing it and are worth not
+rediscovering:
+
+- **There is no large body of unlabelled bone in `centered`.** Tissue at or above
+  400 HU carrying no label at all comes to 3.7 cm3 scattered across 1,979
+  components, the largest 286 mm3 — noise, not a zygomatic arch. The nnU-Net
+  label had already found essentially all of it; the loss was at EXPORT, not at
+  segmentation.
+- ~~**The remaining prize is the `maxillary` volume**~~ **Done 2026-09-01.** It
+  is registered in (`docs/transform-maxillary-to-centered.json`) and ships 23.0
+  cm3 as `FMA53649M`. Its upper-skull label holds 54.0 cm3 against `centered`'s
+  31.3, and the atlas now reaches 75 mm above the occlusal plane instead of 37.
+  It remains **essentially free of crown artefact** (max 2605 HU against
+  `centered`'s saturated 3072) because the zirconia sits outside its field of
+  view — worth remembering for anything that needs clean mid-face intensities.
+  Its own label still stops before the field of view does, so there is more.
+- **The mandibular exposure is in too**, on the same pattern
+  (`docs/transform-mandibular-to-centered.json`, already fitted for the arch
+  work): 32.1 cm³ of mandible against `centered`'s 21.6, contributing 12.0 cm³
+  as `FMA52748M`. All three volumes now supply geometry.
+
 **So the order is: export what was already measured, then generate only the
 remainder.** Re-segmenting the upper skull to the full FOV and bringing the
 `maxillary` volume into the build is Fedora work on data already in hand, and
 every millimetre it recovers is one that does not have to be invented. Do it
 before fitting any template.
 
-### How to generate it, in order of preference
+### A TMJ scan would MEASURE the part that matters — noted 2026-09-01
+
+The operator's machine offers a small-FOV TMJ volume, left and right. That
+captures the condyle and the coronoid process — precisely the anatomy this
+section exists because we do not have, and the only part of the missing skull
+with real clinical function. **It supersedes generating them.** The operator is
+deliberately spacing the exposure out, which is the right call; nothing here is
+urgent and everything below is about making sure that when it is taken it is
+right the first time, so it never has to be taken twice.
+
+**The trap, and it is not obvious: one TMJ volume contains two structures with
+DIFFERENT rigid parents.** The condyle belongs to the mandible; the glenoid
+fossa and articular eminence belong to the temporal bone, and so to the cranium.
+CLAUDE.md's rule that one transform cannot serve both jaws applies here exactly:
+that volume will need **two** registrations, and each needs its own overlap.
+
+- **The condyle registers on the mandible**, and its handle is the RAMUS. So the
+  FOV should be positioned to include as much ramus below the condyle as it can
+  — that shared bone is the entire basis of the fit. A volume containing a
+  beautifully resolved condyle and no ramus is unregisterable and therefore
+  worthless to this atlas.
+- **The fossa and eminence register on the cranium**, and that is the harder
+  one, because the cranial bone we have is MID-FACE — anterior — while the fossa
+  is posterior-superior. The overlap may be poor or absent. If the machine
+  allows any latitude in positioning, favour including the zygomatic arch: it
+  runs between the two and is the only plausible bridge.
+
+**Measured now, so the FOV can be positioned rather than guessed** (atlas frame,
+LPS mm — the point is the shape of the requirement, not the numbers themselves):
+
+- The mandible plus ramus currently reaches **z 16.6** at the top, and the bone
+  within 10 mm of that top sits at **y 12.4–23.5**, laterally around
+  **|x| 35–45**. So a TMJ volume needs to reach INFERIORLY far enough to take in
+  roughly the **top 10–15 mm of ramus below the condylar neck**. That is the
+  whole mandibular registration handle; without it the condyle cannot be placed.
+- For the fossa, the bridge exists: there are **18.5 k mesh vertices of cranial
+  bone lateral of |x| > 32 mm**, spanning y −21.9 to 28.8 and z −7.1 to 67.3 —
+  the zygomatic process region and posterior enough to be plausible overlap. So
+  favour a position that catches the **zygomatic arch**, and the fossa has
+  something to register against rather than nothing.
+
+**Worth settling before the appointment:**
+
+- **Match 0.16 mm isotropic** if the Vol. 1 protocol offers it, so it composites
+  with the existing three without a resampling step.
+- **Record the jaw position** — maximum intercuspation or rest — explicitly, and
+  prefer whatever the existing volumes were taken in. Condyle-to-ramus is rigid
+  either way, so the mandibular registration is safe; condyle-to-FOSSA is not,
+  and two volumes in different positions would place the joint differently. That
+  is interesting rather than fatal — it would show the joint in two positions,
+  which is exactly what [Open and close the mouth](#open-and-close-the-mouth)
+  wants — but it must be RECORDED, never averaged.
+- **Both sides**, and note the mental foramen asymmetry already on record: the
+  right mandibular canal centreline is the weaker of the two, so the right joint
+  is the more valuable of the pair if only one were possible.
+- **Export DICOM, not the vendor's viewer file.** The survey already found a
+  Windows `.exe` shipped alongside the imaging data and correctly refused it.
+
+**If it happens, this section shrinks to the cranial vault and the zygomatic
+arch** — orientation context, the part the wishlist already calls cheapest to
+fake and least at stake. The generation options below stay for that remainder.
+
+### How to generate the remainder, in order of preference
+
+*(For the condyle, fossa and eminence, see the TMJ scan above first — measuring
+beats all three of these, and the whole argument of this atlas is that measured
+anatomy is the point.)*
 
 1. **Template morphed to the measured boundary.** Take a skull mesh and fit it so
    that where it overlaps measured bone it *matches* — then extrapolate outward
@@ -584,6 +772,36 @@ each course once, against the source that item needs anyway.
 re-derived *before* the anaesthesia modelling rather than after, so the
 derivation happens once against Malamed — the reference that feature needs — and
 the citation follows the work instead of preceding it.
+
+### Partly done 2026-09-01 — and the shape of the rest has changed
+
+The maxillary trunks were re-derived against Malamed and are now **confined to
+measured bone**. They had never been tested against bone at all: 72% of that
+mesh lay outside it, a median of 3.5 mm and up to 10.1 mm out, floating in the
+sinus. It is now 0.5 mm median and 1.2 mm maximum, which is the tube's own
+radius — the centrelines are in bone. `SRC.malamed` is cited on that structure
+only, because that is the only geometry actually re-derived against it. The tier
+stays `schematic`: bounded by measured bone is not the same as observed.
+
+**Two of Malamed's landmark constructions cannot be anchored to this scan, and
+both were checked, so nobody spends the time again:**
+
+- **The infraorbital canal does not resolve.** Filling the upper-skull label per
+  slice and taking the interior voids returns the sinuses and the nasal cavity
+  (aspect ratios 1.1–1.7) and no thin tube anywhere. The infraorbital foramen
+  therefore cannot be measured; placing it from the orbital rim plus a published
+  5.8–7.3 mm offset is the best available, and would be *derived*, not measured.
+- **The mandibular foramen construction needs bone that is not there.** Malamed
+  places it ~19 mm below the coronoid notch and ~2.75 mm behind the ramus's
+  anteroposterior midpoint. Both need the ramus's posterior border, and the
+  ramus is still cut by the field of view at y 23.7 against a box edge of 23.85
+  *even with the mandibular exposure registered in*; the condyle was never
+  inside any of the three FOVs. The superior-border profile rises to the
+  coronoid and then stops, so there is no second peak to put a notch between.
+
+**What is left of this item** is the mandibular terminal branches and the
+palatal nerves, plus deciding whether an offset from a measured orbital rim is
+worth having for the infraorbital foramen. The maxillary trunk topology is done.
 
 ---
 

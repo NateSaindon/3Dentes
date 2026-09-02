@@ -37,6 +37,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from read_nifti import read_nifti
 
 
+LABEL_NAMES = {1: "upper skull", 2: "mandible", 3: "upper teeth",
+               4: "lower teeth", 5: "mandibular canal"}
+
+
 def euler(rx, ry, rz):
     cx, sx = np.cos(rx), np.sin(rx)
     cy, sy = np.cos(ry), np.sin(ry)
@@ -132,8 +136,14 @@ def main():
         seconds=round(time.time() - t0, 1),
         convention="x_fixed = R @ (x_moving - centre) + centre + t, LPS mm, "
                    "index order (z, y, x)",
-        note="rigid, mandible only. The mandible is NOT rigid with respect to "
-             "the maxilla across these exposures.")
+        # The note MUST name the label actually fitted. It was hardcoded to
+        # "mandible only", which on the maxillary run said the opposite of what
+        # had happened -- a transform fitted on the upper skull describing
+        # itself as a mandible fit is exactly the kind of quiet mislabel this
+        # repo's provenance rules exist to stop.
+        note=f"rigid, {LABEL_NAMES.get(int(label), f'label {label}')} only. "
+             "The mandible is NOT rigid with respect to the maxilla across "
+             "these exposures, so one transform cannot serve both jaws.")
     with open(out_path, "w") as f:
         json.dump(result, f, indent=2)
     print(f"\nfinal Dice {dice:.4f} in {result['seconds']}s -> {out_path}")

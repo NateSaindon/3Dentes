@@ -5,9 +5,9 @@
     "volume_mm3": 21551.7
   },
   "FMA53649": {
-    "name": "maxilla (alveolar process and palate)",
-    "triangles": 24000,
-    "volume_mm3": 27769.1
+    "name": "maxilla, palate and upper facial skeleton",
+    "triangles": 23998,
+    "volume_mm3": 31324.8
   },
   "FMA59763": {
     "name": "gingiva of upper jaw",
