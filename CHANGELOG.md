@@ -81,6 +81,11 @@ name veins.
   teeth, mandible, maxilla and palate. Nerves and vessels stay off — they are
   interior structures and showing them on load reveals nothing until the teeth
   are faded back.
+- **Mid-face and ramus are off by default.** They are excluded from centring
+  because they reach far beyond the teeth, and that same reach is what makes
+  them wrong on load: they frame the dentition inside a slab of skull and ramus
+  that is not what this atlas is about. They remain in the model, with a toggle,
+  because they are measured.
 - **Veins are named by the IFAA's Terminologia Anatomica Humana**, not the FMA,
   which has 3,741 vein terms and none for the inferior alveolar, infraorbital or
   dental veins. TAH cross-references FMA where both exist, so the two namespaces

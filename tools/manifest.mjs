@@ -120,9 +120,17 @@ const ALL_LAYERS = {
   // 75 mm above the occlusal plane and the ramus 61 mm below it; leaving either
   // in the framing pulls the model's centre off the teeth, which is the same
   // failure the masseters would cause and the reason muscles are excluded.
-  midface:  { label: 'Mid-face',               defaultOpacity: 1.0,  visible: true  },
-  ramus:    { label: 'Ramus & inferior border', defaultOpacity: 1.0, visible: true  },
-  // Gingiva at full opacity hides every root and the app looks broken on load.
+  //
+  // OFF BY DEFAULT since 0.6.0. They are excluded from centring for a reason —
+  // they reach far beyond the teeth — and that same reach is what makes them
+  // wrong on load: they frame the dentition inside a slab of skull and ramus
+  // that is not what this atlas is about. Their being measured is exactly why
+  // they stay in the model and get a toggle rather than being cropped away.
+  midface:  { label: 'Mid-face',               defaultOpacity: 1.0,  visible: false },
+  ramus:    { label: 'Ramus & inferior border', defaultOpacity: 1.0, visible: false },
+  // Gingiva was 0.45 until 0.6.0 BECAUSE at full opacity it hides every root
+  // and the app looks broken on load. The operator asked for 1.0 anyway; if it
+  // reads wrong on screen, this is the line to move, not the mesh.
   gingiva:  { label: 'Gingiva',                defaultOpacity: 1.0,  visible: true  },
   // Pulp and PDL are off by default: they sit INSIDE the teeth, so showing them
   // on load reveals nothing and costs draw calls. The teeth layer's opacity is
