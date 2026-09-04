@@ -7,7 +7,7 @@ It smooths the staircase a voxel mask always has, and it verifies that what
 comes out is one connected surface. If a tooth looks wrong, the tracing is what
 should change, not this.
 
-Usage: mesh_hand.py <vol.nrrd> <pulp-dir> <out-dir>
+Usage: mesh_hand.py <vol.nrrd> <pulp-dir> <out-dir> [smooth-before smooth-after]
 """
 import json
 import os
@@ -25,8 +25,14 @@ from pulp_build import decimate_connected, pulp_field      # noqa: E402
 from pulp_connect import mesh_components, mesh_field       # noqa: E402
 
 
+SMOOTH_BEFORE, SMOOTH_AFTER = 30, 8
+
+
 def main():
+    global SMOOTH_BEFORE, SMOOTH_AFTER
     vol_path, pulp_dir, outdir = sys.argv[1:4]
+    if len(sys.argv) > 5:
+        SMOOTH_BEFORE, SMOOTH_AFTER = int(sys.argv[4]), int(sys.argv[5])
     os.makedirs(outdir, exist_ok=True)
     v = Volume.load(vol_path)
     sp = np.array(v.spacing, float)
@@ -48,9 +54,17 @@ def main():
         world[:, 0] = v.origin[0] + (ox + verts[:, 2]) * sp[0]
         world[:, 1] = v.origin[1] + (oy + verts[:, 1]) * sp[1]
         world[:, 2] = v.origin[2] + (oz + verts[:, 0]) * sp[2]
-        world = taubin(world, faces, 30)
+        # 30 Taubin passes were tuned for the operator's own tracings, which are
+        # already coherent from slice to slice because a person drew them that
+        # way. A PREDICTED mask is decided voxel by voxel, so its surface
+        # carries a step wherever the classifier changed its mind, and 30
+        # passes leave that visible as jagged, faceted canals. More smoothing
+        # is not a cosmetic preference here: Taubin's lambda/mu pair is
+        # volume-preserving, so the extra passes take out the staircase without
+        # thinning a canal that is already only a voxel or two across.
+        world = taubin(world, faces, SMOOTH_BEFORE)
         world, faces, _ = decimate_connected(world, faces)
-        world = taubin(world, faces, 8)
+        world = taubin(world, faces, SMOOTH_AFTER)
         write_binary_stl(os.path.join(outdir, f"{fma}-pulp.stl"), world, faces)
         print(f"{r['universal']:4d} {r['pulp_mm3']:7.1f} {len(faces):6d} "
               f"{mesh_components(world, faces):5d}")

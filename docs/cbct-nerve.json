@@ -3,7 +3,8 @@
     "canal": "MEASURED (CBCT)",
     "apical_foramina": "MEASURED (CBCT)",
     "nerve_trunk": "SCHEMATIC (canal contents are not resolved by CBCT)",
-    "branches": "INFERRED (endpoints measured, path is convention)"
+    "branches": "INFERRED (endpoints measured, path is convention)",
+    "mental_foramen": "MEASURED (anterior end of the hand-traced mental canal)"
   },
   "trunks": [
     {
@@ -22,221 +23,283 @@
       "universal": 18,
       "fma": "FMA55703",
       "canal": 0,
-      "trunk_to_apex_mm": 3.2,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 4.45,
       "apex_lps": [
-        32.51,
-        -5.16,
-        -39.45
+        29.84,
+        -6.79,
+        -39.56
       ]
     },
     {
       "universal": 18,
       "fma": "FMA55703",
       "canal": 1,
-      "trunk_to_apex_mm": 18.74,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 3.13,
       "apex_lps": [
-        24.42,
-        -9.36,
-        -26.54
-      ]
-    },
-    {
-      "universal": 18,
-      "fma": "FMA55703",
-      "canal": 2,
-      "trunk_to_apex_mm": 5.39,
-      "apex_lps": [
-        28.96,
-        -6.32,
-        -38.93
+        32.61,
+        -5.27,
+        -39.56
       ]
     },
     {
       "universal": 19,
       "fma": "FMA55704",
       "canal": 0,
-      "trunk_to_apex_mm": 7.22,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 3.29,
       "apex_lps": [
-        28.5,
-        -16.7,
-        -39.24
+        26.24,
+        -21.32,
+        -40.04
       ]
     },
     {
       "universal": 19,
       "fma": "FMA55704",
       "canal": 1,
-      "trunk_to_apex_mm": 3.46,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 7.09,
       "apex_lps": [
-        26.1,
-        -21.29,
-        -39.81
-      ]
-    },
-    {
-      "universal": 19,
-      "fma": "FMA55704",
-      "canal": 2,
-      "trunk_to_apex_mm": 7.27,
-      "apex_lps": [
-        25.04,
-        -22.9,
-        -34.98
+        28.72,
+        -16.55,
+        -39.4
       ]
     },
     {
       "universal": 20,
       "fma": "FMA55692",
       "canal": 0,
-      "trunk_to_apex_mm": 5.89,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 0.95,
       "apex_lps": [
         21.92,
-        -26.04,
-        -38.92
+        -26.07,
+        -39.08
       ]
     },
     {
       "universal": 21,
       "fma": "FMA55693",
       "canal": 0,
-      "trunk_to_apex_mm": 13.26,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 3.2,
       "apex_lps": [
-        17.73,
-        -31.93,
-        -36.09
+        17.6,
+        -31.91,
+        -36.52
       ]
     },
     {
       "universal": 22,
       "fma": "FMA55687",
       "canal": 0,
-      "trunk_to_apex_mm": 16.66,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 2.06,
       "apex_lps": [
-        12.53,
-        -33.04,
-        -39.51
+        12.55,
+        -33.34,
+        -38.92
       ]
     },
     {
       "universal": 23,
       "fma": "FMA57141",
       "canal": 0,
-      "trunk_to_apex_mm": 24.47,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 2.14,
       "apex_lps": [
-        7.22,
-        -36.87,
-        -34.07
+        7.04,
+        -36.63,
+        -35.56
+      ]
+    },
+    {
+      "universal": 24,
+      "fma": "FMA57143",
+      "canal": 0,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 2.61,
+      "apex_lps": [
+        4.16,
+        -38.23,
+        -33.32
+      ]
+    },
+    {
+      "universal": 25,
+      "fma": "FMA57142",
+      "canal": 0,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 2.73,
+      "apex_lps": [
+        0.96,
+        -37.43,
+        -32.36
       ]
     },
     {
       "universal": 26,
       "fma": "FMA57140",
       "canal": 0,
-      "trunk_to_apex_mm": 24.63,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 2.87,
       "apex_lps": [
-        -1.51,
-        -36.07,
-        -32.82
+        -1.44,
+        -35.99,
+        -33.64
       ]
     },
     {
       "universal": 27,
       "fma": "FMA55686",
       "canal": 0,
-      "trunk_to_apex_mm": 16.09,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 1.75,
       "apex_lps": [
-        -6.63,
-        -32.08,
-        -39.14
+        -6.61,
+        -32.05,
+        -39.56
       ]
     },
     {
       "universal": 28,
       "fma": "FMA55694",
       "canal": 0,
-      "trunk_to_apex_mm": 14.99,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 3.06,
       "apex_lps": [
-        -12.08,
-        -31.39,
-        -34.41
+        -12.64,
+        -30.87,
+        -36.52
       ]
     },
     {
       "universal": 29,
       "fma": "FMA55695",
       "canal": 0,
-      "trunk_to_apex_mm": 7.78,
+      "parent": "incisive",
+      "trunk_to_apex_mm": 1.8,
       "apex_lps": [
-        -14.6,
-        -25.54,
-        -38.42
+        -14.64,
+        -25.51,
+        -38.6
       ]
     },
     {
       "universal": 30,
       "fma": "FMA55705",
       "canal": 0,
-      "trunk_to_apex_mm": 7.3,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 7.19,
       "apex_lps": [
-        -20.36,
-        -13.31,
-        -38.77
+        -20.3,
+        -13.47,
+        -38.92
       ]
     },
     {
       "universal": 30,
       "fma": "FMA55705",
       "canal": 1,
-      "trunk_to_apex_mm": 6.55,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 6.16,
       "apex_lps": [
-        -18.18,
-        -18.73,
-        -38.46
-      ]
-    },
-    {
-      "universal": 30,
-      "fma": "FMA55705",
-      "canal": 2,
-      "trunk_to_apex_mm": 20.19,
-      "apex_lps": [
-        -15.76,
-        -17.53,
-        -24.64
+        -18.96,
+        -19.03,
+        -38.76
       ]
     },
     {
       "universal": 31,
       "fma": "FMA55706",
       "canal": 0,
-      "trunk_to_apex_mm": 3.73,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 4.68,
       "apex_lps": [
-        -23.85,
-        -2.4,
-        -38.64
+        -21.81,
+        -5.06,
+        -38.76
       ]
     },
     {
       "universal": 31,
       "fma": "FMA55706",
       "canal": 1,
-      "trunk_to_apex_mm": 5.2,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 3.63,
       "apex_lps": [
-        -21.56,
-        -5.2,
-        -38.31
+        -23.7,
+        -2.41,
+        -38.76
       ]
     },
     {
       "universal": 31,
       "fma": "FMA55706",
       "canal": 2,
-      "trunk_to_apex_mm": 8.32,
+      "parent": "inferior dental plexus",
+      "trunk_to_apex_mm": 5.73,
       "apex_lps": [
-        -21.31,
-        -6.48,
-        -35.43
+        -21.28,
+        -2.87,
+        -37.32
       ]
+    }
+  ],
+  "mental_foramina": {
+    "right": [
+      -20.15,
+      -21.03,
+      -42.75
+    ],
+    "left": [
+      25.32,
+      -23.08,
+      -43.27
+    ]
+  },
+  "terminal": [
+    {
+      "name": "incisive branch",
+      "side": "right",
+      "length_mm": 29.3,
+      "supplies": [
+        26,
+        27,
+        28,
+        29
+      ],
+      "provenance": "SCHEMATIC (course inferred from the anterior apices; the incisive canal is not resolved at 0.16 mm)"
+    },
+    {
+      "name": "mental nerve",
+      "side": "right",
+      "length_mm": 7.0,
+      "supplies": "chin and lower lip (soft tissue, not modelled)",
+      "provenance": "SCHEMATIC (exits the measured mental foramen; its extraosseous course is convention)"
+    },
+    {
+      "name": "incisive branch",
+      "side": "left",
+      "length_mm": 36.5,
+      "supplies": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "provenance": "SCHEMATIC (course inferred from the anterior apices; the incisive canal is not resolved at 0.16 mm)"
+    },
+    {
+      "name": "mental nerve",
+      "side": "left",
+      "length_mm": 7.0,
+      "supplies": "chin and lower lip (soft tissue, not modelled)",
+      "provenance": "SCHEMATIC (exits the measured mental foramen; its extraosseous course is convention)"
     }
   ]
 }

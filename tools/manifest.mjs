@@ -175,7 +175,44 @@ const NERVE_STRUCTURES = [
     layer: 'nerves', side: 'midline' },
   { fma: 'FMA53088B', name: 'Superior alveolar dental branches',
     layer: 'nerves', side: 'midline' },
-  { fma: 'FMA53088T', name: 'Infraorbital, PSA, MSA and ASA nerves',
+  { fma: 'FMA53088T', name: 'PSA, MSA and ASA nerves',
+    layer: 'nerves', side: 'midline' },
+  // Split out of the entry above on 2026-09-02, because the infraorbital canal
+  // is now traced and this nerve follows it. One mesh can carry only one tier,
+  // so leaving it merged would have meant either promoting PSA/MSA/ASA, which
+  // are still textbook courses, or hiding that this one is no longer.
+  { fma: 'FMA52978', name: 'Infraorbital nerve',
+    layer: 'nerves', side: 'midline' },
+
+  // The terminal fans, added 2026-09-02. Until now both the infraorbital and
+  // the mental nerve ended at their foramen with a single short stub, which
+  // says nothing about what either nerve is FOR: everything a patient feels in
+  // the lower lip, the chin, the upper lip, the side of the nose and the lower
+  // eyelid arrives through these. They are what the two blocks a dentist gives
+  // most often actually anaesthetise.
+  //
+  // The ids are the FMA's own for the branch SETS, not for a single branch and
+  // not for one side -- fma75534 is 'Set of inferior palpebral branches of
+  // infra-orbital nerve', which is exactly what one bilateral mesh of several
+  // branches is. Checked against the FMA through EBI OLS, not guessed.
+  { fma: 'FMA75534', name: 'Inferior palpebral branches',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA75535', name: 'External nasal branches',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA75536', name: 'Internal nasal branches',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA75537', name: 'Superior labial branches',
+    layer: 'nerves', side: 'midline' },
+
+  // The mental nerve's fan, added 2026-09-03 once the operator traced the
+  // mental canal. The gingival branches are the ones a dentist is actually
+  // aiming at with a mental block, and a purely cutaneous account of this nerve
+  // leaves them out.
+  { fma: 'FMA75520', name: 'Mental branches to the chin',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA75521', name: 'Inferior labial branches',
+    layer: 'nerves', side: 'midline' },
+  { fma: 'FMA75522', name: 'Gingival branches of the mental nerve',
     layer: 'nerves', side: 'midline' },
 ];
 
@@ -285,6 +322,8 @@ const SRC = {
   // what produced them.
   malamed:
     'Malamed, Handbook of Local Anesthesia — branching order and the bony relations a block is aimed at',
+  gray:
+    "Gray's Anatomy — the terminal branches of the infraorbital and mental nerves, and what each supplies",
 };
 
 // Keyed by layer where every member shares a provenance, and by FMA id where they
@@ -295,6 +334,10 @@ const BY_LAYER = {
     method: 'Marker-based watershed on the 0.16 mm volume, with bone seeded as its own basin so the segmentation cannot leak up the socket, then cut apart at the interproximal contacts. Meshed from grey levels rather than from the binary mask, which would terrace at the voxel size.',
   },
   pulp: {
+    // The twelve ANTERIOR pulps only; every molar and premolar has its own
+    // entry below. Splitting them was not optional: 16 of the 28 were remade on
+    // 2026-09-03 and 14 of those are machine predictions, which cannot sit
+    // under a `measured` claim written for something else.
     tier: 'measured',
     method: 'Traced by hand, slice by slice, over three rounds. No threshold separates pulp from dentin at 0.16 mm — below about three voxels wide, partial-volume averaging means no voxel ever reaches pulp density — so the lumen was calibrated by integrating the intensity deficit across each cross-section instead. Canals under about 0.5 mm and apical deltas are below the voxel size and are not drawn.',
   },
@@ -359,8 +402,52 @@ const BY_FMA = {
   },
   FMA53088T: {
     tier: 'schematic',
-    method: "Textbook branching order: PSA leaves V2 directly in the pterygopalatine fossa, while MSA and ASA descend from the infraorbital nerve inside its canal. Re-derived against Malamed 2026-09-01 and now CONFINED TO MEASURED BONE — the centred volume's hard tissue union the maxillary exposure registered in. Before that these courses were never tested against bone and 72% of this mesh lay outside it, a median of 3.5 mm and up to 10.1 mm out, floating in the sinus; it is now 0.5 mm and 1.2 mm, which is the tube's own radius. Still SCHEMATIC: the infraorbital canal does not resolve at 0.16 mm, so the course is bounded by measured bone but was never observed in it.",
-    sources: [SRC.malamed, SRC.wikiSA],
+    method: "Textbook branching order: PSA leaves V2 directly in the pterygopalatine fossa, while MSA and ASA descend from the infraorbital nerve inside its canal. Re-derived against Malamed 2026-09-01 and CONFINED TO MEASURED BONE — the centred volume's hard tissue union the maxillary exposure registered in. Before that these courses were never tested against bone and 72% of this mesh lay outside it, a median of 3.5 mm and up to 10.1 mm out, floating in the sinus; it is now 0.5 mm and 1.2 mm, which is the tube's own radius. Where MSA and ASA LEAVE the infraorbital nerve is placed by arc length along the measured canal — anterior for ASA, midway for MSA — so their origins sit on measured geometry while the courses beyond remain textbook. Still SCHEMATIC: the superior alveolar canals themselves are thin, often dehiscent, and were not resolved.",
+    source: SRC.malamed,
+  },
+  // The four terminal groups of the infraorbital nerve share one method: both
+  // ends measured on this patient, the path between them convention. They are
+  // DERIVED for the same reason the dental branches are, and they sit at that
+  // tier rather than schematic because the scan really does decide where each
+  // one stops -- not a figure, and not a length someone chose.
+  ...Object.fromEntries(['FMA75534', 'FMA75535', 'FMA75536', 'FMA75537',
+                         'FMA75520', 'FMA75521', 'FMA75522'].map((f) => [f, {
+    tier: 'derived',
+    method: "Terminal branches of the infraorbital and mental nerves. Each leaves a MEASURED foramen — both canals were hand-traced by the operator, the infraorbital in the maxillary exposure and the mental in the mandibular one — and heads across a MEASURED face: the outward normal of the skin at each foramen, and how deep the foramen lies beneath it, come from the air/tissue boundary in the scan. CBCT has poor soft-tissue CONTRAST but an excellent air/tissue BOUNDARY, and that boundary is the only soft-tissue measurement used here. WHICH branches exist, how many, and where each group heads is Gray's. WHAT IS DRAWN IS A STUB, 5.0–7.5 mm by group: each branch's true termination on the skin was measured and is recorded in docs/cbct-nerve-face.json, but the face it ends on is not rendered yet, so a branch drawn to its full 12–33 mm ends in mid-air and reads as a wire rather than as anatomy. The heading is measured; the drawn length is a placeholder and will be lifted when there is a surface to land on. Two invariants fail the build: no branch may re-enter bone, and none may cross the dental midline.",
+    sources: [SRC.gray, SRC.malamed],
+  }])),
+
+  // --- Pulp, molars and premolars, remade 2026-09-03 --------------------------
+  // Two teeth the operator traced densely in slicer.py, every slice painted.
+  // This is the same tier as the anterior pulps and a better instance of it:
+  // 120 and 103 painted axial slices against the eleven-section tracings the
+  // rest of the atlas was built from.
+  ...Object.fromEntries(['FMA55705-pulp', 'FMA55706-pulp'].map((f) => [f, {
+    tier: 'measured',
+    method: 'Hand-traced by the operator in tools/cbct/slicer.py — three linked planes, every slice painted, 120 and 103 axial slices respectively. Nothing is interpolated between slices and nothing is smoothed before meshing: what is drawn is what was painted. This replaces a 2026-08-30 tracing of the same tooth built from ELEVEN axial sections with the course interpolated between them; the two agree at Dice 0.563, which is a fair measure of how much that method was costing.',
+  }])),
+
+  // The other fourteen were segmented by a classifier rather than by hand.
+  //
+  // They are `measured` on the operator's ruling, and he is right that the
+  // alternative was inconsistent: the teeth, the mandible and the maxilla are
+  // all `measured` and every one of them came out of a neural network. Calling
+  // nnU-Net's output measured and a gradient-boosted classifier's output
+  // derived was a distinction about which algorithm, not about whether the
+  // scan decided it. Both read this CBCT and nothing else.
+  //
+  // The tier says the SCAN decided it. The method below says how, and says
+  // plainly which of these no human has yet looked at.
+  ...Object.fromEntries(['FMA55697-pulp', 'FMA55698-pulp', 'FMA55688-pulp', 'FMA55689-pulp', 'FMA55690-pulp', 'FMA55691-pulp', 'FMA55699-pulp', 'FMA55700-pulp', 'FMA55703-pulp', 'FMA55704-pulp', 'FMA55692-pulp', 'FMA55693-pulp', 'FMA55694-pulp', 'FMA55695-pulp'].map((f) => [f, {
+    tier: 'measured',
+    method: "Segmented by a gradient-boosted classifier (tools/cbct/pulp_learn.py) from this CBCT, trained on the operator's two densely hand-traced molars and six earlier tracings. Every canal is then routed to that tooth's own MEASURED apical foramen through the model's probability field, which brings each within 0.36 mm of its apices bar three upper-molar canals. Three physical rules are enforced afterwards: the pulp is clipped to its own tooth, its radius is capped by an envelope tapering to 0.16 mm at each measured foramen, and it is reduced to a single connected body. Held out on a tooth it had never seen the classifier scores Dice 0.470 against that tooth's older hand-trace — against 0.563, which is what two careful human tracings of one tooth score against each other. Contralateral pairs agree to within 19% on seven of eight. NOT YET REVIEWED BY EYE; tooth 18 differs from its traced counterpart by 32% and is the one to check first.",
+    sources: [SRC.dentalSegmentator],
+  }])),
+
+  FMA52978: {
+    tier: 'derived',
+    method: 'Follows the MEASURED infraorbital canal. The canal was hand-traced by the operator on cross-sections cut perpendicular to its own axis at 1 mm intervals in the maxillary exposure — the exposure that saw it, the posterior end reaching 0.6 mm above the centred volume\'s reconstruction ceiling — and the centreline was carried into the atlas frame as points, never resampled as voxels. What is DRAWN is a tube of chosen calibre on that centreline, exactly as for the inferior alveolar nerve: the canal carries the infraorbital nerve, artery and vein together, so the lumen is wider than the nerve. The drawn surface lies a median 0.16 mm and at most 0.99 mm from the traced lumen. Derived, not measured: the canal was observed, its contents were not.',
+    source: SRC.malamed,
   },
 };
 

@@ -2,18 +2,23 @@
   "provenance": "DERIVED from the measured CEJ and alveolar crest. Gingiva is not visible in CBCT.",
   "models": "health -- no recession, no inflammation, average biotype",
   "construction": "per-tooth collar lofted from the margin ring to below the crest, closed interdentally into papillae",
+  "sulcus_mm": {
+    "facial": 1.0,
+    "proximal": 2.0
+  },
+  "cej": "measured, then refitted to the published cervical-line curvature; the enamel ray under-reads thin lingual enamel",
   "margin_above_cej_mm": 1.0,
   "mgj_below_crest_mm": 4.0,
   "thickness_mm": 1.1,
   "arches": {
     "upper": {
-      "volume_mm3": 1273.7,
-      "triangles": 362344,
+      "volume_mm3": 1155.0,
+      "triangles": 335804,
       "teeth": 14
     },
     "lower": {
-      "volume_mm3": 1176.4,
-      "triangles": 349924,
+      "volume_mm3": 923.3,
+      "triangles": 285730,
       "teeth": 14
     }
   }

@@ -75,6 +75,9 @@ TRUNK_RUN_MM = 12.0        # how far the named trunks run beyond the plexus
 BRANCH_TIP_R_MM = 0.12     # at the apical foramen, where the branch meets pulp
 IO_RADIUS_MM = (1.05, 0.80)     # infraorbital nerve, posterior -> foramen
 IO_ABOVE_MM = 22.0         # the infraorbital canal above the plexus arc
+                           # (fallback only; unused where the canal is traced)
+ASA_BEHIND_FORAMEN_MM = 7.0   # Malamed: ASA leaves the trunk in the
+                           # anterior canal, a few mm short of the foramen
 
 # TOPOLOGY, from the Wikipedia articles on the superior alveolar nerves:
 #   V2 trunk, in the pterygopalatine fossa  -> PSA, straight to the tuberosity
@@ -203,8 +206,38 @@ def smooth(points, passes=4):
     return p
 
 
+MEASURED_IO = {}
+
+
+def measured_io(path):
+    """The traced infraorbital canal centrelines, atlas frame, per side.
+
+    Returns {} when the file is absent, so the constructed arc below stays the
+    fallback and this module still runs on a tree without the tracing.
+    """
+    if not path or not os.path.exists(path):
+        return {}
+    d = json.load(open(path))
+    out = {}
+    for side, rec in d.get("sides", {}).items():
+        pts = np.array([r["p"] for r in rec["points"]], float)
+        if len(pts) >= 3:
+            out[side] = pts
+    return out
+
+
 def main():
+    global MEASURED_IO
     pulp_path, split_path, outdir = sys.argv[1:4]
+    # optional 9th argument: the traced infraorbital centrelines
+    MEASURED_IO = measured_io(sys.argv[8] if len(sys.argv) >= 9 else
+                              os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                           "..", "..", "docs", "cbct-infraorbital.json"))
+    if MEASURED_IO:
+        print(f"infraorbital canal: MEASURED centreline for "
+              f"{sorted(MEASURED_IO)} ({len(next(iter(MEASURED_IO.values())))} samples)")
+    else:
+        print("infraorbital canal: no tracing found, using the constructed arc")
     snap = frac_inside = None
     if len(sys.argv) >= 8:
         snap, frac_inside = maxilla_bone(*sys.argv[4:8])
@@ -290,6 +323,7 @@ def main():
     # ASA, which is what the anatomy is. Anatomical right is NEGATIVE x
     # (CLAUDE.md invariant 1).
     tv, tf, toff = [], [], 0
+    iv, if_, ioff = [], [], 0
     trunks = []
     up = np.array([0.0, 0.0, 1.0])
     for side, keep in (("right", arc[:, 0] < 0), ("left", arc[:, 0] >= 0)):
@@ -307,21 +341,46 @@ def main():
         # The infraorbital nerve: from the pterygopalatine fossa forward above
         # the tooth apices to the infraorbital foramen. MSA and ASA are hung off
         # it, so the tree reads V2 -> infraorbital -> MSA/ASA, which is the
-        # anatomy. Placed relative to the MEASURED apices and flagged SCHEMATIC:
-        # nothing of this canal is resolved at 0.16 mm.
-        io_post = post + back * 4.0 + up * (IO_ABOVE_MM * 0.72)
-        io_ant = ant + fwd * 2.0 + up * IO_ABOVE_MM
-        io_mid = 0.5 * (io_post + io_ant) + up * 1.6
-        t = np.linspace(0, 1, 30)[:, None]
-        io = ((1 - t) ** 2 * io_post + 2 * (1 - t) * t * io_mid
-              + t ** 2 * io_ant)
-        if snap is not None:
-            io = confine(io, snap)
+        # anatomy.
+        #
+        # The canal IS resolved, and this used to say it was not -- see
+        # CLAUDE.md 119 and its correction. Where a tracing exists the course
+        # follows it and the nerve becomes `derived`; where none does, the
+        # constructed arc below is the fallback and stays `schematic`.
+        traced = MEASURED_IO.get(side)
+        if traced is not None:
+            # MEASURED. The canal was hand-traced on cross-sections cut
+            # perpendicular to its own axis in the maxillary exposure, which is
+            # the exposure that saw it -- its posterior end reaches z 37.8 and
+            # the centred volume's skull stops at 37.2, so part of this canal
+            # was never in that reconstruction at all. Resampled to a fixed
+            # count so the tube's radius ramp is unchanged, and NOT confined:
+            # confine() pushes a course into bone, and this one was measured
+            # inside it.
+            u = np.concatenate([[0.0], np.cumsum(
+                np.linalg.norm(np.diff(traced, axis=0), axis=1))])
+            io = np.stack([np.interp(np.linspace(0, u[-1], 30), u, traced[:, k])
+                           for k in range(3)], axis=1)
+            io_post, io_ant = io[-1], io[0]
+        else:
+            io_post = post + back * 4.0 + up * (IO_ABOVE_MM * 0.72)
+            io_ant = ant + fwd * 2.0 + up * IO_ABOVE_MM
+            io_mid = 0.5 * (io_post + io_ant) + up * 1.6
+            t = np.linspace(0, 1, 30)[:, None]
+            io = ((1 - t) ** 2 * io_post + 2 * (1 - t) * t * io_mid
+                  + t ** 2 * io_ant)
+            if snap is not None:
+                io = confine(io, snap)
         o = tube(io, np.linspace(*IO_RADIUS_MM, len(io)))
         if o:
             v, f = o
-            tv.append(v); tf.append(f + toff); toff += len(v)
+            # Its OWN mesh, not merged with PSA/MSA/ASA. Once the canal is
+            # measured the infraorbital nerve is `derived` while those three
+            # remain `schematic`, and one mesh can only carry one tier --
+            # merging them would either overclaim the others or hide this.
+            iv.append(v); if_.append(f + ioff); ioff += len(v)
             trunks.append(dict(name="infraorbital", side=side,
+                               measured_canal=traced is not None,
                                length_mm=round(float(np.linalg.norm(
                                    np.diff(io, axis=0), axis=1).sum()), 1),
                                inconstant=False,
@@ -333,11 +392,34 @@ def main():
         def on_io(p):
             return io[int(np.argmin(np.linalg.norm(io - p[None, :], axis=1)))]
 
+        def at_arc(poly, where):
+            """A point along the trunk: a fraction of its length, or mm from
+            the anterior (foramen) end when `where` is 1 or more."""
+            d = np.concatenate([[0.0], np.cumsum(
+                np.linalg.norm(np.diff(poly, axis=0), axis=1))])
+            target = where * d[-1] if where < 1.0 else min(float(where), d[-1])
+            return poly[int(np.argmin(np.abs(d - target)))]
+
         spec = (
             ("PSA", post, io_post + back * 3.0 + 0.6 * lateral,
              "maxillary nerve (V2)", False),
-            ("MSA", mid, on_io(mid + up * IO_ABOVE_MM), "infraorbital", True),
-            ("ASA", ant, on_io(ant + up * IO_ABOVE_MM), "infraorbital", False),
+            # Where MSA and ASA leave the trunk.
+            #
+            # Against the old CONSTRUCTED arc the rule was "nearest point on the
+            # trunk to the plexus node you serve", with the node lifted by
+            # IO_ABOVE_MM to reach it. That rule cannot survive the canal being
+            # measured: the real canal climbs to z 29-38 while every plexus node
+            # sits at the alveolus, so the nearest point to ALL of them is the
+            # anterior end and both branches collapsed onto the foramen.
+            #
+            # Malamed places them ALONG the canal instead -- ASA in its anterior
+            # part, a few millimetres behind the foramen, MSA about midway. So
+            # they are placed by arc length now. The position along the canal is
+            # literature; the canal it is measured along is not. That keeps the
+            # branches `schematic` while their origin sits on measured geometry,
+            # which is exactly what the tier is meant to distinguish.
+            ("MSA", mid, at_arc(io, 0.50), "infraorbital", True),
+            ("ASA", ant, at_arc(io, ASA_BEHIND_FORAMEN_MM), "infraorbital", False),
         )
         for name, foot, head, parent, inconstant in spec:
             pts = np.array([(1 - q) * head + q * foot
@@ -358,6 +440,9 @@ def main():
                                inconstant=inconstant,
                                origin_lps=[round(float(x), 2) for x in head]))
     if tv:
+        if iv:
+            write_binary_stl(os.path.join(outdir, "nerve-infraorbital.stl"),
+                             np.concatenate(iv), np.concatenate(if_))
         write_binary_stl(os.path.join(outdir, "nerve-superior-trunks.stl"),
                          np.vstack(tv), np.vstack(tf))
 

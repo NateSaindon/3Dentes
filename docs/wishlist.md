@@ -229,7 +229,7 @@ ever saw as one lumen and imply otherwise.
 
 ---
 
-## Fix the inter-tooth contact boundaries — prerequisite for the DRR
+## ~~Fix the inter-tooth contact boundaries~~ — RE-CUT 2026-09-02, one half left
 
 `split_teeth.py` partitions the arch by arc position and then `refine_boundaries()`
 moves the cuts off the sector planes and onto the necks with a watershed. That
@@ -245,9 +245,17 @@ mask — the CEJ ring is the live example, and a chord through the crown is the
 most likely cause of the implausible 3.84 mm cervical scallop measured on tooth
 29, which matters because the gingival margin is lofted from that ring.
 
-**Why it gates the DRR** is in that section above. Enamel work is not blocked by
-it: `enamel.py`'s `outer_depth()` measures against the tooth *union its
-neighbours*, so a contact face is interior and no enamel is painted onto the cut.
+**Why it gates the DRR** is in that section above.
+
+**It gates ENAMEL too — settled by the operator 2026-09-02.** This document used
+to say enamel was not blocked, on the grounds that `enamel.py`'s `outer_depth()`
+measures against the tooth *union its neighbours*, so a contact face is interior
+and no enamel is painted onto the cut. That is still true and it is not enough:
+it only stops enamel being painted ONTO a bad cut, while the cap's extent, the
+CEJ ring it is bounded by, and every per-tooth thickness figure are all measured
+from a mask whose proximal surface the cut defines. CLAUDE.md always said enamel
+was gated; the two documents contradicted each other and the operator resolved it
+in favour of gating.
 
 **What it needs.** A boundary criterion that does not depend on a distance
 minimum — the midsurface between the two teeth's own bodies, or the intensity
@@ -261,6 +269,60 @@ them.
 there is a modelling choice rather than a measurement, which makes it a
 provenance question as much as a geometric one. Decide that deliberately instead
 of tuning until it looks right.
+
+### What was done, 2026-09-02
+
+`refine_boundaries()` now cuts each adjacent pair under an ADDITIVE cost metric
+in a local crop, seeded from cores scaled to each tooth's own depth. The rules
+are CLAUDE.md 120-126; the short version is that the old distance watershed had
+no minimum to cut at, an intensity watershed fails by landslide instead, and an
+additive cost has neither failure. Sheets are `tools/cbct/contact_tune.py`.
+
+**The caveat above was decided, not tuned around.** Where no embrasure is open
+the intensity term is flat and the metric degrades to the midsurface between the
+two tooth bodies. That is a modelling choice and it is now a CONSISTENT one,
+rather than wherever two erosions happened to meet — but it is still a choice,
+and a per-tooth mask at a true contact remains derived-at-the-contact even
+though the tooth either side of it is measured. If contact geometry ever carries
+a claim of its own — and the bitewing is exactly that — this needs its own
+provenance note rather than inheriting the tooth's.
+
+### Gingival accuracy is DEFERRED to the intraoral scan — operator, 2026-09-02
+
+The re-split rebuilt the collar and the result is mixed by the refit metric:
+mean CEJ drop 1.60 -> 1.73 mm, teeth over 3 mm 4 -> 7, with 5 and 12 much better
+and 13, 14, 15 and 18 worse. On screen the posterior margin actually scallops
+MORE than before, so the metric and the render disagree — the drop measures how
+hard the refit had to drag the raw ring, which is a statement about the input,
+not the output.
+
+The operator looked and accepted it as-is. **Do not spend more effort tuning the
+gingiva before the intraoral scan lands**: it moves gingiva from derived to
+measured and resolves this immediately, so work now is work twice. CEJ-to-crest
+also barely moved (4.50 -> 4.46 mm against a healthy 1-2 mm), which is the
+evidence that the contact chord was NOT the cause of the margin error — that
+hypothesis in open question 2 is disproved, and the cause is still unknown.
+
+### The half that is left: restoration bloom
+
+Not a boundary-criterion problem, and re-cutting contacts does not touch it. The
+zirconia on 19 and 30 saturates the volume's 3072 ceiling and its halo is
+labelled as tooth, so the crowned teeth's OUTER contour is inflated against bone
+and background. Restoration-density voxels are no longer divided with the
+neighbour — they are claimed by the tooth the crown is cemented onto — but the
+2000–2500 penumbra around them is still whatever DentalSegmentator made of it.
+
+Fixing it means going back to the segmentation, not the split. Note before
+trying: the ceiling means the restoration cannot be unmixed from the tooth by
+intensity alone, because both are clipped to the same value.
+
+### And a note for whoever generates a natural crown
+
+The usual move — mirror the contralateral tooth — **does not work here**. 19 and
+30 are BOTH crowned, so a natural crown on either would have to come from the
+second molars or from population morphology. `derived` at best, arguably
+`schematic`. The operator's intraoral scan (below) does not solve this either:
+it measures the crown's surface as it sits, not the natural tooth underneath.
 
 ---
 
@@ -354,8 +416,10 @@ Worked examples of what each would say:
 | Pulp | Measured | Hand-traced per slice — no threshold separates it from dentin at this resolution |
 | Apical foramina | Measured | Intensity-deficit integration across the canal cross-section |
 | Inferior alveolar nerve | Measured *course*, schematic *content* | The canal void was traced foramen to foramen; the nerve inside it is drawn, not seen |
-| Mental / incisive branches | Schematic | Foramen measured, course inferred |
-| PSA, MSA, ASA, infraorbital | Schematic | Textbook course; superior alveolar canals not resolved at 0.16 mm. Cite the source |
+| Mental / incisive branches | Schematic | Course inferred; the foramen is now MEASURED from the traced mental canal (2026-09-03) |
+| Infraorbital and mental terminal branches | **Derived** | Foramen and skin both measured; the path between them is Gray's, and only a stub is drawn (2026-09-03) |
+| PSA, MSA, ASA | Schematic | Textbook course; superior alveolar canals not resolved at 0.16 mm. Cite the source |
+| Infraorbital | **Derived** | Follows the hand-traced canal (2026-09-02); a tube of chosen calibre on a measured centreline |
 | Gingiva | Derived | Collar lofted from measured CEJ |
 | PDL | Measured position, exaggerated thickness | Both walls measured; drawn far thicker than ~0.2 mm, which is one voxel |
 | Cementum *(once built)* | Derived | Authored shell on the measured root surface |
@@ -804,6 +868,267 @@ palatal nerves, plus deciding whether an offset from a measured orbital rim is
 worth having for the infraorbital foramen. The maxillary trunk topology is done.
 
 ---
+
+## The proximal nub — the arch split re-cut, then CLOSED, 2026-09-03
+
+**What it was.** Every premolar and molar, worst in the maxilla, carried a
+compact mushroom on its proximal surface at the cervical. It was in the label,
+not the mesher.
+
+**What caused it.** The contact cut. `_cut_pair()` grew each tooth from its own
+core under a cost that is cheap through bright tissue and dear through dark, so
+the boundary would settle in the interproximal embrasure. Enamel is the
+brightest tissue there is — so a rim of it is the cheapest path in the crop, and
+a front that reached the contact could race along the OUTSIDE of its neighbour's
+enamel for less than the neighbour paid to cross its own dentin and get there.
+One tooth ended up wearing a rind of the other.
+
+**The fix.** A second cost term: depth in the union of the two teeth. At a true
+contact the union is locally thick, so the interior stays cheap and the boundary
+is still free to settle in the embrasure — but a path hugging the outer surface
+is shallow along its whole length and now pays for it. Plus a guard: no voxel
+may be kept by a tooth when the other's core is nearer in a straight line by
+more than 1 mm.
+
+**Result.** The nubs are much smaller and the arch reads cleanly, but they are
+NOT entirely gone. Only teeth 12 and 13 moved by more than 4% (−5.9% and +5.1%),
+which is the contact that was worst; everything else is within 4% and 0.5 mm.
+
+**CLOSED, 2026-09-03 (same evening).** A seventh attempt was made and reverted
+by the operator on sight — "it looks worse now" — and it settled the question
+this section had been leaving open. The nub was isolated at last: rebuild each
+crown's contour from the part of its surface that is not at a contact, and
+clip to it. That removes the nub. It also proves the nub cannot be removed.
+
+- The clipped material lies 3.2–4.0 mm below the occlusal end; the measured
+  contacts lie at 2.9–5.6 mm. One band. There is no height at which the two
+  can be separated.
+- Give a pair its contact back after clipping and the nub returns exactly, as
+  a peg — from voxels the clip had itself taken.
+- The clip opens every interproximal contact from 80 µm to 1.68 mm.
+
+It is also **not** a mislabelled neighbour cusp, which was the standing
+hypothesis: flood each tooth from its own core through dense tissue (>500 and
+>700 HU, face connectivity) and 0.0 mm³ is unreachable on all 28. The earlier
+probe that seemed to show an air gap between the nub and its own tooth was a
+single straight ray through a fissure.
+
+Worth recording because all three proxies IMPROVED — mesiodistal crown width
+against Wheeler went from +1.08 mm to +0.16 mm mean error, contralateral
+asymmetry from 3.48% to 3.06%, interpenetration held at 0.0000 mm³ — and the
+build was still worse. See CLAUDE.md 183–185. **Do not attempt an eighth fix.**
+This is the intraoral scan's job.
+
+## Every posterior contact is bridged in the segmentation — 2026-09-03
+
+Found by the operator: isolate an upper premolar or molar and a disc about 3 mm
+across is stuck to its proximal surface at the cervical. The neighbour has a
+matching one 0.3–1.4 mm away — at teeth 3 and 4 both sit at (-17.6, -18.5,
+-10.1) — so the two teeth appear to share material.
+
+**It is in the mask, not the mesher.** Meshing the split label alone, with no
+grey-level blending at all, reproduces the disc exactly. 2.5–7.3 mm³ per tooth,
+HU 930–1750, and nnU-Net labels every voxel of it `upper teeth`.
+
+Two mesher-side fixes were tried, measured, and reverted:
+
+- clamping the surface to a 3-voxel band around its own mask changed **nothing**
+  (0.0% difference) — the surface never strays that far;
+- widening the grey/shape blend ramp across the embrasure moved tooth volumes by
+  0.4% and left the disc untouched.
+
+The cause is resolution. DentalSegmentator infers at 0.43 mm; two enamel
+surfaces in contact are one voxel apart; the label bridges them wider than
+either crown, and the arch split then divides the bridge rather than removing
+it. **There is no gap to find at any threshold, because the teeth really do
+touch.** Shaping the proximal contour by hand would be inventing it, which is
+what everything else in this atlas exists not to do.
+
+**Wait for the intraoral scan.** It measures the crown surface directly, at a
+resolution where a contact is a contact, and it is the only thing that can
+settle this. Until then the atlas is honest about it: the contact region is
+segmented, not observed.
+
+Do NOT try to shave the protrusions off. The erosion test that isolates them
+finds every cusp tip too, at the same size and the same density.
+
+## Machine-assisted pulp: the correction loop works — 2026-09-03
+
+`tools/cbct/pulp_learn.py`. Predict a tooth's pulp, the operator corrects it in
+the slicer, retrain on the correction, predict the next.
+
+**Round one.** Trained on his dense tracing of tooth 31 (plus six older sparse
+ones), predicting tooth 30. He kept 70% of it, deleted 30%, and added another
+24% — and where he edited is exactly where the diagnostics said it was weak:
+
+| band | predicted | he corrected to | old 2026-08-30 trace |
+| --- | --- | --- | --- |
+| coronal third (crowned) | 28.9 mm³ | **14.8** | 7.7 |
+| middle third | 59.2 | 56.1 | 32.8 |
+| apical third | 7.2 | **16.8** | 12.2 |
+
+Over-generous under the crown and half too thin apically, as measured before he
+touched it. His correction also settles a question the numbers could not: in the
+crowned third the model's 28.9 mm³ was too much and the old trace's 7.7 too
+little, and the answer is 14.8.
+
+**Round two.** With tooth 30 corrected, held-out tooth 19 improves sharply:
+
+| training set | Dice on held-out 19 |
+| --- | --- |
+| his 31 only | 0.306 |
+| his 31 + 6 older sparse traces | 0.398 |
+| **his 30 + 31, both dense** | **0.470** |
+| his 30 + 31 + the 6 old ones | 0.464 |
+
+Two corrected teeth beat one dense plus six sparse, and past that point the old
+sparse traces cost more than they add. Against the ~0.563 that two careful
+human tracings of one tooth score against each other, 0.470 is about five sixths
+of the way there. `--also` is scaffolding to drop after the third tooth.
+
+**Do not read Dice(prediction, his correction) = 0.727 as accuracy.** He started
+from the prediction, so it is anchored to it. The held-out number is the honest
+one.
+
+## Correct the fourteen predicted pulps — the standing job
+
+Every molar and premolar pulp is now in the atlas, but only teeth 30 and 31 were
+traced by a human. The other fourteen are predictions nobody has reviewed, and
+they are the only structures here in that position. Correcting each one in
+`slicer.py` takes it from `derived` to `measured` AND makes the next prediction
+better — the loop measured 0.306 → 0.398 → 0.470 as labels were added.
+
+**Correct tooth 18 first.** At 183.9 mm³ it is 47% adrift of its traced
+contralateral (31, at 97.8) and 16.3% of its own tooth volume against a median
+of 8.8% across the set. Its shape is right and it is uniformly too fat, with
+36.8 mm³ falling outside the tooth mask altogether.
+
+    slicer.py nrrd/centered.nrrd traced-pulp-v2 --tooth 18 \
+        --mask traced-pulp-v2,predicted-pulp-all
+
+Order after that: the upper molars (2, 3, 14, 15), whose predictions sit at
+75-79% inside their own tooth masks, the lowest of the set.
+
+## The ML did not help the mental canals, and here is why — 2026-09-03
+
+Worth recording so nobody repeats it. Trained on the operator's complete LEFT
+mental canal and asked for the right — a genuine held-out test, since the 24
+sections he did manage on that side were never shown to the model — it scored
+Dice 0.483 with recall 0.662, and added 103 mm³ of canal.
+
+**None of it was where it was needed.** His right-side blanks are sections 20-32
+and 37-43, and the last seven are the anterior end at the foramen. The model
+filled the middle gap and extended the canal 18 mm POSTERIORLY, and moved the
+anterior end by 0.2 mm. The anterior sections are blank because the canal is
+genuinely not visible there — the same data defeats the model that defeated the
+operator, which is the one failure mode a classifier trained on this scan cannot
+argue its way out of.
+
+It also exposed a real bug in `buccal_foramen`: given the longer canal it put
+the "mental foramen" 18 mm posteriorly, where the mandibular canal legitimately
+runs close to the buccal cortex under the external oblique ridge. Only the
+anterior third is searched now (CLAUDE.md 150). The shipped landmark is
+unchanged.
+
+The mental canal in the atlas therefore remains the operator's tracing alone.
+
+## The pulp is worth redoing on the slicer — 2026-09-03
+
+The pulp is the atlas's most laboriously hand-made structure: 28 teeth, three
+rounds, 723 mm3, and it is `measured` on the strength of that work. It was also
+traced under the worst version of the old workflow — sparse axial sections,
+1.6 mm apart, which leave-one-out scored at Dice 0.076 because consecutive
+outlines of a wandering canal do not overlap. What shipped is good because the
+operator worked around the tool, not because the tool was adequate.
+
+`slicer.py --tooth 30,31` crops to a tooth, names the structures `pulp-<n>` and
+lets every slice be painted with the coronal and sagittal views live alongside.
+His own read: "we could really overhaul that modelling with the new tool."
+
+Outstanding from the original pulp work, worth revisiting in the same pass:
+tooth 31 shows two distal canals in the tracing.
+
+## The mental foramen — traced 2026-09-03, and my diagnosis was wrong
+
+**Correction first.** On 2026-09-02 this section said the mental foramen sat
+0.5 mm outside the mandible and about 4 mm too low. It did not. I measured it
+against the mandible as the CENTRED volume reconstructs it, and that
+reconstruction stops at z -44.5 and cuts the bone off; the real inferior border
+is at z -59, in the mandibular exposure, which the atlas has carried as
+`FMA52748M` since 0.4.0. Against the whole mandible the old landmark sat 14 mm
+above the inferior border, inside the bone, roughly where a mental foramen
+belongs. See CLAUDE.md 141.
+
+What was true is that the segmented canal does not reach the foramen — on the
+right it stops 11 mm short of the premolar window — so the landmark was the end
+of a curve rather than a foramen.
+
+**Now traced.** Both canals, 80.3 and 87.2 mm³, within 8% of each other and
+traced independently. The foramina come out 15.6 and 15.0 mm above the inferior
+border and 19.0 and 20.9 mm from the dental midline, which is symmetric and
+where the literature puts them, and 3.0 and 2.8 mm from the projected points.
+`docs/cbct-mental.json`; both `nerve.py` and `nerve_face.py` read it.
+
+The operator flagged low confidence — the trabeculation makes the sections hard
+to read — and one consequence is visible: the last few millimetres of the right
+tracing hook medially, which is why the facial normal is no longer searched
+about the canal's own tangent.
+
+**Round 2 is traced and shipped (2026-09-03).** 24/44 sections on the right and
+39/39 on the left — he reported several right-side slices where nothing was
+discernable. It also settled what the landmark is: the anterior end of a
+mandibular-canal tracing is NOT the mental foramen, because the canal continues
+forward as the incisive canal. The foramen is the canal's closest approach to
+the buccal plate, which lands at z -42.7 and -43.3, 23.6 and 21.8 mm from the
+dental midline, and makes the two sides' facial branches agree for the first
+time. See CLAUDE.md 150.
+
+**The scrollable slice viewer is built** (`tools/cbct/slicer.py`), which retires
+the contact sheet for everything from here. He chose it over exporting to
+imaging software he already knows, deliberately: that software is not available
+on Linux, and the precedent is worth setting in our own tool.
+
+**Round 2 sheets were cut on his round-1 tracing** (`trace-mental/`, round 1
+archived in `trace-mental/round1/`). The sections are now perpendicular to the
+canal's local tangent rather than to a straight chord, which is what made round
+1 hard: measured against his own tracing, round 1 put the canal a median 3.3 and
+3.6 mm off tile centre, round 2 puts it 0.40 and 0.20 mm. Tiles are 12.2 mm at
+4x rather than 16.2 mm at 3x, and the frame no longer rotates between sections.
+When it comes back, re-import and everything downstream moves on its own.
+
+### The face itself is measured and not in the atlas — the next real step
+
+Every terminal branch's true termination has been measured on the operator's own
+skin and is recorded in `docs/cbct-nerve-face.json`, but nothing renders that
+surface, so the branches are drawn as 5–7.5 mm stubs instead of running their
+full 12–33 mm. A soft-tissue surface would be `measured`, is already present in
+both focused exposures, and would let the whole facial nerve supply be drawn to
+its real extent — one constant, `STUB_MM`, is all that stands in the way.
+
+It is also this person's FACE, which is his call and nobody else's.
+
+## The nasolacrimal ducts are NOT in the atlas, deliberately — 2026-09-02
+
+They came up while hunting the infraorbital canal: a tube detector found both of
+them unprompted, 19-34 mm long, at bone fractions of 0.36-0.52, in the right
+place bilaterally. The operator asked for resolved structures to be added, and
+these were not added. Two reasons, and the second is the one that decides it:
+
+- **My extraction was fragmentary.** The detector that found them was tuned for a
+  nerve canal, whose lumen is soft tissue. A nasolacrimal duct drains into the
+  inferior meatus, so its lumen carries AIR — the wrong band entirely, and the
+  masks it produced caught slivers. Ring detection in axial planes, which is the
+  correct geometry for a vertically-running duct, returned nothing at any
+  threshold from 350 to 650 with or without closing.
+- **The operator declined to trace them**, saying he does not know the anatomy
+  well enough to be comfortable marking them. That is the answer, not a gap to
+  work around. Everything in this atlas carries a provenance claim, and nobody
+  can vouch for these — so they stay out until somebody can.
+
+Trace sheets exist (`trace-canal/nld-{left,right}.png`) if that changes. Note
+before retrying: the sheets were cut perpendicular to a prior axis derived from
+the fragmentary masks, so if the duct is off-centre in them the prior is what is
+wrong, not the duct.
 
 ## Scan the gingiva, and stop deriving it — SCHEDULED, ~late Sept 2026
 

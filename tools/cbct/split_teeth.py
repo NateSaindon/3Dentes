@@ -32,6 +32,7 @@ import sys
 
 import numpy as np
 from scipy import ndimage as ndi
+from skimage.graph import MCP_Geometric
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from vol import Volume
@@ -52,6 +53,21 @@ WIDTHS = {
               5.0, 5.5, 7.0, 7.0, 7.0, 11.0, 10.5],    # 25..31 right
 }
 WIDTH_WEIGHT = 0.9        # how hard the width prior pulls against image evidence
+
+# Boundary refinement. CORTICAL_HU..ZIRCONIA_HU is the window the cost ramp
+# spans; ZIRCONIA_HU is also the restoration test, chosen because no natural
+# tooth in this scan reaches it and both crowned molars are well past it.
+SEED_FRAC = 0.40          # seed = deeper than this fraction of the segment's max depth
+K_DARK = 6.0              # a dark voxel costs this much more to cross than a bright one
+K_SURFACE = 8.0           # ...and a shallow one this much more than a deep one
+EUCLID_MARGIN_MM = 1.0    # how much nearer the other core may be before a
+                          # voxel is taken off a tooth outright
+CORTICAL_HU = 400.0
+ZIRCONIA_HU = 2500.0
+CROWNED_FRAC = 0.05       # fraction at/above ZIRCONIA_HU that marks a tooth crowned
+RESTORATION_REACH = 12    # dilation steps when claiming a restoration's voxels
+PAIR_PAD = 10             # crop margin around a pair, in voxels
+STR6 = ndi.generate_binary_structure(3, 1)
 
 
 def load_manifest_fma(manifest_path):
@@ -179,69 +195,180 @@ def _dp_cuts(dens, s_edge, widths, weight=WIDTH_WEIGHT):
     return sorted(x for x in bounds if 0 < x < B)
 
 
-def refine_boundaries(labels, mask, spacing, erode=3):
+def _core_seed(m, spacing, frac=SEED_FRAC):
+    """The tooth's body, safely away from any contact, at that tooth's own scale.
+
+    The old erosion was a fixed 3 iterations, about 0.5 mm here, which is less
+    than the depth a neighbour's proximal bulge reaches across the sector plane.
+    That left the wrong tissue inside the seed, so the boundary grown from it
+    inherited the bias of the cut it was supposed to replace. A fraction of the
+    segment's OWN maximum depth scales with the tooth: a molar gets a big seed
+    and an incisor a small one, and both sit in the body rather than the contact.
+    """
+    d = ndi.distance_transform_edt(m, sampling=spacing)
+    s = d > frac * d.max()
+    if not s.any():
+        s = d > 0
+    cc, n = ndi.label(s, structure=STR6)
+    if n > 1:
+        szs = ndi.sum(s, cc, range(1, n + 1))
+        s = cc == int(np.argmax(szs)) + 1
+    return s
+
+
+def _cut_pair(labels, roi, spacing, i, j):
+    """Reassign every voxel of teeth i and j to whichever seed is cheaper to reach.
+
+    Cost per unit length is low through bright tissue and high through dark, so
+    the equal-cost surface between the two seeds settles in the interproximal
+    embrasure wherever one is open. Where none is open -- a true contact, where
+    two enamel surfaces touch and 0.16 mm may not resolve a boundary at all --
+    the intensity term is flat and the metric degrades to the midsurface between
+    the two bodies. That is a modelling choice and it is declared as one in
+    docs/wishlist.md; what matters is that it is a CONSISTENT choice rather than
+    wherever two erosions happened to meet.
+    """
+    a, b = labels == i, labels == j
+    if not a.any() or not b.any():
+        return None
+    both = a | b
+    zz, yy, xx = np.where(both)
+    sl = tuple(slice(max(0, c.min() - PAIR_PAD), min(n, c.max() + 1 + PAIR_PAD))
+               for c, n in zip((zz, yy, xx), labels.shape))
+    A, B = a[sl], b[sl]
+    dom = A | B
+    sub = roi[sl].astype(np.float32)
+
+    sa, sb = _core_seed(A, spacing), _core_seed(B, spacing)
+    if not sa.any() or not sb.any():
+        return None
+
+    # Clipping at ZIRCONIA_HU stops a saturated restoration reading as extra
+    # cheap and dragging the boundary through the neighbour's crown.
+    bright = np.clip((sub - CORTICAL_HU) / (ZIRCONIA_HU - CORTICAL_HU), 0.0, 1.0)
+
+    # A SECOND term, added 2026-09-03: travelling near the outer surface is dear.
+    #
+    # Brightness alone is a trap, and the trap had been shipping since the
+    # re-cut. Enamel is the brightest tissue there is, so a rim of it is the
+    # CHEAPEST thing in the crop -- and a front that reaches the contact can then
+    # race along the OUTSIDE of its neighbour's enamel for less than the
+    # neighbour pays to cross its own dentin and get there. That is exactly what
+    # the labels showed: one tooth wearing a rind of the other, rendering as a
+    # 5 mm mushroom at the cervical, which six morphological attempts could not
+    # remove because the material is dense, contiguous and correctly called
+    # tooth. It was never a blob. It was this cut.
+    #
+    # Depth in the UNION of the two teeth fixes it. At a true contact the union
+    # is locally thick, so the interior stays cheap and the boundary is still
+    # free to settle in the embrasure; but a path hugging the outer surface is
+    # shallow everywhere along its length, and now pays for it.
+    depth = ndi.distance_transform_edt(dom, sampling=spacing)
+    shallow = 1.0 - depth / max(float(depth.max()), 1e-6)
+    cost = 1.0 + K_DARK * (1.0 - bright) + K_SURFACE * shallow
+    cost[~dom] = np.inf                  # never route outside these two teeth
+
+    costs = []
+    for seed in (sa, sb):
+        mcp = MCP_Geometric(cost, sampling=spacing)
+        c, _ = mcp.find_costs(np.argwhere(seed))
+        costs.append(c)
+    newa = dom & (costs[0] <= costs[1])
+    newb = dom & ~newa
+
+    # A guard on top, because a geodesic metric can still take a long way round.
+    # No voxel may be kept by a tooth when the OTHER tooth's core is nearer in a
+    # straight line by more than EUCLID_MARGIN_MM. A rind on a neighbour's
+    # surface fails that test by millimetres.
+    da = ndi.distance_transform_edt(~sa, sampling=spacing)
+    db = ndi.distance_transform_edt(~sb, sampling=spacing)
+    newa, newb = (newa & ~(db + EUCLID_MARGIN_MM < da),
+                  newb & ~(da + EUCLID_MARGIN_MM < db))
+    stray = dom & ~(newa | newb)
+    newa |= stray & (da <= db)
+    newb |= stray & (da > db)
+
+    res = []
+    for m in (newa, newb):
+        cc, n = ndi.label(m, structure=STR6)
+        if n > 1:
+            szs = ndi.sum(m, cc, range(1, n + 1))
+            m = cc == int(np.argmax(szs)) + 1
+        res.append(m)
+    orphan = dom & ~(res[0] | res[1])    # anything the cleanup dropped
+    return sl, res[0] | (orphan & A), res[1] | (orphan & B)
+
+
+def refine_boundaries(labels, mask, spacing, roi):
     """Move the inter-tooth boundaries off the sector planes and onto the necks.
 
     The arc-length partition cuts with PLANES through the arch centre. Teeth
     interdigitate at their contacts, so wherever a neighbour's proximal bulge
     crosses into this tooth's angular wedge it is assigned to this tooth, and it
     arrives as a flat blade -- the plane's cross-section through the neighbour.
-    It is visible on the molars once the surfaces are rendered.
 
     The partition is right about WHICH teeth exist and wrong only about where one
-    ends. So it is used as seeds rather than as an answer: erode each segment to
-    a safely interior marker, then let a watershed on the distance transform grow
-    the markers back out. Watershed boundaries settle at the narrowest
-    cross-section between two markers, which for teeth is the contact point --
-    the anatomy, not a plane.
+    ends, so it is used as seeds rather than as an answer. What changed on
+    2026-09-02 is how the seeds are grown back out.
+
+    IT USED TO FLOOD A WATERSHED ON -distance. That has no minimum to cut at
+    where two crowns are in true contact, so the boundary landed wherever two
+    eroded seeds happened to meet: a near-planar chord, sometimes well inside
+    the crown. Every one of the 26 contacts fitted a plane to better than
+    0.26 mm RMS. Flooding on intensity instead does not work either -- watershed
+    assigns a voxel to whichever marker reaches it across the lowest MAXIMUM
+    elevation, so inside the lower incisor block every path ties and the tie
+    broke arbitrarily: tooth 26 grew 112% while 23, 24 and 25 lost a third each.
+
+    What works is an ADDITIVE cost, applied PAIRWISE. Accumulated cost grows
+    with distance travelled, so no front crosses a whole tooth for free and
+    there is no tie to break. Pairwise in a local crop is a safety property, not
+    an optimisation: a pair can only redistribute tissue between those two
+    teeth, so the runaway above is structurally impossible and the arch total is
+    conserved exactly.
     """
-    from skimage.segmentation import watershed as _ws
-    markers = np.zeros_like(labels)
+    out = labels.copy()
+    for i in range(1, int(labels.max())):
+        r = _cut_pair(out, roi, spacing, i, i + 1)
+        if r is None:
+            continue
+        sl, na, nb = r
+        blk = out[sl]
+        blk[na] = i
+        blk[nb] = i + 1
+        out[sl] = blk
+    return _claim_restorations(out, roi, spacing)
+
+
+def _claim_restorations(labels, roi, spacing):
+    """Give restoration-density voxels to the tooth the crown is cemented onto.
+
+    Zirconia thresholds far above enamel: the uncrowned second molars here peak
+    at 2403 and 2331, and no natural tooth in this mouth reaches ZIRCONIA_HU at
+    all, while the two crowned first molars have 23-29% of their voxels at or
+    above it. Any such voxel carrying a NEIGHBOUR's label is that neighbour
+    holding part of a restoration, which no boundary criterion should be asked
+    to divide -- so it is reassigned before the boundary is trusted.
+
+    Crowned teeth are detected from the data rather than listed, so this keeps
+    working if a restoration is ever placed, replaced or scanned again.
+
+    NOTE the volume saturates at 3072 and the restorations are clipped against
+    it, so this finds WHERE the zirconia is and says nothing about how dense it
+    is. See docs/wishlist.md -- a DRR must take that figure from literature.
+    """
+    hot = roi >= ZIRCONIA_HU
+    if not hot.any():
+        return labels
+    crowned = []
     for i in range(1, int(labels.max()) + 1):
         m = labels == i
-        if not m.any():
-            continue
-        e = ndi.binary_erosion(m, np.ones((3, 3, 3)), erode)
-        if not e.any():                      # a small tooth: keep it whole
-            e = m
-        markers[e] = i
-    dist = ndi.distance_transform_edt(mask, sampling=spacing)
-    grown = _ws(-dist, markers, mask=mask)
-
-    # Two cleanups, in order.
-    #
-    # First, shave thin blades. Where two teeth are in true contact the distance
-    # transform has no minimum to cut at, so a flake of the neighbour can survive
-    # the watershed still attached. A blade is thin and a tooth body is not, so
-    # an opening severs it while leaving the tooth intact; dilating the surviving
-    # core back inside the original mask restores the real surface without
-    # restoring the flake.
-    #
-    # Second, keep one connected piece per tooth. Anything else is a fragment of
-    # a neighbour, and shipping it is what put a plane-cut slice of tooth 2 on
-    # the side of tooth 3.
-    out = np.zeros_like(grown)
-    ball = np.ones((3, 3, 3))
-    for i in range(1, int(grown.max()) + 1):
-        m = grown == i
-        if not m.any():
-            continue
-        core = ndi.binary_opening(m, ball, 2)
-        if core.any():
-            cc, n = ndi.label(core, structure=ball)
-            if n > 1:
-                szs = ndi.sum(core, cc, range(1, n + 1))
-                core = cc == (int(np.argmax(szs)) + 1)
-            grown_back = core.copy()
-            for _ in range(4):               # reconstruct inside the original
-                grown_back = ndi.binary_dilation(grown_back, ball) & m
-            m = grown_back
-        cc, n = ndi.label(m, structure=ball)
-        if n > 1:
-            szs = ndi.sum(m, cc, range(1, n + 1))
-            m = cc == (int(np.argmax(szs)) + 1)
-        out[m] = i
-    return out
+        if m.any() and float((roi[m] >= ZIRCONIA_HU).sum()) / m.sum() > CROWNED_FRAC:
+            crowned.append(i)
+    for i in crowned:
+        near = ndi.binary_dilation(labels == i, STR6, RESTORATION_REACH)
+        labels[hot & near & (labels > 0) & (labels != i)] = i
+    return labels
 
 
 def split_arch(mask, v, arch, n_expected=N_PER_ARCH):
@@ -256,7 +383,8 @@ def split_arch(mask, v, arch, n_expected=N_PER_ARCH):
     seg = np.digitize(th, bounds)
     out = np.zeros(mask.shape, np.int32)
     out[zz, yy, xx] = seg + 1
-    out = refine_boundaries(out, mask, tuple(v.spacing))
+    out = refine_boundaries(out, mask, tuple(v.spacing),
+                            v.data.astype(np.float32))
     return out, int(out.max()), centre
 
 

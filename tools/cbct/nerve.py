@@ -102,6 +102,53 @@ def bone_test(pred_path, origin, spacing):
     return inside, snap, in_vol
 
 
+ANTERIOR_FRAC = 0.35       # of the canal's length, searched for the foramen
+
+
+def buccal_foramen(pts, inside, side, max_mm=14.0, step=0.16,
+                   frac=ANTERIOR_FRAC):
+    """Where a traced canal opens on the BUCCAL plate. Returns (index, mm).
+
+    The foramen is NOT the anterior end of the tracing, and assuming it was is
+    why the landmark moved 3-5 mm between two tracings of the same canal. The
+    mandibular canal does not stop at the mental foramen: it carries on forward
+    as the incisive canal, so an operator tracing the lumen runs straight past
+    the exit, and the "anterior end" is wherever the canal became too faint to
+    follow. Both tracings show it -- the last few millimetres run MEDIALLY, into
+    the symphysis, which is the incisive canal's direction and the opposite of
+    the way a nerve leaves the jaw.
+
+    What does mark the foramen is the canal coming to the buccal cortex, and
+    that is measurable on the traced course. On the second tracing it picks out
+    z -43.5 on the right and -43.6 on the left, 22.0 and 21.1 mm from the dental
+    midline, each about 0.55 mm inside the plate -- symmetric to a tenth of a
+    millimetre in height, which the anterior end never was.
+    """
+    # ONLY THE ANTERIOR END IS SEARCHED. "Closest approach to the buccal plate"
+    # is the right criterion and a whole canal is the wrong place to apply it:
+    # further back the mandibular canal genuinely runs near the buccal cortex
+    # under the external oblique ridge, and given a longer tracing that stretch
+    # wins. It did -- extending the right canal posteriorly moved the "foramen"
+    # 18 mm back, to y -2.8, and threw the two sides' symmetry from 1.9 mm apart
+    # to 4.6. The mental foramen is at the front by definition, so only the
+    # front is a candidate.
+    pts = np.asarray(pts, float)
+    n = max(3, int(round(len(pts) * frac)))
+    lat = -1.0 if side == "right" else 1.0
+    best = (0, 1e9)
+    for i, p in enumerate(pts[:n]):
+        if not inside(p):
+            continue
+        d = 0.0
+        while d < max_mm:
+            d += step
+            if not inside(p + np.array([lat * d, 0.0, 0.0])):
+                break
+        if d < best[1]:
+            best = (i, d)
+    return best
+
+
 def taper(n, r0, r1):
     """Radius along a branch. A nerve entering a 0.2 mm foramen cannot be
     0.35 mm wide at its tip; without this the branches read as pegs pushed into
@@ -326,6 +373,44 @@ def main():
                 np.linalg.norm(pts - ref[None, :], axis=1)))]
         else:
             mental[ln["side"]] = pts[int(np.argmin(pts[:, 1]))]
+    # A TRACED mental canal supersedes the projection above.
+    #
+    # The projection puts the foramen at the point of the measured canal
+    # nearest the premolar apices, and that is only ever as good as the canal:
+    # on the right it stops 11 mm short of the premolar window, so the rule
+    # returns the end of the curve. Once the operator has traced the mental
+    # canal itself the foramen is simply its anterior end, and the two modules
+    # that hang geometry off it must use the SAME point -- otherwise the trunk
+    # leaves the bone at one place and its facial branches at another, 3 mm
+    # apart on the right, and the nerve renders in two disconnected pieces.
+    traced = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          "..", "..", "docs", "cbct-mental.json")
+    if os.path.exists(traced):
+        d = json.load(open(traced))
+        for side, rec in d.get("sides", {}).items():
+            pts = np.array([r["p"] for r in rec["points"]], float)
+            if len(pts) < 3 or side not in mental:
+                continue
+            if pts[0][1] > pts[-1][1]:
+                pts = pts[::-1]                      # anterior first
+            if inside is not None:
+                k, gap = buccal_foramen(pts, inside, side)
+                where = f"buccal plate {gap:.2f} mm away, sample {k}"
+            else:
+                k, where = 0, "anterior end (no bone test loaded)"
+            moved = float(np.linalg.norm(pts[k] - mental[side]))
+            print(f"  mental foramen {side:5s}: TRACED, {where}, "
+                  f"{moved:.1f} mm from the projected point")
+            mental[side] = pts[k]
+            rec["foramen_index"] = int(k)
+        report["provenance"]["mental_foramen"] = (
+            "MEASURED (anterior end of the hand-traced mental canal)")
+
+    # Recorded, not just printed: nerve_face.py hangs the mental nerve's
+    # terminal fan off these, and a landmark that two modules each place by
+    # their own copy of the rule is a landmark that will drift.
+    report["mental_foramina"] = {
+        side: [round(float(x), 2) for x in w] for side, w in mental.items()}
     for side, w in mental.items():
         print(f"  mental foramen {side:5s}: "
               f"[{w[0]:.1f}, {w[1]:.1f}, {w[2]:.1f}]")

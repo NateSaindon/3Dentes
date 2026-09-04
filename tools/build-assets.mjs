@@ -31,7 +31,15 @@ const MATERIALS = {
   teeth:    { baseColorFactor: [0.925, 0.906, 0.851, 1], roughnessFactor: 0.35, metallicFactor: 0 },
   mandible: { baseColorFactor: [0.898, 0.855, 0.761, 1], roughnessFactor: 0.70, metallicFactor: 0 },
   maxilla:  { baseColorFactor: [0.898, 0.855, 0.761, 1], roughnessFactor: 0.70, metallicFactor: 0 },
+  // The two focused exposures are the SAME TISSUE as the two above, imaged in a
+  // different acquisition, so they take the same bone appearance. What separates
+  // them is the layer toggle, not the colour: tinting them would say the bone is
+  // different when only the scan is.
+  midface:  { baseColorFactor: [0.898, 0.855, 0.761, 1], roughnessFactor: 0.70, metallicFactor: 0 },
+  ramus:    { baseColorFactor: [0.898, 0.855, 0.761, 1], roughnessFactor: 0.70, metallicFactor: 0 },
   gingiva:  { baseColorFactor: [0.804, 0.451, 0.435, 1], roughnessFactor: 0.75, metallicFactor: 0 },
+  // Kept for Phase 3's authored bellies; no structure carries this layer today,
+  // and materials are only emitted for layers in use, so it costs nothing.
   muscles:  { baseColorFactor: [0.647, 0.271, 0.259, 1], roughnessFactor: 0.65, metallicFactor: 0 },
   pulp:     { baseColorFactor: [0.804, 0.286, 0.271, 1], roughnessFactor: 0.55, metallicFactor: 0 },
   pdl:      { baseColorFactor: [0.612, 0.784, 0.878, 1], roughnessFactor: 0.80, metallicFactor: 0 },
@@ -190,6 +198,36 @@ function dentalMidline(meshes) {
   return (lo + hi) / 2;
 }
 
+/**
+ * How many separate shells a mesh is made of.
+ *
+ * A tooth is one solid, so its surface is one shell. This went unchecked until
+ * 2026-09-03 and 23 of 28 teeth were shipping in two or more pieces: the
+ * grey-level isosurface closes a second shell of about 25 mm3 around the pulp
+ * chamber on every molar, because DentalSegmentator does not include the pulp
+ * in the tooth label, and the restoration-density claiming had left teeth 20
+ * and 29 in 27 and 23 pieces against their crowned neighbours. The masks were
+ * single components throughout, so nothing upstream of the mesher was wrong and
+ * nothing upstream of the mesher would have caught it.
+ *
+ * Union-find over shared vertices, on the WELDED positions -- unwelded, every
+ * triangle is its own island and the count is meaningless.
+ */
+function shellCount(positions, indices) {
+  const n = positions.length / 3;
+  const parent = new Int32Array(n);
+  for (let i = 0; i < n; i++) parent[i] = i;
+  const find = (a) => { while (parent[a] !== a) { parent[a] = parent[parent[a]]; a = parent[a]; } return a; };
+  const union = (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+  for (let i = 0; i < indices.length; i += 3) {
+    union(indices[i], indices[i + 1]);
+    union(indices[i + 1], indices[i + 2]);
+  }
+  const roots = new Set();
+  for (let i = 0; i < indices.length; i++) roots.add(find(indices[i]));
+  return roots.size;
+}
+
 function checkLaterality(report, midline = 0) {
   const failures = [];
   for (const { fma, name, side, centroidX } of report) {
@@ -207,8 +245,25 @@ async function main() {
   doc.createBuffer();
   const scene = doc.createScene('oral-anatomy');
 
+  // A layer with no entry in MATERIALS used to emit primitives with no material
+  // at all, and glTF's default for that is white, fully METALLIC and
+  // single-sided. At full opacity a rough metal under this environment happens
+  // to look like pale bone, so `midface` and `ramus` shipped in 0.4.0 looking
+  // almost right and only went wrong when their opacity slider was moved: a
+  // metal has no diffuse term, so blending one leaves grey smoke rather than
+  // translucent bone. Fail the build instead of letting a new layer inherit that.
+  const usedLayers = [...new Set(STRUCTURES.map((s) => s.layer))];
+  const unstyled = usedLayers.filter((l) => !MATERIALS[l]);
+  if (unstyled.length) {
+    console.error('MATERIAL CHECK FAILED — these layers have no appearance and would fall back');
+    console.error("to glTF's default white metal, which cannot be made translucent:");
+    for (const l of unstyled) console.error(`  ${l} — add an entry to MATERIALS in tools/build-assets.mjs`);
+    process.exit(1);
+  }
+
   const materials = {};
-  for (const [layer, spec] of Object.entries(MATERIALS)) {
+  for (const layer of usedLayers) {
+    const spec = MATERIALS[layer];
     materials[layer] = doc.createMaterial(layer)
       .setBaseColorFactor(spec.baseColorFactor)
       .setRoughnessFactor(spec.roughnessFactor)
@@ -258,6 +313,22 @@ async function main() {
   if (unlabelled.length) {
     console.error('PROVENANCE CHECK FAILED — these structures do not say how they were made:');
     for (const s of unlabelled) console.error(`  ${s.fma} (${s.layer}) — add an entry in tools/manifest.mjs`);
+    process.exit(1);
+  }
+
+  // A tooth is one solid, so its surface is one shell. Checked on the WELDED
+  // mesh, which is the first point where connectivity means anything.
+  const fragmented = meshes
+    .filter((m) => m.s.layer === 'teeth')
+    .map((m) => [m.s, shellCount(m.positions, m.indices)])
+    .filter(([, k]) => k !== 1);
+  if (fragmented.length) {
+    console.error('CONNECTIVITY CHECK FAILED — these teeth are not a single shell:');
+    for (const [s, k] of fragmented) {
+      console.error(`  ${s.fma} (Universal ${toothNotation(s)?.universal}) — ${k} separate pieces`);
+    }
+    console.error('  The mask is one component; the mesher is what split it.');
+    console.error('  See keep_solid() in tools/cbct/export_teeth.py.');
     process.exit(1);
   }
 

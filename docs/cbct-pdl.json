@@ -7,17 +7,17 @@
       "universal": 2,
       "fma": "FMA55697",
       "arch": "upper",
-      "volume_mm3": 4.6,
+      "volume_mm3": 4.3,
       "apparent_width_median_mm": 0.24,
-      "aspects": 264
+      "aspects": 263
     },
     "3": {
       "universal": 3,
       "fma": "FMA55698",
       "arch": "upper",
-      "volume_mm3": 3.3,
+      "volume_mm3": 3.7,
       "apparent_width_median_mm": 0.24,
-      "aspects": 230
+      "aspects": 227
     },
     "4": {
       "universal": 4,
@@ -25,7 +25,7 @@
       "arch": "upper",
       "volume_mm3": 0.7,
       "apparent_width_median_mm": 0.16,
-      "aspects": 209
+      "aspects": 213
     },
     "5": {
       "universal": 5,
@@ -33,39 +33,39 @@
       "arch": "upper",
       "volume_mm3": 1.4,
       "apparent_width_median_mm": 0.16,
-      "aspects": 188
+      "aspects": 177
     },
     "6": {
       "universal": 6,
       "fma": "FMA55798",
       "arch": "upper",
-      "volume_mm3": 0.6,
+      "volume_mm3": 0.5,
       "apparent_width_median_mm": 0.08,
-      "aspects": 315
+      "aspects": 305
     },
     "7": {
       "universal": 7,
       "fma": "FMA55680",
       "arch": "upper",
-      "volume_mm3": 0.5,
+      "volume_mm3": 0.4,
       "apparent_width_median_mm": 0.08,
-      "aspects": 330
+      "aspects": 310
     },
     "8": {
       "universal": 8,
       "fma": "FMA55681",
       "arch": "upper",
-      "volume_mm3": 0.7,
+      "volume_mm3": 0.6,
       "apparent_width_median_mm": 0.08,
-      "aspects": 463
+      "aspects": 482
     },
     "9": {
       "universal": 9,
       "fma": "FMA55682",
       "arch": "upper",
-      "volume_mm3": 0.6,
+      "volume_mm3": 0.8,
       "apparent_width_median_mm": 0.08,
-      "aspects": 512
+      "aspects": 519
     },
     "10": {
       "universal": 10,
@@ -73,23 +73,23 @@
       "arch": "upper",
       "volume_mm3": 0.6,
       "apparent_width_median_mm": 0.08,
-      "aspects": 282
+      "aspects": 307
     },
     "11": {
       "universal": 11,
       "fma": "FMA55799",
       "arch": "upper",
-      "volume_mm3": 0.6,
+      "volume_mm3": 0.5,
       "apparent_width_median_mm": 0.08,
-      "aspects": 375
+      "aspects": 342
     },
     "12": {
       "universal": 12,
       "fma": "FMA55690",
       "arch": "upper",
-      "volume_mm3": 0.8,
+      "volume_mm3": 1.1,
       "apparent_width_median_mm": 0.16,
-      "aspects": 165
+      "aspects": 196
     },
     "13": {
       "universal": 13,
@@ -97,23 +97,23 @@
       "arch": "upper",
       "volume_mm3": 0.3,
       "apparent_width_median_mm": 0.16,
-      "aspects": 232
+      "aspects": 227
     },
     "14": {
       "universal": 14,
       "fma": "FMA55699",
       "arch": "upper",
-      "volume_mm3": 3.3,
+      "volume_mm3": 3.1,
       "apparent_width_median_mm": 0.24,
-      "aspects": 270
+      "aspects": 274
     },
     "15": {
       "universal": 15,
       "fma": "FMA55700",
       "arch": "upper",
-      "volume_mm3": 3.5,
+      "volume_mm3": 3.7,
       "apparent_width_median_mm": 0.24,
-      "aspects": 287
+      "aspects": 288
     },
     "18": {
       "universal": 18,
@@ -121,103 +121,103 @@
       "arch": "lower",
       "volume_mm3": 0.5,
       "apparent_width_median_mm": 0.16,
-      "aspects": 273
+      "aspects": 271
     },
     "19": {
       "universal": 19,
       "fma": "FMA55704",
       "arch": "lower",
-      "volume_mm3": 2.1,
+      "volume_mm3": 2.2,
       "apparent_width_median_mm": 0.16,
-      "aspects": 434
+      "aspects": 431
     },
     "20": {
       "universal": 20,
       "fma": "FMA55692",
       "arch": "lower",
-      "volume_mm3": 0.2,
+      "volume_mm3": 0.8,
       "apparent_width_median_mm": 0.08,
-      "aspects": 107
+      "aspects": 527
     },
     "21": {
       "universal": 21,
       "fma": "FMA55693",
       "arch": "lower",
-      "volume_mm3": 0.7,
+      "volume_mm3": 0.6,
       "apparent_width_median_mm": 0.08,
-      "aspects": 468
+      "aspects": 413
     },
     "22": {
       "universal": 22,
       "fma": "FMA55687",
       "arch": "lower",
-      "volume_mm3": 0.5,
+      "volume_mm3": 0.4,
       "apparent_width_median_mm": 0.16,
-      "aspects": 354
+      "aspects": 365
     },
     "23": {
       "universal": 23,
       "fma": "FMA57141",
       "arch": "lower",
-      "volume_mm3": 0.6,
+      "volume_mm3": 0.4,
       "apparent_width_median_mm": 0.08,
-      "aspects": 294
+      "aspects": 307
     },
     "24": {
       "universal": 24,
       "fma": "FMA57143",
       "arch": "lower",
-      "volume_mm3": 0.5,
+      "volume_mm3": 0.3,
       "apparent_width_median_mm": 0.08,
-      "aspects": 307
+      "aspects": 303
     },
     "25": {
       "universal": 25,
       "fma": "FMA57142",
       "arch": "lower",
-      "volume_mm3": 0.4,
+      "volume_mm3": 0.3,
       "apparent_width_median_mm": 0.08,
-      "aspects": 249
+      "aspects": 250
     },
     "26": {
       "universal": 26,
       "fma": "FMA57140",
       "arch": "lower",
-      "volume_mm3": 0.8,
+      "volume_mm3": 0.6,
       "apparent_width_median_mm": 0.08,
-      "aspects": 280
+      "aspects": 276
     },
     "27": {
       "universal": 27,
       "fma": "FMA55686",
       "arch": "lower",
-      "volume_mm3": 0.9,
+      "volume_mm3": 1.0,
       "apparent_width_median_mm": 0.08,
-      "aspects": 394
+      "aspects": 387
     },
     "28": {
       "universal": 28,
       "fma": "FMA55694",
       "arch": "lower",
-      "volume_mm3": 0.8,
+      "volume_mm3": 1.1,
       "apparent_width_median_mm": 0.08,
-      "aspects": 445
+      "aspects": 436
     },
     "29": {
       "universal": 29,
       "fma": "FMA55695",
       "arch": "lower",
-      "volume_mm3": 0.3,
+      "volume_mm3": 1.1,
       "apparent_width_median_mm": 0.08,
-      "aspects": 95
+      "aspects": 577
     },
     "30": {
       "universal": 30,
       "fma": "FMA55705",
       "arch": "lower",
-      "volume_mm3": 3.9,
+      "volume_mm3": 4.1,
       "apparent_width_median_mm": 0.16,
-      "aspects": 499
+      "aspects": 513
     },
     "31": {
       "universal": 31,
@@ -225,7 +225,7 @@
       "arch": "lower",
       "volume_mm3": 0.9,
       "apparent_width_median_mm": 0.16,
-      "aspects": 561
+      "aspects": 562
     }
   },
   "apparent_width_median_mm": 0.08

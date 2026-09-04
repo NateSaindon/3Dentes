@@ -1,0 +1,363 @@
+{
+  "provenance": {
+    "apical_foramina": "MEASURED (CBCT, trajectory-extrapolated)",
+    "superior_dental_plexus": "SCHEMATIC (not resolved by this CBCT)",
+    "trunks": "SCHEMATIC (PSA/MSA/ASA courses are textbook, not observed)",
+    "branches": "INFERRED (distal endpoint measured, path is convention)"
+  },
+  "note": "The maxillary superior alveolar canals are thin and frequently dehiscent and are NOT reliably visible at 0.16 mm. Nothing in this file was seen in the scan except the foramina.",
+  "msa_note": "The middle superior alveolar nerve is absent in roughly two thirds of people; it is drawn here and flagged.",
+  "plexus_nodes": 25,
+  "trunks": [
+    {
+      "name": "infraorbital",
+      "side": "right",
+      "measured_canal": true,
+      "length_mm": 25.6,
+      "inconstant": false,
+      "parent": "maxillary nerve (V2)",
+      "origin_lps": [
+        -32.44,
+        -6.6,
+        37.79
+      ]
+    },
+    {
+      "name": "PSA",
+      "side": "right",
+      "parent": "maxillary nerve (V2)",
+      "length_mm": 43.9,
+      "inconstant": false,
+      "origin_lps": [
+        -34.28,
+        -3.86,
+        37.74
+      ]
+    },
+    {
+      "name": "MSA",
+      "side": "right",
+      "parent": "infraorbital",
+      "length_mm": 27.2,
+      "inconstant": true,
+      "origin_lps": [
+        -27.78,
+        -16.3,
+        33.22
+      ]
+    },
+    {
+      "name": "ASA",
+      "side": "right",
+      "parent": "infraorbital",
+      "length_mm": 35.0,
+      "inconstant": false,
+      "origin_lps": [
+        -25.51,
+        -19.42,
+        29.78
+      ]
+    },
+    {
+      "name": "infraorbital",
+      "side": "left",
+      "measured_canal": true,
+      "length_mm": 22.5,
+      "inconstant": false,
+      "parent": "maxillary nerve (V2)",
+      "origin_lps": [
+        33.62,
+        -9.71,
+        35.78
+      ]
+    },
+    {
+      "name": "PSA",
+      "side": "left",
+      "parent": "maxillary nerve (V2)",
+      "length_mm": 37.7,
+      "inconstant": false,
+      "origin_lps": [
+        35.51,
+        -7.0,
+        35.83
+      ]
+    },
+    {
+      "name": "MSA",
+      "side": "left",
+      "parent": "infraorbital",
+      "length_mm": 28.3,
+      "inconstant": true,
+      "origin_lps": [
+        27.93,
+        -17.38,
+        35.02
+      ]
+    },
+    {
+      "name": "ASA",
+      "side": "left",
+      "parent": "infraorbital",
+      "length_mm": 34.3,
+      "inconstant": false,
+      "origin_lps": [
+        26.81,
+        -19.95,
+        31.39
+      ]
+    }
+  ],
+  "branches": [
+    {
+      "universal": 2,
+      "supply": "PSA",
+      "foramen_lps": [
+        -24.82,
+        -3.81,
+        6.52
+      ],
+      "length_mm": 3.35
+    },
+    {
+      "universal": 2,
+      "supply": "PSA",
+      "foramen_lps": [
+        -15.77,
+        -0.68,
+        6.68
+      ],
+      "length_mm": 2.6
+    },
+    {
+      "universal": 2,
+      "supply": "PSA",
+      "foramen_lps": [
+        -25.76,
+        -0.95,
+        7.0
+      ],
+      "length_mm": 5.48
+    },
+    {
+      "universal": 3,
+      "supply": "PSA",
+      "foramen_lps": [
+        -24.29,
+        -13.69,
+        7.16
+      ],
+      "length_mm": 2.84
+    },
+    {
+      "universal": 3,
+      "supply": "PSA",
+      "foramen_lps": [
+        -24.72,
+        -9.35,
+        5.24
+      ],
+      "length_mm": 3.66
+    },
+    {
+      "universal": 3,
+      "supply": "PSA",
+      "foramen_lps": [
+        -14.08,
+        -7.89,
+        7.32
+      ],
+      "length_mm": 7.96
+    },
+    {
+      "universal": 4,
+      "supply": "MSA",
+      "foramen_lps": [
+        -17.76,
+        -19.03,
+        6.68
+      ],
+      "length_mm": 2.29
+    },
+    {
+      "universal": 4,
+      "supply": "MSA",
+      "foramen_lps": [
+        -16.0,
+        -18.23,
+        6.68
+      ],
+      "length_mm": 2.74
+    },
+    {
+      "universal": 5,
+      "supply": "MSA",
+      "foramen_lps": [
+        -15.84,
+        -25.43,
+        6.04
+      ],
+      "length_mm": 4.31
+    },
+    {
+      "universal": 5,
+      "supply": "MSA",
+      "foramen_lps": [
+        -12.32,
+        -24.15,
+        3.96
+      ],
+      "length_mm": 4.88
+    },
+    {
+      "universal": 6,
+      "supply": "ASA",
+      "foramen_lps": [
+        -9.54,
+        -27.61,
+        9.56
+      ],
+      "length_mm": 1.39
+    },
+    {
+      "universal": 7,
+      "supply": "ASA",
+      "foramen_lps": [
+        -5.44,
+        -32.47,
+        6.84
+      ],
+      "length_mm": 4.32
+    },
+    {
+      "universal": 8,
+      "supply": "ASA",
+      "foramen_lps": [
+        -1.84,
+        -33.19,
+        7.48
+      ],
+      "length_mm": 3.69
+    },
+    {
+      "universal": 9,
+      "supply": "ASA",
+      "foramen_lps": [
+        6.08,
+        -32.67,
+        6.2
+      ],
+      "length_mm": 3.61
+    },
+    {
+      "universal": 10,
+      "supply": "ASA",
+      "foramen_lps": [
+        9.5,
+        -33.31,
+        4.76
+      ],
+      "length_mm": 5.19
+    },
+    {
+      "universal": 11,
+      "supply": "ASA",
+      "foramen_lps": [
+        13.12,
+        -27.64,
+        7.48
+      ],
+      "length_mm": 0.9
+    },
+    {
+      "universal": 12,
+      "supply": "MSA",
+      "foramen_lps": [
+        20.16,
+        -25.75,
+        5.08
+      ],
+      "length_mm": 4.13
+    },
+    {
+      "universal": 12,
+      "supply": "MSA",
+      "foramen_lps": [
+        16.48,
+        -25.03,
+        1.08
+      ],
+      "length_mm": 5.72
+    },
+    {
+      "universal": 13,
+      "supply": "MSA",
+      "foramen_lps": [
+        22.85,
+        -18.94,
+        5.4
+      ],
+      "length_mm": 2.48
+    },
+    {
+      "universal": 14,
+      "supply": "PSA",
+      "foramen_lps": [
+        30.64,
+        -15.99,
+        6.2
+      ],
+      "length_mm": 3.16
+    },
+    {
+      "universal": 14,
+      "supply": "PSA",
+      "foramen_lps": [
+        31.89,
+        -11.94,
+        4.28
+      ],
+      "length_mm": 4.14
+    },
+    {
+      "universal": 14,
+      "supply": "PSA",
+      "foramen_lps": [
+        21.81,
+        -10.57,
+        6.2
+      ],
+      "length_mm": 7.19
+    },
+    {
+      "universal": 15,
+      "supply": "PSA",
+      "foramen_lps": [
+        31.31,
+        -6.13,
+        5.08
+      ],
+      "length_mm": 4.59
+    },
+    {
+      "universal": 15,
+      "supply": "PSA",
+      "foramen_lps": [
+        31.36,
+        -3.83,
+        5.4
+      ],
+      "length_mm": 5.54
+    },
+    {
+      "universal": 15,
+      "supply": "PSA",
+      "foramen_lps": [
+        22.82,
+        -2.16,
+        5.08
+      ],
+      "length_mm": 2.6
+    }
+  ]
+}
