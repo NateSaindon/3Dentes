@@ -18,6 +18,89 @@ notice, the patch number for fixes and corrections.
 `measured`, `derived` and `schematic`, or when what it is built from changes,
 that is a user-visible change to what the atlas claims and it is recorded here.
 
+## [0.6.0] — 2026-09-04
+
+The atlas gets a circulation. Sixteen vessel meshes across both arches, every
+tooth supplied and drained, and a second ontology because the first one does not
+name veins.
+
+### Added
+
+- **Arteries and veins, 17 structures in one `Arteries & veins` layer.**
+  Inferior alveolar, mental, incisive, infraorbital, posterior and anterior
+  superior alveolar, greater palatine, and the dental branches and tributaries
+  of each — 8 complete neurovascular bundles, each with an artery, a vein and a
+  nerve. Red arteries and blue veins share one toggle — the colour is carried
+  per structure, because nobody wants to switch on arteries and veins separately
+  to look at a bundle.
+- **Every tooth in both arches now has an arterial supply and a venous
+  drainage**, drawn to the same measured apical foramina the nerve branches use.
+- **The greater palatine artery**, the one vessel here that runs OUTSIDE the
+  bone — forward in its groove on the palate, under the mucosa. Its course is
+  found by casting up onto this patient's own palatal vault at each station and
+  taking the lateral gutter, so the vessel is schematic but its shape is
+  measured.
+- **Cross-sectional shape in the traced canal files.** `semi_major_mm`,
+  `semi_minor_mm` and `major_axis_lps` per sample in
+  `docs/cbct-infraorbital.json` and `docs/cbct-mental.json`.
+- **The greater palatine nerve and vein**, on the same measured palatal course
+  as the artery — a groove carries a bundle.
+- **The mental vein**, leaving the measured foramen with its nerve and artery.
+- **Three build checks.** `tools/version.test.mjs` fails when package.json, the
+  README and this file disagree about the release. `tools/ontology.test.mjs`
+  resolves every FMA and TAH id against a vendored snapshot of the ontologies'
+  own labels and fails when a structure carrying a bare id shares no word with
+  it. `tools/bundle.test.mjs` fails when an artery, vein or nerve is added
+  without its counterparts — the failure is otherwise silent, because an absent
+  vessel looks exactly like one you have not switched on.
+
+### Fixed
+
+- **Two FMA ids named the wrong organs, in every release since 0.1.0.**
+  `FMA53381` — the inferior alveolar nerve and its two derived meshes — is the
+  occipital part of the aponeurosis of epicranius. `FMA53088` — the superior
+  dental plexus and its two — is the lateral wall of the right orbit. They are
+  now `FMA53243` and `FMA77528`. The teeth and everything tooth-adjacent were
+  correct: 40 of 42 ids resolved cleanly.
+- **The infraorbital nerve was thickest where it should be thinnest.**
+  `IO_RADIUS_MM` is written posterior-to-foramen but was applied down a course
+  ordered anterior-first, putting the 1.05 mm end at the foramen. It now tapers
+  to 0.80 mm as it emerges. The centreline is unchanged.
+- **The README said v0.4.0 through the whole of 0.5.0.** Now checked.
+- **The superior alveolar trunk mesh was stale.** It could not be reproduced
+  from any input combination and sat 0.613 mm off its own siblings, having been
+  built from an earlier code state and never regenerated. The whole maxillary
+  set — plexus, branches, trunks and the infraorbital nerve — is now built from
+  one input pair, which is also the pair the teeth come from. `nerve_maxilla.py`
+  and `vessels.py` now record their inputs in their JSON output, so this cannot
+  go quiet again.
+
+### Changed
+
+- **Gingiva and periodontal ligament are on at full opacity by default**, with
+  teeth, mandible, maxilla and palate. Nerves and vessels stay off — they are
+  interior structures and showing them on load reveals nothing until the teeth
+  are faded back.
+- **Veins are named by the IFAA's Terminologia Anatomica Humana**, not the FMA,
+  which has 3,741 vein terms and none for the inferior alveolar, infraorbital or
+  dental veins. TAH cross-references FMA where both exist, so the two namespaces
+  agree rather than compete. The join-key field is still called `fma` and now
+  holds TAH ids too; renaming it touches every consumer at once and is deferred.
+
+### Provenance
+
+- Every vessel is `derived` or `schematic`, never `measured`. The canals and the
+  apical foramina were measured; their contents were not, at any calibre, so
+  every radius and offset is a choice and says so.
+- **No vessel travels through dentin.** All 78 courses are routed against the
+  tooth labels and confined to measured bone — except the greater palatine
+  artery, which belongs outside it. Two courses graze a palatal root by 0.14 mm,
+  which is less than the 0.16 mm voxel and so finer than the tooth boundary is
+  known; that is reported rather than tuned away.
+- The arrangement inside the mandibular canal — vessels superior to the nerve,
+  artery lingual to the vein — is sourced. The site-dependent rotation the same
+  series report is not modelled, and the provenance says so.
+
 ## [0.5.0] — 2026-09-03
 
 The release where the atlas gained its own tracing tool, and where a machine

@@ -75,6 +75,346 @@ Run `build:assets` after cloning or nothing loads.
    centreline, so it is `derived`, and the method says which part was measured.
    Overclaiming a tier because some input was measured is the exact failure this
    field exists to prevent.
+7. **A NEUROVASCULAR BUNDLE IS BUILT WHOLE OR NOT AT ALL.** Operator's rule,
+   2026-09-04: where an artery, a vein and a nerve run together, all three go in
+   at the same time. `tools/bundle.test.mjs` enforces it — every structure in
+   the `vessels` or `nerves` layers names its `bundle`, and a bundle must carry
+   at least one of each role. It is a check and not a note because the failure
+   is SILENT: the greater palatine artery shipped alone and nothing said so, the
+   mental artery had no vein for a release, and neither is visible in a render,
+   because an absent vessel looks exactly like one you have not switched on.
+   The exemption list is EMPTY and any entry must give an ANATOMICAL reason;
+   "not built yet" is the thing being caught.
+8. **Every ontology id names what the manifest says it names.**
+   `tools/ontology.test.mjs` resolves each id against a vendored snapshot of the
+   ontology's own labels (`tools/ontology-labels.json`) and fails the build if a
+   structure carrying a BARE id shares no word with it. TWO NAMESPACES: FMA
+   where the FMA has a term, IFAA Terminologia Anatomica Humana (`TAHU15802` in
+   the manifest, `TAH:U15802` in the table) where it does not — which is every
+   vein in this atlas. This is invariant 5 one level up: a tooth number
+   can disagree with tooth morphology, but an FMA id is self-consistent with
+   nothing, so a wrong one is invisible forever unless something looks it up.
+   Two were wrong from 0.1.0 until 2026-09-04 — see below. The exemption list in
+   that file has exactly ONE entry, and it earns it: the greater palatine vein
+   carries the id of the pterygoid plexus it drains into, because no ontology
+   names the vein and there is no bare sibling to vouch for the group.
+
+### Which pulp and which split the maxillary nerves came from (2026-09-04)
+
+Chased and settled. The shipped maxillary set was built from
+`pulp-v2/pulp-connect.json` and `split-new/split.json`. Everything is now on
+`pulp-v2` + `split-v3`, one input set across teeth, nerves and vessels.
+
+190. **A NODE COUNT IS A FINGERPRINT.** Regenerating the maxillary nerves moved
+    them 0.4-1.8 mm and the cause was invisible in the geometry, but the plexus
+    came out with 700 triangles against the shipped 3,360/700 — one node fewer,
+    because `pulp-connect/` has 24 upper foramina and `pulp-v2/` has 25. Its 19
+    LOWER foramina then matched the 19 branches already recorded in
+    `docs/cbct-nerve.json`, which confirmed it. With those inputs the plexus,
+    the branches AND the infraorbital nerve all reproduce BYTE-FOR-BYTE.
+191. **Three of four reproduced; the trunks mesh was stale.** `FMA77528T`
+    (PSA/MSA/ASA) cannot be reproduced from any pulp x split combination
+    available -- it was built from an earlier code state and never regenerated
+    when its siblings were, and it sat 0.613 mm off. Regenerated, so the set is
+    internally consistent for the first time.
+192. **Choosing the split cost 0.013 mm.** `split-new` reproduces the shipped
+    nerves; `split-v3` is what the TEETH are built from. Between them the
+    maxillary nerves move 0.006-0.013 mm, a fifteenth of a voxel -- so the
+    inconsistency was worth removing and the geometry barely noticed. The
+    maxillary VESSELS were being built on `pulp-connect` + `split-v3` and are
+    now on the same pair as the nerves, which matters because they ride the
+    same arc.
+193. **A TOOL MUST RECORD WHAT IT WAS BUILT FROM.** None of the above would have
+    been a mystery if `nerve-maxilla.json` had named its inputs. Rule 116 said
+    this about a transform's own description; it is just as true of a mesh.
+    `nerve_maxilla.py` and `vessels.py` now write their input paths into their
+    JSON output.
+
+### The bundle rule, and two veins no ontology names (2026-09-04, 0.6.0)
+
+186. **Drawing one member of a bundle asserts the others are not there.** A
+    canal or a groove carries an artery, a vein and a nerve; a reader who sees
+    only the artery reads that as the anatomy, not as a work queue. Hence
+    invariant 7. Tagging the existing structures found two real gaps at once —
+    the greater palatine had no nerve and no vein, and the mental artery had no
+    vein — neither of which any render would have shown.
+187. **NEITHER ONTOLOGY NAMES A GREATER PALATINE VEIN OR A MENTAL VEIN.**
+    Checked against an FMA index carrying 3,741 vein terms, against the IFAA's
+    own tributary lists for the pterygoid plexus and the facial vein, and
+    against Wikidata. They take the id of what they DRAIN INTO with the repo's
+    derived-mesh suffix — `TAHU4540P` off the pterygoid plexus, `TAHU15802M` off
+    the inferior alveolar vein. That is the same reasoning that put the anterior
+    maxillary tributaries on the infraorbital vein rather than under a tidier
+    but wrong parent, and it is the most precise identifier that exists.
+188. **A suffix-only group has nothing to vouch for it.** Every other suffixed
+    mesh sits beside a bare sibling that agrees with the ontology label, so the
+    group clears itself. `TAHU4540P` does not — the pterygoid plexus is not
+    drawn — so `ontology.test.mjs` correctly refused it, and it is the first and
+    only entry in that file's ALIASES. Recorded rather than worked around.
+189. **The lateral member of a bundle is the one that meets the alveolar
+    process.** The palatine vein at 0.75 mm across the groove grazed a root; the
+    bundle was narrowed to 0.62 mm to fit. That is a constraint on the DRAWING,
+    not a fact about the patient — the arrangement across the groove was already
+    convention, and the groove is narrow.
+
+### The greater palatine artery, and one toggle for two colours (2026-09-04, 0.6.0)
+
+178. **One vessel here belongs OUTSIDE the bone.** The greater palatine artery
+    runs forward in a groove ON the palate, under the mucosa, so `confine()` is
+    exactly wrong for it. Its surface is found by casting a ray UP from the oral
+    cavity, which meets the palatal plate first and can meet nothing else --
+    rule 139's argument for finding skin, on a different surface.
+179. **A COLUMN THROUGH A PALATAL ROOT IS NOT PALATE.** The upper teeth are
+    their own labels, so they are holes in the bone mask, and a ray fired under
+    a palatal root passes through it and stops on the bone ABOVE -- putting the
+    artery 2.35 mm inside the root. The ray now stops at a tooth and the station
+    is rejected.
+180. **Scan for the gutter, do not guess a fraction of the way to the midline.**
+    Stepping medially from each tooth centroid found 5 of 7 stations on the
+    right and 3 of 7 on the left, because near the front the column above that
+    offset is the incisive canal and the nasal floor. At any coronal level the
+    palate's LOWEST point on each side IS the lateral gutter the groove runs in,
+    so it can be scanned for: 21 and 19 stations, both sides, 44 and 38 mm.
+181. **Smoothing pulls a course INTO a concave surface.** The palate is a vault,
+    so a curve smoothed across stations that hug it moves toward the chord,
+    which is up into the bone -- it came out 67% inside after smoothing that had
+    been 0% before. Re-project after smoothing, not before.
+182. **A graze shallower than ONE VOXEL is not a resolvable claim, and saying so
+    is not the same as widening the tolerance.** Two palatine courses graze a
+    root by 0.14 mm against a 0.16 mm voxel. They are counted and named
+    separately rather than folded into the allowance, because moving a threshold
+    until the number reads zero is how a check stops meaning anything.
+183. **`IO_RADIUS_MM` was applied backwards and is now applied in the COURSE's
+    own direction.** The constant is written posterior-to-foramen; the traced
+    course is ordered anterior-first and the constructed fallback arc is not, so
+    one `linspace` cannot be right for both. The traced branch had the thick end
+    at the foramen, which is the reverse of the anatomy. `vessels.py` carries the
+    matching pair and a note that the two must move together.
+184. **Regenerating a mesh is not free, and three came back different.**
+    Re-running `nerve_maxilla.py` to fix one calibre also rebuilt the plexus, its
+    branches and the named trunks, and all three moved 0.4-1.8 mm -- so the
+    SHIPPED ones were built from inputs other than the ones I passed. Only
+    `FMA52978` was staged, and it was verified first: same triangle count,
+    centroid shift 0.000 mm, a pure radius-ramp reversal. WHICH pulp and split
+    the maxillary nerves were built from is now an open question, not a silent
+    change.
+185. **A per-structure appearance override needs the same check as a layer.**
+    One vascular toggle carries red arteries and blue veins by naming a
+    `material` per structure. An unknown material name would fall back to the
+    layer's colour and every vessel would come out arterial red -- a wrong
+    drawing rather than an obviously broken one, which is rule 135's whole
+    complaint. `build-assets.mjs` now fails on an unknown material as well as an
+    unstyled layer, and it was verified to bite.
+
+### Vessels follow the bone now, not just the gaps between teeth (2026-09-04)
+
+The operator's read: the maxillary vessels should curve the way the hard palate
+does. They now do -- the maxillary arc is 100% inside measured bone against 83%
+unconfined, and the incisive vessels 88% against 64%.
+
+174. **"Out of the teeth" is not "in the bone", and the maxillary vessels needed
+    BOTH.** The arc laid between apices floats wherever the arch is concave,
+    which is nerve_maxilla's own finding about its nerves -- 72% of that mesh
+    was outside bone, a median of 3.5 mm and up to 10.1 mm, in the sinus, until
+    it was confined. `route()` now confines to measured bone with
+    `nerve_maxilla.confine` and the same masks the nerves use, rather than a
+    second opinion about where bone is.
+175. **The two constraints FIGHT, and dentin has to go last.** Both bone masks
+    FILL the teeth -- `nerve.bone_test` unions the lower-tooth class into the
+    mandible and `maxilla_bone` fills each slice -- so "snap to the nearest
+    bone" can land a point inside a root. Confining after clearing put two
+    branches back a voxel deep. Confine first, clear second, and end with a
+    clearing pass that has no confinement behind it.
+176. **A field sampled NEAREST-NEIGHBOUR cannot answer a sub-voxel question.**
+    Two branches reported travelling exactly 0.16 mm through dentin -- one
+    voxel -- and no number of clearing passes moved them, because a point
+    0.08 mm CLEAR of a root rounds into the voxel inside it. The clearances
+    being asked about here are smaller than a voxel, so the signed field is
+    interpolated. That is the difference between 2 of 76 and 0 of 76, and the
+    2 were never real.
+177. **I rebuilt a bone mask and walked into the trap its own docstring
+    describes.** Measuring containment against a bare `lab == 2` minus teeth
+    reported the inferior alveolar artery as 0.0% inside bone. `bone_test` says
+    why in its second paragraph: the canal and the teeth are classes of their
+    own, so they are holes in the mandible label, and it read 0 of 209 trunk
+    points before that fill was added. Use the module, do not re-derive the
+    mask. (The trunk still reads 44% because roughly half the fused canal lies
+    beyond the centred volume's field of view, which is expected and is in
+    nerve.py's own comments.)
+
+### Every tooth has a supply and a drainage now (2026-09-04)
+
+Sixteen vessel meshes, 120 structures. All 28 teeth get an artery and a vein;
+0 of 76 branches travel through dentin.
+
+168. **A dental branch MUST end inside the tooth, so "percent inside a tooth" is
+    not the question.** The apical foramen is on the root, so the last fraction
+    of a millimetre of every branch is in hard tissue by design. The first check
+    counted mesh vertices inside the tooth labels and reported 7-12% on branches
+    that were correct, which is unusable as a pass/fail. Measuring contact
+    against DISTANCE FROM THE ENDPOINTS separates the connection from the
+    defect, and the answer is 0 of 76.
+169. **What is rendered is a TUBE, so clearing the CENTRELINE clears nothing.**
+    The first router pushed each course until its centreline was outside the
+    tooth labels, and the meshes still had 7-10% of their vertices in dentin,
+    because a tube whose axis sits on the surface is half buried. The clearance
+    a point needs is its own radius plus a margin.
+170. **A signed field, or "far enough clear" cannot be asked.** A plain distance
+    transform of the tooth labels is zero everywhere outside them, so it answers
+    "inside or not" and nothing else. Subtracting the outside transform gives a
+    field that can be asked for a margin.
+171. **The anterior teeth have no supply without the INCISIVE vessels.** A chord
+    from the canal to a central incisor is 22-26 mm and runs through bone, which
+    is why nerve.py hangs the anterior teeth off the incisive nerve. The vessels
+    had the same gap and it showed as teeth 24 and 25 having no drainage drawn.
+    Neither ontology names an incisive artery or vein -- the FMA has no term and
+    the IFAA lists only dental, peridental, mental and mylohyoid branches under
+    TAH:U3863 -- so they take the repo's derived-mesh suffix off their own
+    parent, exactly as the incisive NERVE does as FMA53243T.
+172. **Split a branch mesh by TERRITORY when the ids are territorial.** One
+    "upper dental" mesh has to be filed under either the anterior or the
+    posterior superior alveolar artery, and is then wrong about half its own
+    branches -- invariant 7's failure, self-inflicted. PSA and ASA branches are
+    separate meshes with exact ids, and the anterior venous tributaries hang off
+    the INFRAORBITAL vein rather than the posterior superior alveolar one,
+    because that is where the anterior maxilla actually drains.
+173. **Vessels ride the arc the NERVE plexus is already built on.** Three
+    independent constructions of one course drift apart; the maxillary arc is
+    the only thing here anchored to measured foramina, so the artery and vein
+    are offsets off it rather than fresh guesses.
+
+### The canal is an OVAL, and that is where the artery went (2026-09-04)
+
+The infraorbital artery was held back the same morning because it came out 100%
+and 89% buried inside the drawn nerve. It ships now, and nothing about the nerve
+changed: the packing was measuring the wrong thing.
+
+160. **`canal_r_mm` IS NOT A RADIUS, it is the EQUIVALENT-CIRCLE radius.**
+    `io_centreline.centreline()` computes it as sqrt(area/pi), which for an
+    ellipse is the geometric mean of the two semi-axes. Packing a bundle against
+    it therefore assumes a circular lumen of the AVERAGE cross-dimension, and
+    every millimetre of the long axis is invisible. Measured perpendicular to
+    each canal's own tangent, the infraorbital canal runs 2.0:1 and 2.4:1 —
+    semi-major 1.60 and 1.95 mm against semi-minor 0.85 and 0.90 — exactly the
+    2.0-2.6 mm transverse against 3.8-5.5 mm vertical the CBCT literature
+    reports for the foramen. The mandibular canal measures 1.17:1 on this
+    patient, so the circular rule there was right, and that is now a
+    MEASUREMENT rather than a lucky assumption.
+161. **A cross-section belongs in the centreline file, not in the packing code.**
+    `io_centreline.py` now records `semi_major_mm`, `semi_minor_mm` and
+    `major_axis_lps` per sample, so the direction a vessel is placed along is
+    measured on the same footing as the point it is placed at. Re-running it
+    reproduced every existing `p` and `canal_r_mm` to 0.000000 mm before the new
+    fields were trusted.
+162. **Carry a DIRECTION through a transform as two points.** The major axis has
+    to reach the atlas frame, and re-deriving "just the rotation part" of a fit
+    expressed as centre + rotation + voxel translation means restating that
+    convention in a second place — rule 116's complaint in a new costume.
+    Mapping the sample and the sample-plus-half-a-millimetre and subtracting
+    cannot disagree with how the points themselves moved.
+163. **An eigenvector's SIGN is not a direction.** The major axis comes out of an
+    eigen-decomposition, which fixes the axis and not which end is which, and it
+    can flip between adjacent samples. Unoriented, the artery and vein swap ends
+    wherever the solver changes its mind. Oriented by its own z component they
+    do not. Rule 158, one week old, in a second place.
+164. **The residual overlap is the NERVE's, and it is now measured.** The
+    infraorbital nerve is drawn at an absolute 1.05 mm and is wider than its
+    canal's SHORT semi-axis at 70% and 37% of samples, by up to 0.44 mm — never
+    wider than the long one. So at the narrow ends no arrangement fits both, and
+    4% of the right-side vessels still lie 0.014 mm inside it. Reported rather
+    than tuned away, and the honest fix is the nerve's calibre.
+165. **`IO_RADIUS_MM` is applied backwards from its own comment.** It reads
+    "posterior -> foramen", but `io_centreline` orders the course ANTERIOR-FIRST
+    and `nerve_maxilla` reads `io[0]` as the anterior end, so `linspace(1.05,
+    0.80)` puts the THICK end at the foramen. Found while packing against the
+    real ramp. NOT corrected: it changes a shipped mesh, and it is the
+    operator's call.
+
+### Veins exist, under a different ontology (2026-09-04)
+
+166. **The FMA gap is real; the IFAA fills it.** Terminologia Anatomica Humana
+    names all three — `TAH:U15802` vena alveolaris inferior, `TAH:U15803` venae
+    dentales (its child, which is exactly the relation the dental branches have
+    to the trunk), `TAH:U15485` vena infraorbitalis — and cross-references FMA
+    wherever both exist, so the namespaces agree rather than compete.
+    Operator's find; verified against the IFAA unit pages before use.
+167. **The join-key field is still called `fma` and now holds TAH ids too.**
+    Renaming it touches the manifest, the STL filenames, `teeth.json` and every
+    consumer at once, which is the same reason `FMA53649` kept an inexact id.
+    Worth doing deliberately, not as a side effect of adding six vessels.
+
+### Arteries, and the vein the ontology does not name (2026-09-04)
+
+`tools/cbct/vessels.py`. The inferior alveolar artery rides the MEASURED
+mandibular canal on the identical centreline as the inferior alveolar nerve --
+read through `nerve.canal_centrelines` rather than re-derived, so the two cannot
+drift -- offset 0.80 of the canal's own local radius toward superior, 14 degrees
+lingual, drawn at 0.13 of that radius. The mental artery leaves the measured
+foramen on the mental nerve's own course. Both are `derived`: the canal was
+measured, its contents were not, at any calibre.
+
+155. **THE FMA HAS NO INFERIOR ALVEOLAR VEIN** — resolved the same day by
+    rule 166; the veins ship under TAH ids. 3,741 vein terms -- facial,
+    lingual, maxillary, the pterygoid plexus -- and nothing for the inferior
+    alveolar, infraorbital, alveolar or dental veins, checked four ways. The
+    atlas joins on FMA ids, so there is no honest id to hang blue on. Borrowing
+    the artery's with a `V` suffix would mean "a part of the artery", which a
+    vein is not, and inventing one puts back the exact defect invariant 7 was
+    written for the same morning. Blue is blocked on IDENTITY, not geometry:
+    `vessels.py` draws a vein the moment a caller supplies an id.
+156. **A vessel inside another structure is a claim nobody can see** — the
+    infraorbital artery ships now; the cause was rule 160, not the nerve alone. The
+    infraorbital artery sits correctly inside its measured canal -- 0% of points
+    outside the wall -- and still comes out 100% and 89% buried inside the DRAWN
+    infraorbital nerve, by up to 0.85 mm. The cause is the nerve: it is drawn at
+    an absolute 1.05 -> 0.80 mm in a canal whose measured radius averages 0.92
+    and 1.03. The mandibular canal has no such problem because its nerve is a
+    FRACTION of the measured lumen (0.55) rather than a millimetre figure. The
+    artery is built and HELD out of the manifest; the fix belongs to the nerve's
+    calibre.
+157. **A clearance check must take the other structure's REAL radius.** The
+    first version passed the artery's own `offset - radius` as the nerve's
+    radius, which makes the test evaluate to zero by construction; it duly
+    reported -0.000 mm on every infraorbital point and looked like a pass. Same
+    family as enamel detector (c), and caught only because a figure that clean
+    is not what real geometry looks like.
+158. **Orient a lateral axis against ITS OWN component, not a per-side
+    constant.** `cross(tangent, superior)` points whichever way the centreline
+    happens to be ordered. Multiplying by `sign(midline - x)` flips both canals
+    together and was 100% correct on today's data -- and 0% correct the moment
+    the traversal reverses, which is rule 125's failure exactly. Comparing the
+    axis's own x to the direction of the midline is true per point whatever the
+    ordering, and was verified by reversing both centrelines.
+159. **A new layer decides the camera unless told not to.** Adding the arteries
+    widened the framed extent from 82.1 x 81.2 to 84.8 x 84.1 mm, because the
+    mental artery runs an arbitrary 7 mm out of its foramen -- a drawing choice
+    moving the whole model, which is rule 114 and the nerves' own reason.
+    `arteries` is now in `NOT_FRAMING`.
+
+### Two FMA ids named the wrong organs, and nothing could have noticed (2026-09-04)
+
+`FMA53381` — the inferior alveolar nerve, its dental branches and its mental and
+incisive branches, three meshes — is the **occipital part of the aponeurosis of
+epicranius**. `FMA53088` — the superior dental plexus and its two derived meshes
+— is the **lateral wall of the right orbit**. Both shipped in every release from
+0.1.0. They are now `FMA53243` and `FMA77528`, resolved on EBI OLS4 and
+cross-checked against Wikidata's P1402.
+
+152. **The join key was the one identifier nothing checked.** README calls FMA
+    ids "the join key throughout" and the manifest explains what the ontology
+    is, and between them that reads like a claim someone verified. Laterality,
+    tooth identity, provenance, layer appearance, shell count and version drift
+    all had checks; the ids themselves had none, and they are the one field
+    whose correctness cannot be inferred from anything else in the repo.
+153. **A group check needs a member that must answer for itself.** The first
+    version cleared an id if ANY mesh carrying it agreed with the label, because
+    the B/T/M suffixes name parts and their names are legitimately free. That
+    let `FMA52978` sit on "Mandible" without complaint — the real infraorbital
+    nerve shared the id and vouched for it. A mesh carrying the BARE id claims
+    to BE that structure, so it now has to agree on its own.
+154. **The teeth and the tooth-adjacent anatomy were all correct.** 40 of 42
+    ids resolve cleanly. The two that did not are both nerve structures added
+    later and by hand, which is where an id gets typed rather than derived.
 
 ### Enamel: four automatic hole-detectors, all blind (2026-09-01)
 
@@ -297,7 +637,7 @@ point — a sixth detector is not what was needed.
     reconstruction ceiling is suspect. Segment in the exposure that MEASURED the
     region, which for the whole mid-face is the maxillary one.
 133. **Splitting a structure is sometimes what a provenance change costs.**
-    `FMA53088T` used to be "Infraorbital, PSA, MSA and ASA nerves", one mesh.
+    `FMA77528T` (then `FMA53088T`) used to be "Infraorbital, PSA, MSA and ASA nerves", one mesh.
     Once the canal is traced the infraorbital nerve is `derived` while the other
     three are still textbook, and one mesh carries one tier — so leaving them
     merged would have meant either promoting PSA/MSA/ASA or hiding this. The
@@ -1297,7 +1637,7 @@ INFRAORBITAL nerve inside its canal.
 111. **Keep the schematic terminal branches in their OWN mesh.** They were
     first appended to the trunk's buffers, which would have let the UI colour a
     course this scan never saw exactly like the canal it did -- the thing this
-    module's docstring exists to prevent. `nerve-terminal.stl` / FMA53381T.
+    module's docstring exists to prevent. `nerve-terminal.stl` / FMA53243T (then FMA53381T).
 112. **MSA and ASA must arise FROM the infraorbital nerve.** They were free
     stubs in the sinus. The infraorbital nerve is now built from the
     pterygopalatine fossa forward to its foramen, with MSA and ASA descending

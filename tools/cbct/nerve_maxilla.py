@@ -73,7 +73,14 @@ BRANCH_RADIUS_MM = 0.30
 TRUNK_RADIUS_MM = 0.70
 TRUNK_RUN_MM = 12.0        # how far the named trunks run beyond the plexus
 BRANCH_TIP_R_MM = 0.12     # at the apical foramen, where the branch meets pulp
-IO_RADIUS_MM = (1.05, 0.80)     # infraorbital nerve, posterior -> foramen
+IO_RADIUS_MM = (1.05, 0.80)     # infraorbital nerve, POSTERIOR -> FORAMEN
+# ...and that order is the whole point, so it is applied explicitly rather than
+# by np.linspace(*IO_RADIUS_MM) over whatever order the course happens to be in.
+# The TRACED course is ordered ANTERIOR-FIRST (io_centreline orients it that way
+# and `io_post, io_ant = io[-1], io[0]` below reads it so), while the CONSTRUCTED
+# fallback arc runs posterior-first. One linspace cannot be right for both, and
+# the traced branch had the thick end at the foramen -- the reverse of what this
+# constant says and of the anatomy, where the nerve is thinnest as it emerges.
 IO_ABOVE_MM = 22.0         # the infraorbital canal above the plexus arc
                            # (fallback only; unused where the canal is traced)
 ASA_BEHIND_FORAMEN_MM = 7.0   # Malamed: ASA leaves the trunk in the
@@ -362,6 +369,7 @@ def main():
             io = np.stack([np.interp(np.linspace(0, u[-1], 30), u, traced[:, k])
                            for k in range(3)], axis=1)
             io_post, io_ant = io[-1], io[0]
+            anterior_first = True
         else:
             io_post = post + back * 4.0 + up * (IO_ABOVE_MM * 0.72)
             io_ant = ant + fwd * 2.0 + up * IO_ABOVE_MM
@@ -369,9 +377,14 @@ def main():
             t = np.linspace(0, 1, 30)[:, None]
             io = ((1 - t) ** 2 * io_post + 2 * (1 - t) * t * io_mid
                   + t ** 2 * io_ant)
+            anterior_first = False
             if snap is not None:
                 io = confine(io, snap)
-        o = tube(io, np.linspace(*IO_RADIUS_MM, len(io)))
+        # radii along THIS course's own direction, not along the constant's
+        r_io = (np.linspace(IO_RADIUS_MM[1], IO_RADIUS_MM[0], len(io))
+                if anterior_first
+                else np.linspace(IO_RADIUS_MM[0], IO_RADIUS_MM[1], len(io)))
+        o = tube(io, r_io)
         if o:
             v, f = o
             # Its OWN mesh, not merged with PSA/MSA/ASA. Once the canal is
@@ -458,6 +471,17 @@ def main():
         msa_note="The middle superior alveolar nerve is absent in roughly "
                  "two thirds of people; it is drawn here and flagged.",
         plexus_nodes=len(arc), trunks=trunks, branches=branches)
+    # WHAT THIS WAS BUILT FROM, recorded in the output. Rule 116's lesson: a
+    # transform whose description does not name the label it was fitted to
+    # survives being wrong indefinitely, and the same is true of a mesh and its
+    # inputs. Three maxillary meshes were regenerated on 2026-09-04 from
+    # `pulp-connect/` when the shipped ones came from `pulp-v2/`, and the only
+    # clue was that the plexus came out with one node fewer.
+    rep["inputs"] = dict(
+        pulp=os.path.abspath(pulp_path), split=os.path.abspath(split_path),
+        **{k: os.path.abspath(sys.argv[i]) for k, i in
+           (("pred_centred", 4), ("pred_maxillary", 5), ("transform", 6),
+            ("volume", 7), ("infraorbital", 8)) if len(sys.argv) > i})
     with open(os.path.join(outdir, "nerve-maxilla.json"), "w") as fh:
         json.dump(rep, fh, indent=2)
     print(f"plexus nodes {len(arc)}, branches {len(branches)}, "

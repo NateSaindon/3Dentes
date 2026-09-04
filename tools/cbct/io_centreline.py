@@ -7,6 +7,16 @@ MOVING grid and only the finished POINTS are carried into the atlas frame, never
 resampled as voxels -- the exposures sit tens of millimetres apart and a
 resample discards precisely the anatomy that only one of them saw.
 
+The canal's CROSS-SECTIONAL SHAPE is recorded too, and it matters: `canal_r_mm`
+is an EQUIVALENT-CIRCLE radius (sqrt(area/pi), so the geometric mean of the two
+semi-axes), and the infraorbital canal is not round. Measured on this patient it
+runs 2.0:1, semi-major 1.41-1.64 mm against semi-minor 0.78-0.91 -- which is
+what the literature describes as a foramen 2.0-2.6 mm transverse and 3.8-5.5 mm
+vertical. A bundle packed against the equivalent-circle radius therefore has
+nowhere to go, while the real lumen has room along its long axis. So each sample
+also carries `semi_major_mm`, `semi_minor_mm` and `major_axis_lps`, the last
+carried into the atlas frame the same way the points are.
+
 The canal's own radius is recorded alongside the centreline but is NOT what gets
 drawn. The canal carries the infraorbital nerve, artery and vein together, so
 its lumen is wider than the nerve; the same reasoning the inferior alveolar
@@ -53,7 +63,23 @@ def centreline(mask, vm, slab_mm=SLAB_MM):
             continue
         pts = P[sel]
         area = float(sel.sum()) * float(np.prod(sp)) / slab_mm
-        out.append((pts.mean(0), float(np.sqrt(max(area, 1e-6) / np.pi))))
+        c_s = pts.mean(0)
+        # principal axes of THIS slab's cross-section, in the plane
+        # perpendicular to the canal's own axis
+        e1 = np.array([0.0, 0.0, 1.0]) - ax * (np.array([0.0, 0.0, 1.0]) @ ax)
+        if np.linalg.norm(e1) < 1e-6:
+            e1 = np.array([0.0, 1.0, 0.0]) - ax * (np.array([0.0, 1.0, 0.0]) @ ax)
+        e1 /= np.linalg.norm(e1)
+        e2 = np.cross(ax, e1); e2 /= np.linalg.norm(e2)
+        q = pts - c_s
+        uv = np.stack([q @ e1, q @ e2], 1)
+        ev, evec = np.linalg.eigh(np.cov(uv.T))
+        semi = 2.0 * np.sqrt(np.maximum(ev, 0.0))
+        k = int(np.argmax(ev))
+        major = e1 * evec[0, k] + e2 * evec[1, k]
+        major /= max(np.linalg.norm(major), 1e-9)
+        out.append((c_s, float(np.sqrt(max(area, 1e-6) / np.pi)),
+                    major, float(semi.max()), float(semi.min())))
     # orient anterior-first: anterior is -y in LPS
     if len(out) > 1 and out[0][0][1] > out[-1][0][1]:
         out = out[::-1]
@@ -90,14 +116,31 @@ def main():
             print(f'{side}: too few samples')
             continue
         rows = []
-        for w, rad in pts:
+
+        def to_atlas(w):
             mi = ((w[2] - vm.origin[2]) / spm[2],
                   (w[1] - vm.origin[1]) / spm[1],
                   (w[0] - vm.origin[0]) / spm[0])
             fi = fixed_index_of(mi, R, t_vox, centre)
-            wx, wy, wz = vc.world(fi[2], fi[1], fi[0])
-            rows.append(dict(p=[round(wx, 3), round(wy, 3), round(wz, 3)],
-                             canal_r_mm=round(rad, 3)))
+            return np.array(vc.world(fi[2], fi[1], fi[0]), float)
+
+        for w, rad, major, a_mm, b_mm in pts:
+            q = to_atlas(w)
+            # A DIRECTION IS CARRIED AS TWO POINTS, not rotated by hand. The
+            # transform is applied in index space with a centre and a voxel
+            # translation, so re-deriving "just the rotation part" for a vector
+            # means restating that convention in a second place -- rule 116's
+            # complaint in a new costume. Mapping both ends and subtracting
+            # cannot disagree with how the points themselves moved.
+            d = to_atlas(np.asarray(w, float) + np.asarray(major) * 0.5) - q
+            n = float(np.linalg.norm(d))
+            d = (d / n) if n > 1e-9 else np.array([0.0, 0.0, 1.0])
+            rows.append(dict(p=[round(float(q[0]), 3), round(float(q[1]), 3),
+                                round(float(q[2]), 3)],
+                             canal_r_mm=round(rad, 3),
+                             semi_major_mm=round(a_mm, 3),
+                             semi_minor_mm=round(b_mm, 3),
+                             major_axis_lps=[round(float(x), 4) for x in d]))
         L = sum(float(np.linalg.norm(np.array(rows[i + 1]['p'])
                                      - np.array(rows[i]['p'])))
                 for i in range(len(rows) - 1))

@@ -1,5 +1,5 @@
 {
- "provenance": "MEASURED -- hand-traced by the operator on cross-sections cut perpendicular to the canal axis in the maxillary exposure, 1 mm apart, then carried into the atlas frame as points (rule 113).",
+ "provenance": "MEASURED -- hand-traced by the operator on cross-sections cut perpendicular to the canal axis in the maxillary.nrrd exposure, 1 mm apart, then carried into the atlas frame as points (rule 113).",
  "note": "canal_r_mm is the CANAL, which carries the nerve, artery and vein together. It is recorded, not drawn.",
  "sides": {
   "right": {
@@ -10,7 +10,14 @@
       -22.96,
       28.737
      ],
-     "canal_r_mm": 0.313
+     "canal_r_mm": 0.313,
+     "semi_major_mm": 1.648,
+     "semi_minor_mm": 0.51,
+     "major_axis_lps": [
+      -0.0826,
+      0.6223,
+      -0.7784
+     ]
     },
     {
      "p": [
@@ -18,7 +25,14 @@
       -22.019,
       28.551
      ],
-     "canal_r_mm": 0.589
+     "canal_r_mm": 0.589,
+     "semi_major_mm": 2.203,
+     "semi_minor_mm": 0.651,
+     "major_axis_lps": [
+      -0.2642,
+      0.5447,
+      -0.7959
+     ]
     },
     {
      "p": [
@@ -26,7 +40,14 @@
       -21.226,
       28.432
      ],
-     "canal_r_mm": 0.923
+     "canal_r_mm": 0.923,
+     "semi_major_mm": 2.267,
+     "semi_minor_mm": 0.849,
+     "major_axis_lps": [
+      -0.2322,
+      0.5603,
+      -0.795
+     ]
     },
     {
      "p": [
@@ -34,7 +55,14 @@
       -20.63,
       28.591
      ],
-     "canal_r_mm": 1.212
+     "canal_r_mm": 1.212,
+     "semi_major_mm": 2.297,
+     "semi_minor_mm": 1.048,
+     "major_axis_lps": [
+      -0.2972,
+      0.5278,
+      -0.7957
+     ]
     },
     {
      "p": [
@@ -42,7 +70,14 @@
       -20.083,
       28.909
      ],
-     "canal_r_mm": 1.287
+     "canal_r_mm": 1.287,
+     "semi_major_mm": 1.735,
+     "semi_minor_mm": 1.14,
+     "major_axis_lps": [
+      -0.4828,
+      0.4132,
+      -0.7721
+     ]
     },
     {
      "p": [
@@ -50,7 +85,14 @@
       -19.564,
       29.569
      ],
-     "canal_r_mm": 1.164
+     "canal_r_mm": 1.164,
+     "semi_major_mm": 1.338,
+     "semi_minor_mm": 1.177,
+     "major_axis_lps": [
+      -0.489,
+      0.4087,
+      -0.7706
+     ]
     },
     {
      "p": [
@@ -58,7 +100,14 @@
       -19.124,
       30.194
      ],
-     "canal_r_mm": 1.045
+     "canal_r_mm": 1.045,
+     "semi_major_mm": 1.279,
+     "semi_minor_mm": 1.062,
+     "major_axis_lps": [
+      0.8595,
+      0.0014,
+      0.5112
+     ]
     },
     {
      "p": [
@@ -66,7 +115,14 @@
       -18.496,
       30.861
      ],
-     "canal_r_mm": 1.071
+     "canal_r_mm": 1.071,
+     "semi_major_mm": 1.334,
+     "semi_minor_mm": 0.993,
+     "major_axis_lps": [
+      0.8845,
+      0.055,
+      0.4633
+     ]
     },
     {
      "p": [
@@ -74,7 +130,14 @@
       -17.77,
       31.461
      ],
-     "canal_r_mm": 0.929
+     "canal_r_mm": 0.929,
+     "semi_major_mm": 1.219,
+     "semi_minor_mm": 1.007,
+     "major_axis_lps": [
+      0.9118,
+      0.4048,
+      0.0699
+     ]
     },
     {
      "p": [
@@ -82,7 +145,14 @@
       -17.224,
       32.132
      ],
-     "canal_r_mm": 1.015
+     "canal_r_mm": 1.015,
+     "semi_major_mm": 1.501,
+     "semi_minor_mm": 0.912,
+     "major_axis_lps": [
+      0.887,
+      0.4616,
+      -0.0115
+     ]
     },
     {
      "p": [
@@ -90,7 +160,14 @@
       -16.625,
       32.876
      ],
-     "canal_r_mm": 1.036
+     "canal_r_mm": 1.036,
+     "semi_major_mm": 1.485,
+     "semi_minor_mm": 0.934,
+     "major_axis_lps": [
+      0.8985,
+      0.4383,
+      0.0227
+     ]
     },
     {
      "p": [
@@ -98,7 +175,14 @@
       -15.904,
       33.628
      ],
-     "canal_r_mm": 1.005
+     "canal_r_mm": 1.005,
+     "semi_major_mm": 1.473,
+     "semi_minor_mm": 0.918,
+     "major_axis_lps": [
+      0.8922,
+      0.4517,
+      0.0032
+     ]
     },
     {
      "p": [
@@ -106,7 +190,14 @@
       -15.231,
       34.305
      ],
-     "canal_r_mm": 0.884
+     "canal_r_mm": 0.884,
+     "semi_major_mm": 1.248,
+     "semi_minor_mm": 0.875,
+     "major_axis_lps": [
+      0.8167,
+      0.554,
+      -0.1617
+     ]
     },
     {
      "p": [
@@ -114,7 +205,14 @@
       -14.564,
       35.11
      ],
-     "canal_r_mm": 0.748
+     "canal_r_mm": 0.748,
+     "semi_major_mm": 1.125,
+     "semi_minor_mm": 0.774,
+     "major_axis_lps": [
+      0.6718,
+      0.6482,
+      -0.3585
+     ]
     },
     {
      "p": [
@@ -122,7 +220,14 @@
       -13.722,
       35.793
      ],
-     "canal_r_mm": 0.795
+     "canal_r_mm": 0.795,
+     "semi_major_mm": 1.108,
+     "semi_minor_mm": 0.76,
+     "major_axis_lps": [
+      0.5969,
+      0.6746,
+      -0.4342
+     ]
     },
     {
      "p": [
@@ -130,7 +235,14 @@
       -13.032,
       36.485
      ],
-     "canal_r_mm": 0.936
+     "canal_r_mm": 0.936,
+     "semi_major_mm": 1.372,
+     "semi_minor_mm": 0.873,
+     "major_axis_lps": [
+      0.915,
+      0.3947,
+      0.0836
+     ]
     },
     {
      "p": [
@@ -138,7 +250,14 @@
       -12.231,
       37.03
      ],
-     "canal_r_mm": 1.047
+     "canal_r_mm": 1.047,
+     "semi_major_mm": 1.394,
+     "semi_minor_mm": 0.939,
+     "major_axis_lps": [
+      0.9318,
+      0.25,
+      0.2632
+     ]
     },
     {
      "p": [
@@ -146,7 +265,14 @@
       -11.256,
       37.54
      ],
-     "canal_r_mm": 1.026
+     "canal_r_mm": 1.026,
+     "semi_major_mm": 1.532,
+     "semi_minor_mm": 0.912,
+     "major_axis_lps": [
+      0.9266,
+      0.2005,
+      0.318
+     ]
     },
     {
      "p": [
@@ -154,7 +280,14 @@
       -10.342,
       38.012
      ],
-     "canal_r_mm": 1.123
+     "canal_r_mm": 1.123,
+     "semi_major_mm": 1.992,
+     "semi_minor_mm": 0.796,
+     "major_axis_lps": [
+      0.9082,
+      0.1204,
+      0.4009
+     ]
     },
     {
      "p": [
@@ -162,7 +295,14 @@
       -9.303,
       38.289
      ],
-     "canal_r_mm": 1.141
+     "canal_r_mm": 1.141,
+     "semi_major_mm": 2.334,
+     "semi_minor_mm": 0.783,
+     "major_axis_lps": [
+      0.8868,
+      0.0607,
+      0.4581
+     ]
     },
     {
      "p": [
@@ -170,7 +310,14 @@
       -8.236,
       38.23
      ],
-     "canal_r_mm": 0.999
+     "canal_r_mm": 0.999,
+     "semi_major_mm": 2.288,
+     "semi_minor_mm": 0.742,
+     "major_axis_lps": [
+      -0.8316,
+      0.0487,
+      -0.5532
+     ]
     },
     {
      "p": [
@@ -178,7 +325,14 @@
       -7.338,
       37.885
      ],
-     "canal_r_mm": 0.631
+     "canal_r_mm": 0.631,
+     "semi_major_mm": 1.608,
+     "semi_minor_mm": 0.61,
+     "major_axis_lps": [
+      0.8725,
+      0.028,
+      0.4879
+     ]
     },
     {
      "p": [
@@ -186,7 +340,14 @@
       -6.596,
       37.79
      ],
-     "canal_r_mm": 0.165
+     "canal_r_mm": 0.165,
+     "semi_major_mm": 0.936,
+     "semi_minor_mm": 0.322,
+     "major_axis_lps": [
+      0.8904,
+      0.0696,
+      0.4498
+     ]
     }
    ],
    "length_mm": 25.75,
@@ -204,7 +365,14 @@
       -23.411,
       29.848
      ],
-     "canal_r_mm": 0.304
+     "canal_r_mm": 0.304,
+     "semi_major_mm": 1.073,
+     "semi_minor_mm": 0.552,
+     "major_axis_lps": [
+      0.4114,
+      0.4112,
+      -0.8135
+     ]
     },
     {
      "p": [
@@ -212,7 +380,14 @@
       -22.896,
       30.08
      ],
-     "canal_r_mm": 0.467
+     "canal_r_mm": 0.467,
+     "semi_major_mm": 1.505,
+     "semi_minor_mm": 0.573,
+     "major_axis_lps": [
+      0.102,
+      0.5588,
+      -0.823
+     ]
     },
     {
      "p": [
@@ -220,7 +395,14 @@
       -21.497,
       29.288
      ],
-     "canal_r_mm": 0.699
+     "canal_r_mm": 0.699,
+     "semi_major_mm": 2.376,
+     "semi_minor_mm": 0.966,
+     "major_axis_lps": [
+      0.3983,
+      0.4189,
+      -0.816
+     ]
     },
     {
      "p": [
@@ -228,7 +410,14 @@
       -21.066,
       29.622
      ],
-     "canal_r_mm": 1.408
+     "canal_r_mm": 1.408,
+     "semi_major_mm": 2.15,
+     "semi_minor_mm": 1.158,
+     "major_axis_lps": [
+      0.4897,
+      0.361,
+      -0.7937
+     ]
     },
     {
      "p": [
@@ -236,7 +425,14 @@
       -20.563,
       30.335
      ],
-     "canal_r_mm": 1.302
+     "canal_r_mm": 1.302,
+     "semi_major_mm": 1.926,
+     "semi_minor_mm": 1.038,
+     "major_axis_lps": [
+      0.4067,
+      0.414,
+      -0.8144
+     ]
     },
     {
      "p": [
@@ -244,7 +440,14 @@
       -20.038,
       31.187
      ],
-     "canal_r_mm": 1.261
+     "canal_r_mm": 1.261,
+     "semi_major_mm": 2.001,
+     "semi_minor_mm": 0.952,
+     "major_axis_lps": [
+      0.4401,
+      0.3934,
+      -0.8072
+     ]
     },
     {
      "p": [
@@ -252,7 +455,14 @@
       -19.633,
       32.092
      ],
-     "canal_r_mm": 1.282
+     "canal_r_mm": 1.282,
+     "semi_major_mm": 2.092,
+     "semi_minor_mm": 0.931,
+     "major_axis_lps": [
+      0.5027,
+      0.3521,
+      -0.7895
+     ]
     },
     {
      "p": [
@@ -260,7 +470,14 @@
       -19.068,
       32.88
      ],
-     "canal_r_mm": 1.136
+     "canal_r_mm": 1.136,
+     "semi_major_mm": 1.467,
+     "semi_minor_mm": 1.08,
+     "major_axis_lps": [
+      0.4498,
+      0.3873,
+      -0.8048
+     ]
     },
     {
      "p": [
@@ -268,7 +485,14 @@
       -18.522,
       33.829
      ],
-     "canal_r_mm": 1.146
+     "canal_r_mm": 1.146,
+     "semi_major_mm": 1.345,
+     "semi_minor_mm": 1.151,
+     "major_axis_lps": [
+      0.675,
+      0.2127,
+      -0.7065
+     ]
     },
     {
      "p": [
@@ -276,7 +500,14 @@
       -17.853,
       34.598
      ],
-     "canal_r_mm": 1.095
+     "canal_r_mm": 1.095,
+     "semi_major_mm": 1.354,
+     "semi_minor_mm": 1.1,
+     "major_axis_lps": [
+      0.9259,
+      -0.1747,
+      -0.3348
+     ]
     },
     {
      "p": [
@@ -284,7 +515,14 @@
       -17.052,
       35.31
      ],
-     "canal_r_mm": 1.077
+     "canal_r_mm": 1.077,
+     "semi_major_mm": 1.37,
+     "semi_minor_mm": 0.997,
+     "major_axis_lps": [
+      0.9182,
+      -0.1468,
+      -0.368
+     ]
     },
     {
      "p": [
@@ -292,7 +530,14 @@
       -16.222,
       35.933
      ],
-     "canal_r_mm": 1.074
+     "canal_r_mm": 1.074,
+     "semi_major_mm": 1.405,
+     "semi_minor_mm": 0.992,
+     "major_axis_lps": [
+      0.9384,
+      -0.2559,
+      -0.2322
+     ]
     },
     {
      "p": [
@@ -300,7 +545,14 @@
       -15.323,
       36.382
      ],
-     "canal_r_mm": 1.14
+     "canal_r_mm": 1.14,
+     "semi_major_mm": 1.675,
+     "semi_minor_mm": 1.002,
+     "major_axis_lps": [
+      0.937,
+      -0.3155,
+      -0.1501
+     ]
     },
     {
      "p": [
@@ -308,7 +560,14 @@
       -14.356,
       36.63
      ],
-     "canal_r_mm": 1.167
+     "canal_r_mm": 1.167,
+     "semi_major_mm": 1.684,
+     "semi_minor_mm": 1.012,
+     "major_axis_lps": [
+      0.9366,
+      -0.2344,
+      -0.2603
+     ]
     },
     {
      "p": [
@@ -316,7 +575,14 @@
       -13.317,
       36.78
      ],
-     "canal_r_mm": 1.183
+     "canal_r_mm": 1.183,
+     "semi_major_mm": 2.106,
+     "semi_minor_mm": 1.022,
+     "major_axis_lps": [
+      0.9264,
+      -0.1765,
+      -0.3327
+     ]
     },
     {
      "p": [
@@ -324,7 +590,14 @@
       -12.197,
       36.78
      ],
-     "canal_r_mm": 1.332
+     "canal_r_mm": 1.332,
+     "semi_major_mm": 2.8,
+     "semi_minor_mm": 0.939,
+     "major_axis_lps": [
+      0.901,
+      -0.0991,
+      -0.4223
+     ]
     },
     {
      "p": [
@@ -332,7 +605,14 @@
       -11.218,
       36.569
      ],
-     "canal_r_mm": 1.319
+     "canal_r_mm": 1.319,
+     "semi_major_mm": 3.4,
+     "semi_minor_mm": 0.748,
+     "major_axis_lps": [
+      0.8766,
+      -0.0463,
+      -0.479
+     ]
     },
     {
      "p": [
@@ -340,7 +620,14 @@
       -10.471,
       36.302
      ],
-     "canal_r_mm": 0.841
+     "canal_r_mm": 0.841,
+     "semi_major_mm": 2.913,
+     "semi_minor_mm": 0.576,
+     "major_axis_lps": [
+      0.8556,
+      -0.0083,
+      -0.5176
+     ]
     },
     {
      "p": [
@@ -348,7 +635,14 @@
       -9.714,
       35.781
      ],
-     "canal_r_mm": 0.258
+     "canal_r_mm": 0.258,
+     "semi_major_mm": 2.365,
+     "semi_minor_mm": 0.378,
+     "major_axis_lps": [
+      0.8312,
+      0.0304,
+      -0.5552
+     ]
     }
    ],
    "length_mm": 22.62,

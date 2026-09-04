@@ -46,6 +46,18 @@ const MATERIALS = {
   // Nerve tissue is yellow by the convention every anatomy atlas and every
   // dental text uses, so it reads at a glance against bone and pulp.
   nerves:   { baseColorFactor: [0.965, 0.827, 0.176, 1], roughnessFactor: 0.45, metallicFactor: 0 },
+  // Arterial red, and deliberately darker and less saturated than a warning
+  // colour: it sits a fraction of a millimetre from the yellow nerve inside the
+  // same canal, so the two have to read apart at small size and low opacity.
+  // The vascular layer is ONE toggle carrying two appearances. A structure may
+  // name a `material` and it is looked up here ahead of its layer, so arteries
+  // and veins switch on together and still read apart. Arterial red is darker
+  // than a warning colour and the venous blue is matched to it in lightness:
+  // they sit a fraction of a millimetre apart inside one canal, so neither may
+  // read as the more important of the two.
+  vessels:  { baseColorFactor: [0.788, 0.184, 0.204, 1], roughnessFactor: 0.40, metallicFactor: 0 },
+  artery:   { baseColorFactor: [0.788, 0.184, 0.204, 1], roughnessFactor: 0.40, metallicFactor: 0 },
+  vein:     { baseColorFactor: [0.216, 0.353, 0.678, 1], roughnessFactor: 0.40, metallicFactor: 0 },
 };
 
 /** Parse a binary STL into a flat, non-indexed Float32Array of positions. */
@@ -252,19 +264,25 @@ async function main() {
   // almost right and only went wrong when their opacity slider was moved: a
   // metal has no diffuse term, so blending one leaves grey smoke rather than
   // translucent bone. Fail the build instead of letting a new layer inherit that.
+  // A structure may override its layer's appearance with `material`, which is
+  // how one vascular toggle carries red arteries and blue veins. That override
+  // needs the SAME check: an unknown material name would quietly fall back to
+  // the layer and every vessel would come out arterial red, which is a wrong
+  // drawing rather than an obviously broken one.
   const usedLayers = [...new Set(STRUCTURES.map((s) => s.layer))];
-  const unstyled = usedLayers.filter((l) => !MATERIALS[l]);
+  const usedMaterials = [...new Set(STRUCTURES.map((s) => s.material).filter(Boolean))];
+  const unstyled = [...usedLayers, ...usedMaterials].filter((k) => !MATERIALS[k]);
   if (unstyled.length) {
-    console.error('MATERIAL CHECK FAILED — these layers have no appearance and would fall back');
-    console.error("to glTF's default white metal, which cannot be made translucent:");
+    console.error('MATERIAL CHECK FAILED — these have no appearance and would fall back');
+    console.error("to glTF's default white metal, or silently to their layer's colour:");
     for (const l of unstyled) console.error(`  ${l} — add an entry to MATERIALS in tools/build-assets.mjs`);
     process.exit(1);
   }
 
   const materials = {};
-  for (const layer of usedLayers) {
-    const spec = MATERIALS[layer];
-    materials[layer] = doc.createMaterial(layer)
+  for (const key of [...usedLayers, ...usedMaterials]) {
+    const spec = MATERIALS[key];
+    materials[key] = doc.createMaterial(key)
       .setBaseColorFactor(spec.baseColorFactor)
       .setRoughnessFactor(spec.roughnessFactor)
       .setMetallicFactor(spec.metallicFactor)
@@ -296,7 +314,12 @@ async function main() {
   // (19 mm for the mid-face alone). Both are measured anatomy rather than a
   // drawing choice, so "exclude it because it is invented" does not apply and
   // "exclude it because framing is not its job" does.
-  const NOT_FRAMING = new Set(['muscles', 'nerves', 'midface', 'ramus']);
+  // Arteries join for the nerves' reason exactly: the mental artery runs an
+  // arbitrary 7 mm out of its foramen because the face it would reach is not in
+  // the scan, and letting that stub decide the camera is a drawing choice
+  // moving the whole model. It did — adding the two arteries widened the framed
+  // extent from 82.1 x 81.2 to 84.8 x 84.1 mm before this line included them.
+  const NOT_FRAMING = new Set(['muscles', 'nerves', 'vessels', 'midface', 'ramus']);
   const dental = meshes.filter((m) => !NOT_FRAMING.has(m.s.layer));
   const all = new Float32Array(dental.reduce((n, m) => n + m.positions.length, 0));
   let at = 0;
@@ -350,7 +373,7 @@ async function main() {
       .setAttribute('POSITION', doc.createAccessor(`${s.fma}_P`).setType('VEC3').setArray(positions))
       .setAttribute('NORMAL', doc.createAccessor(`${s.fma}_N`).setType('VEC3').setArray(normals))
       .setIndices(doc.createAccessor(`${s.fma}_I`).setType('SCALAR').setArray(indices))
-      .setMaterial(materials[s.layer]);
+      .setMaterial(materials[s.material ?? s.layer]);
 
     // Node name is the FMA id: the join key the app uses to look up metadata.
     const node = doc.createNode(s.fma).setMesh(doc.createMesh(s.fma).addPrimitive(prim));

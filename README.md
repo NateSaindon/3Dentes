@@ -5,7 +5,7 @@ Linux, macOS, Windows and iPad — install it to the home screen and it works
 offline.
 
 **Live: https://natesaindon.github.io/3Dentes/**  ·  **What changed:
-[CHANGELOG.md](CHANGELOG.md)** (currently v0.4.0)
+[CHANGELOG.md](CHANGELOG.md)** (currently v0.6.0)
 
 ![Pulp, periodontal ligament and the inferior alveolar nerve, seen through the teeth](docs/screenshot.png)
 
