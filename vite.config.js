@@ -18,9 +18,17 @@ export default defineConfig({
       includeAssets: ['dentition.glb', 'teeth.json'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,glb,json,svg,png}'],
-        // The mesh is ~6MB and Workbox silently drops anything over 2MB from the
-        // precache, which would break offline use without any error.
-        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
+        // Workbox drops anything over 2MB from the precache, which would break
+        // offline use — the whole point of installing this to a home screen.
+        //
+        // THIS CAP HAS TO LEAD THE MESH, and it has twice failed to. The
+        // comment here said "~6MB" while the file was 12.3; 0.6.0 took it to
+        // 13.7 and the deploy failed on the 12 MiB limit AFTER the push, which
+        // is the worst place to find out. The mesh grows about 1.4 MB a release
+        // as anatomy lands, so this is set well ahead of it rather than to the
+        // current size. `npm run build` catches a breach locally — run it
+        // before pushing a release, not just `build:assets`.
+        maximumFileSizeToCacheInBytes: 32 * 1024 * 1024,
       },
       manifest: {
         name: '3Dentes — Interactive Oral Anatomy',
