@@ -62,7 +62,7 @@ sparse ones start to cost more than they add. So `--train` takes a LIST, and
 
 Usage: pulp_learn.py <volume.nrrd> <split-dir> <traced-dir> <out-dir>
                      [--train 30,31] [--also 18,20,21,22,27,29] [--predict 19]
-                     [--old <pulp-dir>] [--threshold 0.30]
+                     [--old <pulp-dir>] [--grow 0.50]
 """
 import json
 import os
@@ -81,7 +81,31 @@ DOMAIN_DILATE = 3          # the model is only ever asked about voxels this
                            # domain of exactly the mask would clip the truth.
 SATURATED = 2500.0         # zirconia and the ceiling; excluded from statistics
 SCALES = (1.0, 2.0, 3.5)   # voxels, for the multi-scale features
-SEED_P, GROW_P = 0.50, 0.20   # hysteresis: confident seed, then grow
+SEED_P = 0.50                 # hysteresis: confident seed, then grow
+# ONE THRESHOLD CANNOT SERVE THE CHAMBER AND THE CANALS, and using one is why
+# every machine pulp came back with a hollow chamber -- the operator's words,
+# 2026-09-05: "every trace YOU ran has completely empty chambers which I tried
+# to fix". Measured against his own tracings, his corrected molars carry 32-45%
+# of their pulp coronal to the CEJ; the predictions carried 8-28%, roughly half.
+#
+# The two regions fail in OPPOSITE directions, so they need opposite thresholds:
+#
+#   IN THE CROWN a loose threshold is safe. The chamber is a large, confidently
+#       dark body and over-inclusion is bounded by the crown itself -- there is
+#       nowhere for it to leak to. Tightening here just hollows it out.
+#   IN THE ROOT a loose threshold is what inflated the canals 2.09x, because a
+#       canal one or two voxels across is partial-volume with the dentin around
+#       it and the probability field bleeds outward with nothing to stop it.
+#
+# GROW_P was 0.20 until 2026-09-05, then briefly 0.50 -- calibrated on held-out
+# tooth 18, where 0.20 over-predicted 2.09x and handed him 23,013 voxels to
+# delete while 0.50 landed within 4% of his volume. But 0.50 also cut the
+# chamber by ~35% (tooth 2: 10.3 -> 6.7 mm3), so that calibration bought volume
+# accuracy with chamber anatomy. Splitting the threshold buys both.
+# CLAUDE.md 196, 200.
+GROW_CROWN = 0.20             # coronal to the tooth's own measured CEJ ring
+GROW_ROOT = 0.50              # apical to it
+GROW_P = GROW_ROOT            # what --grow overrides; the crown keeps its own
 K_DARK = 14.0              # how much dearer it is to route through dentin
 TRACK_P = 0.06             # a tracked canal may widen only this far
 
@@ -165,6 +189,33 @@ def _fma_of(pulp_dir, fname):
 
 APEX_R_MM = 0.16       # a canal at its foramen is about a third of a millimetre
 TAPER_MM = 7.0         # over which it widens from the foramen to unconstrained
+
+
+def crown_zone(tooth, arch, spacing):
+    """Boolean: which voxels of this tooth's crop lie coronal to its CEJ ring.
+
+    Uses enamel.cej_ring, so the chamber and the enamel cap are bounded by the
+    SAME measured landmark and cannot disagree about where the crown starts.
+    Falls back to all-False -- i.e. the root threshold everywhere, the previous
+    behaviour -- if the ring cannot be read, so a tooth whose narrowing is
+    unreadable degrades to the old conservative result rather than to a guess.
+    """
+    try:
+        import enamel as EN
+        r = EN.cej_ring(tooth, arch, spacing)
+        if r is None:
+            return np.zeros_like(tooth)
+        centres, cej, t_tip, idx, t, ang = r
+        edges = np.linspace(-np.pi, np.pi, EN.N_CEJ_ANGLES + 1)
+        which = np.clip(np.digitize(ang, edges) - 1, 0, EN.N_CEJ_ANGLES - 1)
+        out = np.zeros_like(tooth)
+        zz, yy, xx = idx
+        out[zz, yy, xx] = t > cej[which]
+        # the chamber is bounded by the crown, but the threshold should apply to
+        # the whole coronal region including the dentin around the horns
+        return ndi.binary_dilation(out, np.ones((3, 3, 3)), 2) & tooth
+    except Exception:
+        return np.zeros_like(tooth)
 
 
 def physical_rules(pulp, tooth, foramina, origin, spacing):
@@ -377,12 +428,24 @@ def main():
     # --- the model that gets used -------------------------------------------
     clf = HistGradientBoostingClassifier(max_iter=400, learning_rate=0.08,
                                          random_state=0).fit(Xtr_all, ytr_all)
-    # The threshold is NOT fitted on the training teeth. Doing that gives 0.40
-    # and a resubstitution Dice of 0.88, which measures memory rather than
-    # skill. It is set from the tooth held out of training instead, and if that
-    # tooth is not available it has to be given.
-    th = float(opt.get("threshold", 0.30))
-    print(f"  threshold {th:.2f} (chosen on a HELD-OUT tooth, not on these)")
+    # THE OPERATING POINT IS `--grow`, AND IT IS NOT FITTED ON THE TRAINING
+    # TEETH. Fitting on them gives a resubstitution Dice of 0.88, which measures
+    # memory rather than skill; it is set from a tooth held out of training.
+    # Calibrated 2026-09-05 on held-out tooth 18 against the operator's own
+    # tracing: the old default of 0.20 over-predicted 2.09x and handed him 23,013
+    # voxels to delete, while 0.50 lands within 4% of his volume and roughly
+    # halves the total edit burden. See CLAUDE.md 196.
+    #
+    # There was a `--threshold` flag here until 2026-09-05. It parsed a value,
+    # PRINTED "threshold N (chosen on a HELD-OUT tooth, not on these)", and was
+    # then never used -- the segmentation has always read SEED_P and GROW_P.
+    # Swept at 0.30/0.45/0.60/0.75 it returned 135.7 mm3 every time. It is gone
+    # rather than wired, because the knob that matters already exists and a
+    # second one that silently disagreed with it is how the first lie happened.
+    # CLAUDE.md 194.
+    grow_p = float(opt.get("grow", GROW_P))
+    print(f"  seed {SEED_P:.2f}, grow {GROW_CROWN:.2f} in the crown / "
+          f"{grow_p:.2f} in the root (calibrated on a HELD-OUT tooth)")
 
     # --- predict, one tooth at a time ---------------------------------------
     from skimage.graph import MCP_Geometric
@@ -398,7 +461,12 @@ def main():
         prob = np.zeros(dom_pr.shape, np.float32)
         prob[dom_pr] = clf.predict_proba(Xpr)[:, 1]
 
-        seed, weak = prob > SEED_P, prob > float(opt.get("grow", GROW_P))
+        # The crown/root divider is this tooth's OWN measured CEJ ring, the same
+        # instrument enamel.py bounds the cap with -- not a fraction of tooth
+        # length, and not the enamel, which would be circular (CLAUDE.md 197).
+        crown = crown_zone(t_pr[roi_pr], arch_of(split, pu)[0], sp)
+        thr = np.where(crown, GROW_CROWN, grow_p)
+        seed, weak = prob > SEED_P, prob > thr
         lab, n = ndi.label(weak, np.ones((3, 3, 3)))
         ids = np.unique(lab[seed])
         grown = np.isin(lab, ids[ids > 0]) if len(ids) else seed

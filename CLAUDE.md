@@ -698,6 +698,190 @@ and asked whether that is enough to have the machine do tooth 30. Partly.
     entire discipline is knowing where each surface came from, a machine guess
     filed among hand-traced masks is a provenance failure waiting to happen.
 
+194. **`pulp_learn.py --threshold` IS A DEAD PARAMETER, and it prints a claim of
+    rigour while doing nothing.** Line 384 reads `th = float(opt.get(
+    "threshold", 0.30))`, line 385 prints *"threshold 0.30 (chosen on a HELD-OUT
+    tooth, not on these)"*, and `th` is never referenced again. The segmentation
+    uses the module constants `SEED_P = 0.50` and `GROW_P = 0.20`. Swept on
+    held-out tooth 18 at 0.30, 0.45, 0.60 and 0.75 the output was 135.7 mm3 to
+    the decimal every time. `--grow` IS wired (`opt.get("grow", GROW_P)`);
+    `--threshold` is not, and there is no flag for `SEED_P` at all. This is
+    worse than rule 163's silent failure: the run PRINTS a methodological claim
+    that nothing in the code implements, and that line has been going into the
+    provenance record of every prediction. Fix the wiring or delete the flag and
+    the print; do not leave a knob that lies.
+
+195. **Adding a third dense tracing made every prediction FATTER, and the
+    obvious explanation is wrong.** Training on 30 + 31 + the operator's new 18
+    (65.0 mm3, against the model's own 144.9 guess for that tooth) moved 12 of
+    13 predictions UP, teeth 3, 14 and 28 by 18-21%. The tidy story -- that 18
+    is mostly thin canal at dentin brightness and so teaches "faint is pulp" --
+    is FALSE: measured across the three labels, 18 is the DARKEST and cleanest
+    of them (median 679 against 707 and 839; 24.7% of its voxels above the
+    dentin 5th percentile against 25.8% and 39.2%).
+
+    **CAUSE FOUND the same day: the label that was wrong was 31, not 18.** He
+    retraced 31 on the slicer and it came back 97.82 -> 72.08 mm3, a quarter of
+    it removed, and what he removed had a median intensity of 1121 against 621
+    for what he kept -- he was deleting DENTIN that had been called pulp.
+    Retraining with only that label changed and everything else identical moved
+    tooth 2 from 83.5 to 55.1 mm3 and tooth 3 from 87.9 to 55.0. The fat
+    predictions were a fat training label propagating, and tooth 18 was never
+    the problem; it was the tight label that made the conflict visible.
+
+    Two things follow. **A training label is a measurement and needs the same
+    scepticism as a prediction** -- 31 sat in every run for three days because it
+    was hand-traced and nobody re-examined it. And **contralateral symmetry
+    catches it**: `pulp_learn`'s own check flagged 18/31 at 34%, which is what
+    prompted the retrace; the pair now agrees to 10%. Rule 166's trajectory was
+    measured on Dice against an old trace, not on how much the operator has to
+    DELETE, and those are not the same quantity.
+
+    **Tooth 30 is the same vintage and has not been re-examined** (87.70 mm3,
+    Sep 4). If it is fat by 31's factor its true volume is ~64.9, and the model
+    predicts its contralateral 19 at 66.8 -- a 3% agreement that the current
+    24% mismatch would become. Treat 30 as SUSPECT until retraced.
+
+196. **`GROW_P = 0.20` is the WORST operating point available for the operator's
+    effort, and 0.50 is the calibrated one.** Swept on held-out tooth 18
+    (trained on 30 and 31 only) against his 65.0 mm3 tracing:
+
+        grow   mm3    vs his   delete   paint   total edits   apex gaps
+        0.20   135.7   2.09x    23013    5731         28744   [0.11, 0.29]
+        0.35    95.2   1.47x    13813    6438         20251   [0.11, 0.03]
+        0.50    67.4   1.04x     7922    7313         15235   [0.11, 0.03]
+        0.65    48.6   0.75x     4346    8328         12674   [0.11, 0.03]
+
+    The shipped default hands him 2.09x too much mask and 23,013 voxels to
+    delete; 0.50 matches his volume within 4% and nearly halves the total edit
+    burden. The apical routing also improves at every value above the default --
+    0.29 mm to 0.03 mm -- and THAT signal is not anchored to his tracing, since
+    the foramina were measured independently.
+
+    **The caveat that keeps this honest:** he built that tracing by editing the
+    0.20 mask, so per rule 167 the delete/paint split is anchored to it and is an
+    effort ESTIMATE, not an accuracy score. The delete column is the trustworthy
+    half; the paint column is the one anchoring flatters. Confirm on the next
+    tooth traced from a 0.50 prediction rather than treating this as settled.
+
+197. **The CEJ ring's 45%-of-length fallback is GONE, and the cheap fix that was
+    queued for it was a tautology.** The recorded plan was to interpolate the
+    NO-NARROW angles from their measured neighbours. Simulated first: teeth 2, 3
+    and 15 moved **0.00 mm** and 14 moved 0.50. The reason is that on those four
+    molars every no-narrow run is walled in by CLAMPED angles, which are
+    themselves `cap_t` -- only 3 of 38 no-narrow angles touch a genuinely
+    measured neighbour, so "interpolate from the neighbours" interpolates from
+    the constant and returns the constant. Same cap-fallback tautology as rule
+    5b's local-minimum attempt, in a new costume. **Simulate a fill before
+    building one: ask what the donors actually are.**
+
+    What shipped instead: an angle contributes ONLY if it measured a narrowing
+    coronal of `cap_t`; everything else is NaN and is filled from that tooth's
+    own measured angles. Because every surviving value is >= `cap_t` and
+    interpolation is bounded by its neighbours, the ring can only move CORONALLY
+    of the old constant, never further down the root -- so this cannot
+    reintroduce enamel painted onto a root. All 28 teeth still produce a ring;
+    20 of 28 scallops got SMALLER; median amplitude 1.57 mm.
+
+    **Teeth 20 and 29 remain implausible at 4.08 and 4.15 mm and this change did
+    not cause it** -- they were 4.96 and 5.26 before, so the constant was partly
+    MASKING them. They are the neighbours of the crowned molars 19 and 30, which
+    is the restoration bloom of open question 6 showing up in a third place.
+    They have 29 and 28 measured angles, so this is not interpolation starvation;
+    the readings themselves are distorted by the zirconia halo in the mask.
+
+198. **THERE ARE TWO CEJ RINGS AND THEY ARE NOT THE SAME RING.** `enamel.py`'s
+    `cej_ring()` is 36 angles read from the TOOTH MASK's cervical narrowing and
+    feeds the enamel cap. `landmarks.py` has its own 24-angle ring read from an
+    OTSU THRESHOLD ON THE ENAMEL, written to `landmarks.json`, and that is what
+    `gingiva.py` and `crest.py` consume. The 1,008-angle / 53%-measured figure is
+    28 x 36, so it is `enamel.py`'s, and that is the one rule 197 fixed.
+
+    **The work order's claim that this ring "is also what the gingival margin is
+    lofted from" is therefore FALSE**, and fixing the enamel ring did not move
+    the gingiva at all. Worth noting for whenever gingiva comes off its deferral:
+    the ring the margin actually uses derives the CEJ from the enamel, which is
+    exactly the circularity `enamel.py`'s header rejects for its own ring
+    (CLAUDE.md 97, 102). Two rings, two methods, one of them the method the other
+    file refuses to use. Do not "unify" them without deciding which is right.
+
+199. **A label of the right KIND beats more labels of the same kind.** Every pulp
+    training label was MANDIBULAR -- 30, 31, 18 -- and every maxillary molar came
+    back with its PALATAL canal unrouted: the buccal roots landed within 0.11 mm
+    of their measured foramina while the palatal one sat 5.5-6.4 mm short, at
+    both grow values, on all four of 2, 3, 14 and 15. It was not the operating
+    point and it was not the masks. The model had never been shown a palatal
+    root.
+
+    The operator corrected tooth 3 in the slicer -- explicitly a LIGHT pass, not
+    a reference tracing -- closing its own palatal gap from 6.34 mm to 0.06 mm.
+    Retrained with that one maxillary label added, the other three fixed
+    themselves: tooth 2 from 5.97 mm to 0.18, tooth 14 from 5.50 to 0.05, tooth
+    15 from 5.58 to 0.10. **One rough label of an unseen structure was worth more
+    than three careful ones of a structure already covered.** When a defect is
+    confined to a class of anatomy, ask what class the training set is missing
+    before touching parameters.
+
+200. **ONE THRESHOLD CANNOT SERVE THE CHAMBER AND THE CANALS, and the operator
+    saw it before any metric did.** His report, 2026-09-05: *"every trace YOU ran
+    has completely empty chambers which I tried to fix"*. Measured, he was right
+    -- his corrected molars carry 32-45% of their pulp coronal to the CEJ against
+    the predictions' 8-28%, roughly half. The physical rules were innocent:
+    applied to his own tracings they removed 0.02-0.73 mm3 and NOTHING from the
+    chamber. It was the single global grow threshold.
+
+    The two regions fail in opposite directions. In the crown a loose threshold
+    is safe, because the chamber is a large confidently dark body with nowhere to
+    leak; in the root a loose threshold is exactly what inflated the canals
+    2.09x, because a canal one or two voxels across is partial-volume with the
+    dentin around it. So `GROW_CROWN = 0.20` and `GROW_ROOT = 0.50`, split on
+    the tooth's own measured CEJ ring -- the same landmark enamel.py bounds the
+    cap with, so the chamber and the enamel cannot disagree about where the crown
+    starts. On held-out tooth 18 that moves the crown fraction from ~17% to
+    35.1% against his 33.5%, recovering 78% of his chamber volume.
+
+    **And note what raising GROW_P to 0.50 that morning had actually done:** it
+    bought volume calibration (2.09x -> 1.04x) by cutting the chamber ~35%
+    (tooth 2, 10.3 -> 6.7 mm3). A single number tuned against a single summary
+    statistic will do that -- total volume was right while the anatomy inside it
+    got worse, and no contralateral or apex-gap check caught it. He did.
+
+201. **A percentage is not a defect. The twelve ANTERIOR pulps sit at 12.8-25.4%
+    crown (median 20.3%) against his molars' 32-45%, and that is NOT evidence
+    they are wrong** -- an incisor's pulp is mostly canal while a molar's is
+    mostly chamber, so the ratio differs for real anatomical reasons. Comparing
+    them directly measures the wrong thing (rule 146). They are hand-traced and
+    ship as `measured`; do not rewrite them off a ratio. Render them and let the
+    operator read them.
+
+202. **`pulp_learn.py` NAMES ITS OUTPUT `U<universal>` UNLESS `--fma` IS PASSED,
+    and the build silently keeps the old mesh.** Meshing predicted-pulp-v8
+    produced `U2-pulp.stl`, while `build-assets.mjs` looks for
+    `FMA55697-pulp.stl` -- so the twelve corrected pulps were written into
+    `assets/cbct/stl/` as ORPHANS and the build loaded the previous meshes from
+    2026-09-03. Every invariant passed, the structure count was right, the app
+    rendered, and 0.7.0 was reported as shipping a pulp fix it did not contain.
+    Nothing checks that an STL in that directory is one the manifest asks for.
+    Pass `--fma`, or rename before installing, and diff the STL mtimes against
+    the build.
+
+203. **A MASK THAT REACHES ITS CROP WALL MESHES OPEN, and nothing prints.**
+    `marching_cubes` cannot close a surface at the array boundary, so it emits a
+    rim of boundary edges. All twelve machine-predicted pulps hit this --
+    54 to 136 open edges each -- because `pulp_learn` crops tight to the tooth,
+    while the operator's own tracings came through padded and closed. The
+    triangle count and the component count both look NORMAL, so `mesh_hand.py`'s
+    own report said nothing.
+
+    **The trap that nearly hid it:** the divergence-theorem volume of an OPEN
+    mesh is not translation invariant. Tooth 21 measured 12.0 mm3 about the array
+    origin and 1.1 mm3 about the scanner origin FROM THE SAME TRIANGLES, which is
+    what made the numbers look impossible -- a permutation and a uniform scale
+    cannot change a volume, and that contradiction is what exposed the open mesh.
+    If a mesh volume changes when you move it, it is not closed. `mesh_hand.py`
+    now pads by 2 voxels and shifts the crop origin to match, so this cannot
+    depend on how the caller cropped.
+
 ### The nub was the CUT, and my detector was measuring the wrong thing (2026-09-03)
 
 180. **A cost that is cheap through bright tissue lets a front run along a

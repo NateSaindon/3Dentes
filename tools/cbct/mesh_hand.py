@@ -43,7 +43,23 @@ def main():
         if P.sum() < 40:
             print(f"{r['universal']:4d}  too little traced")
             continue
-        oz, oy, ox = r["crop_origin_zyx"]
+        # PAD BEFORE MESHING, or a mask that reaches its crop wall meshes OPEN.
+        # marching_cubes cannot close a surface at the array boundary, so it
+        # emits a rim of boundary edges and the tooth ships with a hole in it.
+        # It is invisible in every summary the pipeline prints -- the triangle
+        # count and the component count both look normal -- and it does not
+        # even show up as a wrong volume unless you check, because the
+        # divergence-theorem volume of an OPEN mesh is not translation
+        # invariant: tooth 21 measured 12.0 mm3 about the origin and 1.1 mm3
+        # about the scanner origin, from the same triangles.
+        #
+        # All twelve machine-predicted pulps hit this on 2026-09-05 (54-136
+        # boundary edges each) because pulp_learn crops tight to the tooth;
+        # the operator's own tracings did not, only because those crops were
+        # padded upstream. Pad here so it cannot depend on the caller.
+        PAD = 2
+        P = np.pad(P, PAD)
+        oz, oy, ox = (c - PAD for c in r["crop_origin_zyx"])
         thin = ndi.distance_transform_edt(P) <= 1.5
         f = pulp_field(P & ~thin, P & thin)
         verts, faces, _, _ = marching_cubes(f, level=0.5)

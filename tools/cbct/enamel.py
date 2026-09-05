@@ -265,7 +265,22 @@ def cej_ring(solid, arch, spacing, cervical_frac=0.80, max_crown_frac=0.45):
             if pj[j] < cervical_frac * rmax:
                 hit = hj[j]
                 break
-        cej[k] = cap_t if hit is None else max(float(hit), cap_t)
+        # AN ANGLE THAT DID NOT MEASURE A NARROWING CONTRIBUTES NOTHING. It used
+        # to fall back to `cap_t`, the 45%-of-tooth-length constant, and so did
+        # any angle whose reading came out apical of it. That made 43% of the
+        # ring the constant and 4% of it a no-narrow guess -- only 53% of 1,008
+        # angles measured -- and on maxillary molars 2, 3, 14 and 15 it put a
+        # third of the circumference 1.6-2.2 mm too apical, which paints enamel
+        # down the root. Leave those angles NaN and let the periodic fill below
+        # take them from this tooth's OWN measured angles instead.
+        #
+        # Interpolating "from the neighbours" while the fallback still wrote
+        # `cap_t` was the tempting cheap fix and it is a TAUTOLOGY: on those four
+        # molars every no-narrow run is walled in by clamped angles, only 3 of 38
+        # touch a genuinely measured one, and three of the four teeth moved
+        # 0.00 mm. Measured 2026-09-05. See CLAUDE.md 197.
+        if hit is not None and float(hit) >= cap_t:
+            cej[k] = float(hit)
     if np.all(np.isnan(cej)):
         return None
     # fill gaps and smooth AROUND the ring -- it is periodic, and a cervical
@@ -273,7 +288,17 @@ def cej_ring(solid, arch, spacing, cervical_frac=0.80, max_crown_frac=0.45):
     nan = np.isnan(cej)
     if nan.any():
         good = ~nan
-        cej[nan] = np.interp(centres[nan], centres[good], cej[good], period=2 * np.pi)
+        # Fewer than three real readings cannot describe a scallop; fall back to
+        # the old constant rather than interpolate a ring out of noise.
+        if good.sum() < 3:
+            cej[nan] = cap_t
+        else:
+            cej[nan] = np.interp(centres[nan], centres[good], cej[good],
+                                 period=2 * np.pi)
+    # Every surviving value is >= cap_t and interpolation is bounded by its
+    # neighbours, so the ring can only ever move CORONALLY of the old constant,
+    # never further down the root. That is the safety property that makes this
+    # replacement strictly better than the fallback it removes.
     pad = CEJ_SMOOTH_BINS
     wrapped = np.concatenate([cej[-pad:], cej, cej[:pad]])
     kern = np.ones(2 * pad + 1) / (2 * pad + 1)

@@ -41,6 +41,13 @@ const MATERIALS = {
   // Kept for Phase 3's authored bellies; no structure carries this layer today,
   // and materials are only emitted for layers in use, so it costs nothing.
   muscles:  { baseColorFactor: [0.647, 0.271, 0.259, 1], roughnessFactor: 0.65, metallicFactor: 0 },
+  // Enamel clads the crown, so unlike pulp and PDL it is SEEN, and it has to
+  // read as enamel against the dentine-coloured tooth directly beneath it —
+  // lighter, bluer and glossier, which is how enamel actually differs from the
+  // dentine that gives a tooth its yellow. The difference is deliberately small:
+  // a strongly tinted cap would look like a coating rather than the outer
+  // millimetre of the tooth, and the two tissues really are close in colour.
+  enamel:   { baseColorFactor: [0.961, 0.957, 0.937, 1], roughnessFactor: 0.18, metallicFactor: 0 },
   pulp:     { baseColorFactor: [0.804, 0.286, 0.271, 1], roughnessFactor: 0.55, metallicFactor: 0 },
   pdl:      { baseColorFactor: [0.612, 0.784, 0.878, 1], roughnessFactor: 0.80, metallicFactor: 0 },
   // Nerve tissue is yellow by the convention every anatomy atlas and every

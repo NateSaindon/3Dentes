@@ -135,6 +135,11 @@ const ALL_LAYERS = {
   // Pulp and PDL are off by default: they sit INSIDE the teeth, so showing them
   // on load reveals nothing and costs draw calls. The teeth layer's opacity is
   // what makes them visible.
+  // Enamel is ON by default and the teeth layer sits under it: the cap IS the
+  // outer surface of the crown, so unlike pulp and PDL it is not hidden by the
+  // tooth, it clads it. 19 and 30 have no entry at all -- they are crowned, and
+  // the omission is the claim. See the provenance note.
+  enamel:   { label: 'Enamel',                 defaultOpacity: 1.0,  visible: true  },
   pulp:     { label: 'Pulp',                   defaultOpacity: 1.0,  visible: false },
   pdl:      { label: 'Periodontal ligament',   defaultOpacity: 1.0,  visible: true  },
   // Nerves are OFF by default. Two sets of geometry with very
@@ -326,14 +331,22 @@ const NERVE_STRUCTURES = [
 // side and position -- which is what lets the app associate them with their
 // tooth and keeps the notation derived rather than retyped. Their ids suffix the
 // tooth's FMA id, so FMA55682-pulp belongs unambiguously to FMA55682.
-const perTooth = (layer) =>
+const perTooth = (layer, except = []) =>
   MEASURED_STRUCTURES
-    .filter((s) => s.layer === 'teeth')
+    .filter((s) => s.layer === 'teeth' && !except.includes(s.fma))
     .map((s) => ({ ...s, fma: `${s.fma}-${layer}`, layer, tooth: s.fma }));
+
+// The two crowned teeth. Their natural enamel was prepped away before the
+// zirconia went on, so there is no cap to ship: measured, they hold 11.0 and
+// 31.0 mm3 of residue against 215-290 mm3 for every other molar, and 344.7 and
+// 276.7 mm3 of restoration against <=0.16 mm3 for every natural tooth. An
+// enamel mesh here would assert tissue that is not in the mouth.
+const CROWNED = ['FMA55704', 'FMA55705'];   // Universal 19 and 30
 
 export const STRUCTURES = [
   ...MEASURED_STRUCTURES,
   ...NERVE_STRUCTURES,
+  ...perTooth('enamel', CROWNED),
   ...perTooth('pulp'),
   ...perTooth('pdl'),
 ];
@@ -359,7 +372,7 @@ export function toothNotation(s) {
 }
 
 /** Human-readable name, derived for teeth and explicit for everything else. */
-const PER_TOOTH_LABEL = { pulp: 'Pulp of', pdl: 'Periodontal ligament of' };
+const PER_TOOTH_LABEL = { enamel: 'Enamel of', pulp: 'Pulp of', pdl: 'Periodontal ligament of' };
 
 export function structureName(s) {
   if (s.arch && PER_TOOTH_LABEL[s.layer]) {
@@ -415,6 +428,10 @@ const SRC = {
     "Dot G. et al., 'DentalSegmentator: robust open source deep learning-based CT and CBCT image segmentation', J Dent (2024)",
   wheeler:
     "Wheeler's Dental Anatomy, Physiology and Occlusion — crown-height and cervical-line tables",
+  enamelCbct:
+    'Quantitative Evaluation of Enamel Thickness in Maxillary Central Incisors, CBCT (PMC11592583) — the 0.48/0.81/0.95 mm cervical-to-incisal gradient at 1/3/5 mm above the CEJ',
+  enamelContact:
+    'Interproximal enamel thickness at the contact by arch and tooth type (PMC11235574)',
   // These cite what was actually used. Upgrading to a primary anatomical source
   // is on the wishlist -- and is NOT a citation edit: the geometry has to be
   // re-derived against the new reference first, or the citation credits a book
@@ -451,6 +468,11 @@ const BY_LAYER = {
     // under a `measured` claim written for something else.
     tier: 'measured',
     method: 'Traced by hand, slice by slice, over three rounds. No threshold separates pulp from dentin at 0.16 mm — below about three voxels wide, partial-volume averaging means no voxel ever reaches pulp density — so the lumen was calibrated by integrating the intensity deficit across each cross-section instead. Canals under about 0.5 mm and apical deltas are below the voxel size and are not drawn.',
+  },
+  enamel: {
+    tier: 'derived',
+    method: "A depth-limited SHELL on the anatomic crown, not a density threshold. Thresholding was tried first and failed in both directions at once — it lost cusp tips, where enamel is thickest and partial volume drives the sharpest anatomy faintest, and it flooded inward through dense coronal dentin toward the chamber. So the tooth's own geometry decides where enamel CAN be and the image only chooses within it: bounded outside by the measured crown surface, inside by a thickness envelope taken from the published figures, and apically by this tooth's own MEASURED cervical ring. That ring is read from the tooth mask's cervical narrowing per angle, never from the enamel itself, which would be circular. Every angle that finds no narrowing is filled from that tooth's other measured angles rather than from a constant fraction of tooth length, so the ring cannot drift down the root. EXTENT is therefore measured and THICKNESS is literature, which is why this ships as derived rather than measured. Per-tooth VOLUME and enamel-as-%-of-crown are NOT quoted as measured quantities: re-cutting the interproximal contacts moved them by up to 20% and 14.4 points. The thickness figures at the literature's own sites are robust to that same re-cut, to a median of 0.03 mm, and those are the numbers to read.",
+    sources: [SRC.wheeler, SRC.enamelCbct, SRC.enamelContact],
   },
   pdl: {
     tier: 'derived',
@@ -635,17 +657,27 @@ const BY_FMA = {
     sources: [SRC.gray, SRC.malamed],
   }])),
 
-  // --- Pulp, molars and premolars, remade 2026-09-03 --------------------------
-  // Two teeth the operator traced densely in slicer.py, every slice painted.
-  // This is the same tier as the anterior pulps and a better instance of it:
-  // 120 and 103 painted axial slices against the eleven-section tracings the
-  // rest of the atlas was built from.
-  ...Object.fromEntries(['FMA55705-pulp', 'FMA55706-pulp'].map((f) => [f, {
+  // --- Pulp, molars and premolars, remade 2026-09-03, extended 2026-09-05 -----
+  // FOUR teeth the operator traced or corrected in slicer.py. Teeth 31 and 18
+  // are full tracings; 3 is a corrected prediction he described as a lighter
+  // pass; 30 is the oldest of the four and the only one not re-examined since
+  // 2026-09-04. They are the same tier as the anterior pulps and a better
+  // instance of it: every slice painted, against the eleven-section tracings
+  // the rest of the atlas was built from.
+  ...Object.fromEntries(['FMA55705-pulp', 'FMA55706-pulp', 'FMA55703-pulp',
+                         'FMA55698-pulp'].map((f) => [f, {
     tier: 'measured',
-    method: 'Hand-traced by the operator in tools/cbct/slicer.py — three linked planes, every slice painted, 120 and 103 axial slices respectively. Nothing is interpolated between slices and nothing is smoothed before meshing: what is drawn is what was painted. This replaces a 2026-08-30 tracing of the same tooth built from ELEVEN axial sections with the course interpolated between them; the two agree at Dice 0.563, which is a fair measure of how much that method was costing.',
+    method: "Hand-traced or hand-corrected by the operator in tools/cbct/slicer.py — three linked planes, every slice painted. Nothing is interpolated between slices and nothing is smoothed before meshing: what is drawn is what was painted, less any stray voxel not joined to the main body, which the same physical rule removes from traced and predicted masks alike (0.02–0.93 mm³ per tooth). Tooth 31 was retraced on 2026-09-05 and came back a quarter smaller than its 2026-09-04 version, 97.82 → 72.08 mm³; what came off had a median intensity of 1121 against 621 for what stayed, so it was dentin that had been called pulp. That correction brought 18 and 31 — contralateral second molars, independently traced — to within 10% of each other. Tooth 3 is a corrected prediction rather than a tracing from scratch, and the operator flagged it as a lighter pass; it is the only maxillary molar in the set and it closed that tooth's palatal canal, which no prediction had found. Tooth 30 is the remaining 2026-09-04 tracing and is the one to re-examine next: it differs from its predicted contralateral by 22%, in the same direction and roughly the same magnitude that 31 turned out to be wrong.",
   }])),
 
-  // The other fourteen were segmented by a classifier rather than by hand.
+  // The other TWELVE were segmented by a classifier rather than by hand.
+  //
+  // This list must not name a tooth the traced block above also names. It did:
+  // teeth 3 and 18 sat in both, and because this block is spread LAST its
+  // prediction text silently won for two teeth the operator had traced by hand.
+  // Nothing failed and nothing rendered differently -- the atlas simply lied
+  // about where two of its structures came from. Check this list against the
+  // traced one whenever either changes.
   //
   // They are `measured` on the operator's ruling, and he is right that the
   // alternative was inconsistent: the teeth, the mandible and the maxilla are
@@ -656,9 +688,9 @@ const BY_FMA = {
   //
   // The tier says the SCAN decided it. The method below says how, and says
   // plainly which of these no human has yet looked at.
-  ...Object.fromEntries(['FMA55697-pulp', 'FMA55698-pulp', 'FMA55688-pulp', 'FMA55689-pulp', 'FMA55690-pulp', 'FMA55691-pulp', 'FMA55699-pulp', 'FMA55700-pulp', 'FMA55703-pulp', 'FMA55704-pulp', 'FMA55692-pulp', 'FMA55693-pulp', 'FMA55694-pulp', 'FMA55695-pulp'].map((f) => [f, {
+  ...Object.fromEntries(['FMA55697-pulp', 'FMA55688-pulp', 'FMA55689-pulp', 'FMA55690-pulp', 'FMA55691-pulp', 'FMA55699-pulp', 'FMA55700-pulp', 'FMA55704-pulp', 'FMA55692-pulp', 'FMA55693-pulp', 'FMA55694-pulp', 'FMA55695-pulp'].map((f) => [f, {
     tier: 'measured',
-    method: "Segmented by a gradient-boosted classifier (tools/cbct/pulp_learn.py) from this CBCT, trained on the operator's two densely hand-traced molars and six earlier tracings. Every canal is then routed to that tooth's own MEASURED apical foramen through the model's probability field, which brings each within 0.36 mm of its apices bar three upper-molar canals. Three physical rules are enforced afterwards: the pulp is clipped to its own tooth, its radius is capped by an envelope tapering to 0.16 mm at each measured foramen, and it is reduced to a single connected body. Held out on a tooth it had never seen the classifier scores Dice 0.470 against that tooth's older hand-trace — against 0.563, which is what two careful human tracings of one tooth score against each other. Contralateral pairs agree to within 19% on seven of eight. NOT YET REVIEWED BY EYE; tooth 18 differs from its traced counterpart by 32% and is the one to check first.",
+    method: "Segmented by a gradient-boosted classifier (tools/cbct/pulp_learn.py) from this CBCT, trained on the operator's FOUR hand-traced or hand-corrected molars — 30, 31, 18 and 3 — with the older sparse tracings dropped. Every canal is then routed to that tooth's own MEASURED apical foramen through the model's probability field; every canal in this set now lands within 0.23 mm of its foramen. Until 2026-09-05 the three upper molars each missed their PALATAL canal by 5.5–6.3 mm, at any threshold: every training label was mandibular and the model had never been shown a palatal root. One corrected maxillary molar fixed all three. Three physical rules are enforced afterwards: the pulp is clipped to its own tooth, its radius is capped by an envelope tapering to 0.16 mm at each measured foramen, and it is reduced to a single connected body. The growth threshold is SPLIT at the tooth's own measured CEJ — loose in the crown, tight in the root — because one global value hollowed out every pulp chamber, which the operator caught by eye before any metric did; on a held-out tooth that split recovers 78% of his traced chamber volume against roughly a third before. Contralateral pairs now agree to within 11% on six of eight. STILL NOT REVIEWED BY EYE, tooth by tooth: what has been checked is that each tooth reaches its own measured foramina and agrees with its opposite number, which is not the same as being right.",
     sources: [SRC.dentalSegmentator],
   }])),
 

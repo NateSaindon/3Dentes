@@ -1045,8 +1045,35 @@ operator worked around the tool, not because the tool was adequate.
 lets every slice be painted with the coronal and sagittal views live alongside.
 His own read: "we could really overhaul that modelling with the new tool."
 
-Outstanding from the original pulp work, worth revisiting in the same pass:
-tooth 31 shows two distal canals in the tracing.
+~~Outstanding from the original pulp work: tooth 31 shows two distal canals in
+the tracing.~~ **RESOLVED 2026-09-05, and this entry had it backwards.** It was
+never an anatomical finding to carry — it was the operator reporting a DEFECT.
+His words: *"our model at the time was fundamentally flawed BECAUSE it showed 2
+distal canals. There is clearly 1 canal in the distal root of 31."* Recording a
+defect report as an open question about the anatomy sent it to the wrong list
+and left it sitting for two days.
+
+He retraced 31 on the slicer on 2026-09-05 and it is fixed. Below the chamber
+floor the old tracing had FIVE components — the two real canals, a spurious
+third branch of 3.94 mm3 running z 72-109, and two fragments — against the new
+tracing's TWO, one per root, both full length. One canal in the distal root, as
+he said.
+
+**Tooth 18 traced on the slicer — 2026-09-05, and it carries a LATERAL CANAL.**
+The operator's read: a lateral canal leaves the **mesiolingual root just below
+mid-root and runs toward the distal aspect** of the tooth. It is his finding
+from scrubbing the volume, and it is the anatomy — see the memory rule that his
+clinical read is evidence, not preference. Two things follow. It is a real
+endodontic feature the atlas should carry rather than smooth away, and it is
+exactly the structure no voxel classifier here will ever propose: a lateral
+canal is one to two voxels across, branching off-axis, and rule 160's
+chamber-classify/canal-track scheme routes between the chamber and the MEASURED
+apical foramina — a lateral canal ends at neither, so nothing in the current
+pipeline is even looking for it.
+
+His tracing is 64.95 mm3 against the prediction's 144.9. He deleted roughly
+seventy per cent of what the model proposed, most of it in the middle third,
+which is the same region the lateral canal is in.
 
 ## The mental foramen — traced 2026-09-03, and my diagnosis was wrong
 

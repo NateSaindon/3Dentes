@@ -18,6 +18,70 @@ notice, the patch number for fixes and corrections.
 `measured`, `derived` and `schematic`, or when what it is built from changes,
 that is a user-visible change to what the atlas claims and it is recorded here.
 
+## [0.7.0] — 2026-09-05
+
+The teeth get their enamel, and the pulp stops being hollow.
+
+### Added
+
+- **Enamel, 26 caps in one `Enamel` layer.** A depth-limited shell on the
+  anatomic crown, bounded outside by the measured crown surface, inside by the
+  published thickness envelope, and apically by each tooth's own measured
+  cervical ring. **`derived`** — the extent is measured, the thickness is
+  literature. Per-tooth enamel VOLUME and enamel-as-%-of-crown are deliberately
+  not published as measured quantities: re-cutting the interproximal contacts
+  moves them by up to 20% and 14.4 points. The thickness figures at the sites the
+  literature reports are robust to that same re-cut, to a median of 0.03 mm.
+- **Teeth 19 and 30 have no enamel, and that is the claim.** Both carry zirconia
+  crowns, so their natural enamel was prepped away before cementation. They hold
+  11.0 and 31.0 mm³ of residue against 215–290 mm³ for every other molar, and
+  344.7 and 276.7 mm³ of restoration against ≤0.16 mm³ for every natural tooth.
+  Shipping a cap there would assert tissue that is not in the mouth.
+
+### Changed
+
+- **The cementoenamel ring the enamel cap is bounded by is no longer 47%
+  constant.** An angle that found no cervical narrowing used to fall back to a
+  flat 45% of tooth length, and so did any angle whose reading came out apical of
+  it — 43% of 1,008 angles were that constant and only 53% were measured. On the
+  upper molars it put a third of the circumference 1.6–2.2 mm too apical, which
+  paints enamel down a root. Those angles are now filled from each tooth's own
+  measured angles, which can only move the ring coronally, never further down the
+  root. 20 of 28 cervical scallops got smaller.
+- **The pulp chambers are no longer hollow.** Every machine-segmented pulp was
+  carrying roughly half the chamber it should — the operator's finding, by eye,
+  before any metric caught it. One growth threshold cannot serve both regions:
+  the chamber is a large confidently dark body with nowhere to leak, while a
+  canal one or two voxels across bleeds into the dentin around it. The threshold
+  is now split at each tooth's own measured cervical ring. On a held-out tooth
+  this recovers 78% of the operator's traced chamber volume, against roughly a
+  third before.
+- **Every upper molar now reaches its palatal canal.** Teeth 2, 3, 14 and 15 each
+  missed that canal by 5.5–6.3 mm at any threshold, because every pulp training
+  label was mandibular and the model had never seen a palatal root. One corrected
+  maxillary molar fixed all four; every canal in the set now lands within 0.23 mm
+  of its measured foramen.
+- **Tooth 31's pulp is a quarter smaller, and 18 and 3 are new tracings.**
+  Retraced 2026-09-04 → 2026-09-05, 97.82 → 72.08 mm³. What came off had a median
+  intensity of 1121 against 621 for what stayed: it was dentin that had been
+  called pulp. Teeth 18 and 31 — contralateral second molars, independently
+  traced — now agree to 10%, against 34% before.
+- **Tooth 31 has one canal in its distal root.** The previous model showed two,
+  which was a defect and not anatomy; the record had it filed as an open question
+  about the tooth rather than a fault in the model.
+
+### Fixed
+
+- **Every machine-segmented pulp was shipping with holes in it.** A mask cropped
+  tight to its tooth reaches the edge of its own array, and marching cubes cannot
+  close a surface there, so all twelve predicted pulps carried a rim of open
+  boundary edges. Triangle counts and component counts both read normal, so
+  nothing reported it. The mesher now pads before meshing.
+- Teeth 3 and 18 were named in both the hand-traced and the machine-predicted
+  provenance lists. The predicted block is spread last, so for two teeth the
+  atlas credited a classifier for work the operator did by hand. Nothing failed
+  and nothing rendered differently; it was simply wrong about its own sources.
+
 ## [0.6.0] — 2026-09-04
 
 The atlas gets a circulation. Sixteen vessel meshes across both arches, every
