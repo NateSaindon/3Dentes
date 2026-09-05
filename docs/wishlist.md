@@ -990,6 +990,33 @@ of the way there. `--also` is scaffolding to drop after the third tooth.
 from the prediction, so it is anchored to it. The held-out number is the honest
 one.
 
+## Where the pulp stands after 0.7.0 — 2026-09-05
+
+Four teeth are now hand-traced or hand-corrected in the slicer: **31, 18, 3 and
+30**. Twelve are machine predictions from `pulp_learn.py` trained on those four,
+with the growth threshold split at the CEJ. The twelve ANTERIOR pulps are
+untouched and still ship from `pulp-v2`.
+
+**The operator's read of 0.7.0:** teeth **18 and 19 look fantastic**; the
+**PREMOLARS are "a bit silly all around"** and he wants to trace them by hand
+later — explicitly NOT now, and they are acceptable as shipped. That is teeth
+4, 5, 12, 13, 20, 21, 28 and 29. Do not spend effort tuning them; the answer he
+has already chosen is tracing, not parameters.
+
+**Tooth 30 is the last suspect label.** It is the only remaining 2026-09-04
+tracing, at 86.77 mm3, and it differs from its predicted contralateral (19, at
+68.0) by 22% — the same direction and rough magnitude that tooth 31 turned out
+to be wrong before it was retraced (97.82 → 72.08). If it is fat by 31's factor
+its true volume is ~64 mm3, which would bring the pair to within about 5%.
+Retracing it is the single highest-value pulp job left.
+
+**Directories, as of 0.7.0:** `traced-pulp-v2/` holds the four tracings (plus
+`provenance.json` and a timestamped backup of the pre-retrace tooth 31);
+`predicted-pulp-v8/` holds the twelve predictions; `pulp-ship-070/` is the
+assembled sixteen that were meshed, and `pulp-stl-070/` the meshes. Note that
+`pulp_learn.py` writes `U<universal>-pulp.npy` unless `--fma` is passed, which
+is CLAUDE.md 202 and cost a silently wrong build.
+
 ## Correct the fourteen predicted pulps — the standing job
 
 Every molar and premolar pulp is now in the atlas, but only teeth 30 and 31 were

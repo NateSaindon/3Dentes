@@ -882,6 +882,19 @@ and asked whether that is enough to have the machine do tooth 30. Partly.
     now pads by 2 voxels and shifts the crop origin to match, so this cannot
     depend on how the caller cropped.
 
+204. **A `while pgrep -f "<pattern>"` WAIT LOOP NEVER EXITS, because the waiting
+    shell's own command line contains the pattern.** Eighteen of them
+    accumulated over one session, each spinning a `sleep` forever long after the
+    job it was watching had finished; the operator saw them before I did. This is
+    CLAUDE.md 164 generalised -- `pkill -f` killing its own shell and `pgrep -f`
+    matching its own shell are the same bug. Wait on a recorded PID
+    (`while kill -0 $PID 2>/dev/null`), or on a sentinel file the job writes when
+    it finishes. Do not pattern-match a command line you are yourself inside of.
+
+    Killing them also needs the right field: `ps -eo pid,ppid,cmd` puts the
+    command's first word in $3, not $2, so `awk '$2=="sleep"'` silently matches
+    nothing and reports success while killing zero processes.
+
 ### The nub was the CUT, and my detector was measuring the wrong thing (2026-09-03)
 
 180. **A cost that is cheap through bright tissue lets a front run along a
